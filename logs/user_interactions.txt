@@ -1,0 +1,371 @@
+
+================================================================================
+Timestamp:  2026-03-21 23:44:44
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  baghi nechri telfaza 3endi 2000 dh
+
+Extracted Entities:
+  • query: baghi nechri telfaza 3endi 2000 dh
+  • product: telfaza
+  • price: 2000 dh
+  • color: bag
+
+Bot Response:
+  😕 No results found for *telfaza*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:45:28
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  3endi 4000 dh chemene telephone ykone a7sene wahede lili ?
+
+Extracted Entities:
+  • query: 3endi 4000 dh chemene telephone ykone a7sene wahede lili ?
+  • product: che
+  • price: 4000 dh
+  • color: wahede
+
+Bot Response:
+  😕 No results found for *che*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:45:52
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Bghit nechri iphone 15 pro max 3endi 4000 dh
+
+Extracted Entities:
+  • query: Bghit nechri iphone 15 pro max 3endi 4000 dh
+  • product: iphone
+  • price: 4000 dh
+
+Bot Response:
+  😕 No results found for *iphone*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:46:47
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Bghit nechri telaja Samsung
+
+Extracted Entities:
+  • query: Bghit nechri telaja Samsung
+  • product: telaja
+  • brand: samsung
+  • color: nech
+
+Bot Response:
+  😕 No results found for *telaja*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:47:13
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  wach kayn laptop Samsung f Rabat b 8000 dh
+
+Extracted Entities:
+  • query: wach kayn laptop Samsung f Rabat b 8000 dh
+  • product: laptop
+  • brand: samsung
+  • price: 8000 dh
+
+Bot Response:
+  😕 No results found for *laptop*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:51:20
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  s21 ultra 3endi 4500dh
+
+Extracted Entities:
+  • query: s21 ultra 3endi 4500dh
+  • product: ultra
+  • price: 4500dh
+
+Bot Response:
+  😕 No results found for *ultra*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-21 23:55:34
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  wach kayene chi s23 ultra be tamane 8000 dh
+
+Extracted Entities:
+  • query: wach kayene chi s23 ultra be tamane 8000 dh
+  • price: 8000 dh
+
+Bot Response:
+  😕 No results found for *None*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+================================================================================
+Timestamp:  2026-03-21 23:59:03
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  s21 ultra 3endi 4500dh
+
+Extracted Entities:
+  • query: s21 ultra 3endi 4500dh
+  • product: s21 ultra
+  • price: 4500dh
+
+Bot Response:
+  🔍 *Understood:* 🛍 *s21 ultra*  ·  💰 budget: *4500dh*
+
+📊 *Market (6 products found)*
+   Min: *39 MAD*  ·  Max: *99 MAD*  ·  Avg: *71 MAD*
+   ✅ _Your budget covers all options_
+
+⭐ *Best recommendation:*
+  🟠 *Coque Armor Antichoc pour Samsung S21 Ultra Magnétique Chargement Sans Fil*
+  💵 *99.00 Dhs  51
+
+================================================================================
+Timestamp:  2026-03-22 18:14:48
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Kan9eleb 3la iphone 13 pro max 3endi 6000dh
+
+Extracted Entities:
+  • query: Kan9eleb 3la iphone 13 pro max 3endi 6000dh
+  • product: iphone
+  • price: 6000dh
+
+Bot Response:
+  🔍 *Understood:* 🛍 *iphone*  ·  💰 budget: *6000dh*
+
+📊 *Market (2 products found)*
+   Min: *4599 MAD*  ·  Max: *6599 MAD*  ·  Avg: *5599 MAD*
+   ✅ _2 product(s) match your budget_
+
+⭐ *Best recommendation:*
+  🟠 *Apple iPhone 13 Pro Max - 6.7" - 128 Go - 6GB - Gold - Remis à neuf*
+  💵 *6,599.00 Dhs  (wa
+
+
+================================================================================
+Timestamp:  2026-03-22 18:16:07
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Bghit nike shoes 3endi 2000dh
+
+Extracted Entities:
+  • query: Bghit nike shoes 3endi 2000dh
+  • product: shoes
+  • brand: nike
+  • price: 2000dh
+
+Bot Response:
+  🔍 *Understood:* 🛍 *shoes*  ·  🏷 nike  ·  💰 budget: *2000dh*
+
+📊 *Market (5 products found)*
+   Min: *1669 MAD*  ·  Max: *1999 MAD*  ·  Avg: *1813 MAD*
+   ✅ _Your budget covers all options_
+
+⭐ *Best recommendation:*
+  🟠 *Nike AIR JORDAN 1 MID SE 'WHITE/LOBSTER-DUNE RED-SAIL*
+  💵 *1,999.00 Dhs*
+  🏪 Jum
+
+
+================================================================================
+Timestamp:  2026-03-22 18:19:39
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Bghit nike shoes 3endi 2000dh
+
+Extracted Entities:
+  • query: Bghit nike shoes 3endi 2000dh
+  • product: shoes
+  • brand: nike
+  • price: 2000dh
+
+Bot Response:
+  🔍 *Understood:* 🛍 *shoes*  ·  🏷 nike  ·  💰 budget: *2000dh*
+
+📊 *Market (5 products found)*
+   Min: *1669 MAD*  ·  Max: *1999 MAD*  ·  Avg: *1813 MAD*
+   ✅ _Your budget covers all options_
+
+⭐ *Best recommendation:*
+  🟠 *Nike AIR JORDAN 1 MID SE 'WHITE/LOBSTER-DUNE RED-SAIL*
+  💵 *1,999.00 Dhs*
+  🏪 Jum
+
+
+================================================================================
+Timestamp:  2026-03-24 20:13:04
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  bghit nechri telephone samsung 3endi 2000 dh
+
+Extracted Entities:
+  • query: bghit nechri telephone samsung 3endi 2000 dh
+  • product: telephone
+  • brand: samsung
+  • price: 2000 dh
+  • color: nechri
+
+Bot Response:
+  😕 No results found for *telephone*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-24 20:13:56
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  bghit nechri phone samsung 3endi 2000 dh
+
+Extracted Entities:
+  • query: bghit nechri phone samsung 3endi 2000 dh
+  • product: phone
+  • brand: samsung
+  • price: 2000 dh
+  • color: nechri
+
+Bot Response:
+  😕 No results found for *phone*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-03-24 20:14:12
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Bghit nike shoes 3endi 2000dh
+
+Extracted Entities:
+  • query: Bghit nike shoes 3endi 2000dh
+  • product: shoes
+  • brand: nike
+  • price: 2000dh
+
+Bot Response:
+  🔍 *Understood:* 🛍 *shoes*  ·  🏷 nike  ·  💰 budget: *2000dh*
+
+📊 *Market (6 products found)*
+   Min: *1680 MAD*  ·  Max: *2445 MAD*  ·  Avg: *2011 MAD*
+   ✅ _6 product(s) match your budget_
+
+⭐ *Best recommendation:*
+  🟠 *Nike - Air Zoom Pegasus 38 Shield - Black White*
+  💵 *2,044.00 Dhs*
+  🏪 Jumia.ma
+
+
+
+================================================================================
+Timestamp:  2026-03-24 20:14:26
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  bghit  phone samsung 3endi 2000 dh
+
+Extracted Entities:
+  • query: bghit  phone samsung 3endi 2000 dh
+  • product: phone samsung
+  • price: 2000 dh
+
+Bot Response:
+  😕 No results found for *phone samsung*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
