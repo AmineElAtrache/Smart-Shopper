@@ -369,3 +369,97 @@ Try:
   • Remove city or color
   • Broader price range
 
+
+================================================================================
+Timestamp:  2026-05-04 11:05:40
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  h
+
+Extracted Entities:
+  • query: h
+
+Bot Response:
+  🤔 *I couldn't identify what you're looking for.*
+
+Try:
+  • `bghit sneakers Nike f Casablanca b 300 dh`
+  • `بغيت نشري تيشرت نايك أحمر بحوالي 200 درهم`
+  • `wach kayn laptop Samsung f Rabat b 8000 dh`
+
+
+================================================================================
+Timestamp:  2026-05-04 11:06:16
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  ana baghi sperdila nike be 300 dh
+
+Extracted Entities:
+  • query: ana baghi sperdila nike be 300 dh
+  • product: sperdila
+  • brand: nike
+  • city: baghi
+  • price: 300 dh
+
+Bot Response:
+  😕 No results found for *sperdila*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-05-04 11:06:53
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  bghit nechri phone samsung 3endi 2000 dh
+
+Extracted Entities:
+  • query: bghit nechri phone samsung 3endi 2000 dh
+  • product: phone
+  • brand: samsung
+  • price: 2000 dh
+  • color: nechri
+
+Bot Response:
+  😕 No results found for *phone*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
+
+================================================================================
+Timestamp:  2026-05-04 11:30:04
+User ID:    6084223798
+Name:       El Atrach
+Username:   @N/A
+
+Original Query:
+  Iphone 14 pro maben 5000dh et 6000 dh
+
+Extracted Entities:
+  • query: Iphone 14 pro maben 5000dh et 6000 dh
+  • product: iphone
+  • price: 5000dh
+
+Bot Response:
+  😕 No results found for *iphone*.
+
+Try:
+  • Different product name
+  • Remove city or color
+  • Broader price range
+
