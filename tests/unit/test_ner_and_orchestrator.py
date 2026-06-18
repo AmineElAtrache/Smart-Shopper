@@ -1,4 +1,4 @@
-import pytest
+import asyncio
 
 from agents.orchestrator.agent import OrchestratorAgent
 from models.ner.serve import extract_entities
@@ -15,15 +15,14 @@ def test_rule_based_ner_extracts_brand_product_and_budget() -> None:
     assert by_type["budget"].attributes["currency"] == "MAD"
 
 
-@pytest.mark.asyncio
-async def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
+def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
     message = InboundMessage(
         request_id="req_001",
         user_id="telegram_123",
         text="Find me a Samsung phone under 3000 MAD",
     )
 
-    extracted, task = await OrchestratorAgent().handle_inbound(message)
+    extracted, task = asyncio.run(OrchestratorAgent().handle_inbound(message))
 
     assert extracted.request_id == "req_001"
     assert task.request_id == "req_001"

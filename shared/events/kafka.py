@@ -6,7 +6,6 @@ import json
 from collections.abc import AsyncIterator
 from typing import TypeVar
 
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from pydantic import BaseModel
 
 EventT = TypeVar("EventT", bound=BaseModel)
@@ -23,6 +22,8 @@ def decode_event(payload: bytes, schema: type[EventT]) -> EventT:
 
 class KafkaEventProducer:
     def __init__(self, bootstrap_servers: str, client_id: str = "smart-shopper") -> None:
+        from aiokafka import AIOKafkaProducer
+
         self._producer = AIOKafkaProducer(
             bootstrap_servers=bootstrap_servers,
             client_id=client_id,
@@ -51,6 +52,8 @@ class KafkaEventConsumer:
         group_id: str,
         client_id: str = "smart-shopper",
     ) -> None:
+        from aiokafka import AIOKafkaConsumer
+
         self._consumer = AIOKafkaConsumer(
             *topics,
             bootstrap_servers=bootstrap_servers,
