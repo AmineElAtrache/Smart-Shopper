@@ -1,0 +1,9 @@
+# Base image for Python agents and gateway — extend with multi-stage builds per component.
+FROM python:3.12-slim
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+# COPY pyproject.toml README.md ./
+# RUN pip install --no-cache-dir -e ".[dev]"
+# COPY . .
+# Placeholder process until entrypoints are implemented:
+CMD ["sleep", "infinity"]

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ner.v1;
+
+option python_package = "generated.ner.v1";
+
+// Stateless NER inference surface (Orchestrator calls as a tool; not a Kafka agent).
+service NerService {
+  rpc Extract(ExtractRequest) returns (ExtractResponse);
+}
+
+message ExtractRequest {
+  string text = 1;
+  string locale_hint = 2;
+}
+
+message Entity {
+  string type = 1;
+  string value = 2;
+  float confidence = 3;
+  map<string, string> attributes = 4;
+}
+
+message ExtractResponse {
+  repeated Entity entities = 1;
+  string request_id = 2;
+}
