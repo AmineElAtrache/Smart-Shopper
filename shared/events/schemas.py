@@ -99,6 +99,9 @@ class ScrapeTaskAssigned(UserEvent):
 
 
 class RawProduct(Event):
+    user_id: str | None = None
+    channel: Channel = Channel.TELEGRAM
+    query: ProductQuery | None = None
     source: str
     title: str
     price: float = Field(ge=0)
@@ -139,6 +142,7 @@ class RankedProduct(BaseModel):
 
 
 class DecisionRanked(UserEvent):
+    query: ProductQuery | None = None
     products: list[RankedProduct]
 
 
