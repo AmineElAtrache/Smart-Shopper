@@ -6,17 +6,171 @@ Smart Shopper is a PFA MVP for an AI shopping intelligence bot. The first goal i
 Telegram -> Kafka -> Orchestrator -> Mock Scraper -> Decision Agent -> Agent Generator -> Telegram
 ```
 
-This branch implements **Mounim's MVP part**:
+The project is split into two main development parts:
 
-- Telegram Gateway: receives Telegram messages and publishes `msg.inbound`.
-- Mock WebScraping Agent: consumes `scrape.task.assigned` and publishes mock `scrape.raw` products.
-- Template Agent Generator: consumes `decision.ranked` and publishes `response.outbound`.
-- Local `.env` loading for runtime configuration.
-- Unit tests for Telegram conversion, mock product generation, and response generation.
+- **Amine's part:** core intelligence pipeline.
+- **Mounim's part:** Telegram gateway, scraper side, and response generation side.
 
-## Mounim MVP Components
+## Project Flow
 
-### Telegram Gateway
+```text
+Telegram user
+-> Telegram Gateway
+-> Kafka msg.inbound
+-> Orchestrator + NER
+-> Kafka scrape.task.assigned
+-> Mock WebScraping Agent
+-> Kafka scrape.raw
+-> Decision Agent
+-> Kafka decision.ranked
+-> Agent Generator
+-> Kafka response.outbound
+-> Telegram Gateway
+-> Telegram user
+```
+
+## Amine's Part - Core Pipeline
+
+Amine owns the internal intelligence pipeline: understanding the user request, building the product query, and ranking scraped products.
+
+Main flow:
+
+```text
+msg.inbound
+-> Orchestrator
+-> NER
+-> scrape.task.assigned
+-> scrape.raw
+-> Decision Agent
+-> decision.ranked
+```
+
+### Implemented Components
+
+#### Shared Contracts
+
+Files:
+
+```text
+shared/events/schemas.py
+shared/events/topics.py
+shared/events/kafka.py
+```
+
+Responsibilities:
+
+- Defines shared Pydantic event schemas.
+- Defines Kafka topic constants.
+- Provides JSON encode/decode helpers.
+- Provides Kafka producer/consumer wrappers.
+
+#### Rule-Based NER
+
+File:
+
+```text
+models/ner/serve.py
+```
+
+Responsibilities:
+
+- Extracts brand, product, budget, currency, and intent from user text.
+- Acts as the MVP placeholder for the future XLM-RoBERTa NER model.
+
+Example:
+
+```text
+Find me a Samsung phone under 3000 MAD
+```
+
+Extracted entities:
+
+```text
+brand=Samsung
+product=phone
+budget=3000
+currency=MAD
+intent=search
+```
+
+#### Orchestrator Agent
+
+Files:
+
+```text
+agents/orchestrator/agent.py
+agents/orchestrator/tools/ner_client.py
+agents/orchestrator/tools/task_router.py
+agents/orchestrator/tools/cache_lookup.py
+```
+
+Responsibilities:
+
+- Receives an `InboundMessage`.
+- Calls the NER client.
+- Creates a `NerExtracted` event.
+- Builds a `ScrapeTaskAssigned` event.
+- Converts extracted entities into a structured `ProductQuery`.
+- Provides Redis cache key/helper logic for product queries.
+
+Current status:
+
+- Core Orchestrator logic is implemented.
+- Long-running Kafka runtime loop is not implemented yet.
+
+#### Decision Agent
+
+Files:
+
+```text
+agents/decision/agent.py
+agents/decision/tools/scoring_engine.py
+```
+
+Responsibilities:
+
+- Receives raw scraped products.
+- Deduplicates products.
+- Scores products using the 100-point scoring model.
+- Returns a `DecisionRanked` event.
+
+Scoring model:
+
+```text
+Price:        40 points
+Trust/source: 30 points
+Quality:      20 points
+Availability: 10 points
+Total:       100 points
+```
+
+Current status:
+
+- Core Decision logic is implemented.
+- Long-running Kafka runtime loop is not implemented yet.
+
+## Mounim's Part - Gateway, Scraper, Generator
+
+Mounim owns the user side, scraper side, and response side.
+
+Main flow:
+
+```text
+Telegram Gateway
+-> msg.inbound
+scrape.task.assigned
+-> Mock Scraper
+-> scrape.raw
+decision.ranked
+-> Agent Generator
+-> response.outbound
+-> Telegram Gateway
+-> Telegram user
+```
+
+### Implemented Components
+
+#### Telegram Gateway
 
 File:
 
@@ -33,7 +187,7 @@ Responsibilities:
 - Sends final messages back to the Telegram user.
 - Stores simple inbound/outbound history in MongoDB when available.
 
-### Mock WebScraping Agent
+#### Mock WebScraping Agent
 
 File:
 
@@ -49,7 +203,7 @@ Responsibilities:
 
 This is intentionally mock data for the first MVP. Real Jumia/Avito scraping is future work.
 
-### Template Agent Generator
+#### Template Agent Generator
 
 File:
 
@@ -64,6 +218,19 @@ Responsibilities:
 - Publishes `OutboundResponse` to `response.outbound`.
 
 This is intentionally template-based for the first MVP. Gemini/Groq LLM generation is future work.
+
+#### Local Environment Loader
+
+File:
+
+```text
+shared/config/env.py
+```
+
+Responsibilities:
+
+- Loads local `.env` values for MVP services.
+- Allows services to run without manually setting every environment variable in PowerShell.
 
 ## Environment Setup
 
@@ -160,21 +327,27 @@ Expected immediate reply:
 Request received (req_...). I am looking for offers now.
 ```
 
-## Full MVP Integration
+## Full MVP Integration Status
 
-Mounim's services cover:
+The code from both parts works together in-process:
 
 ```text
-Telegram -> msg.inbound
-scrape.task.assigned -> Mock Scraper -> scrape.raw
-decision.ranked -> Agent Generator -> response.outbound -> Telegram
+InboundMessage
+-> Orchestrator + NER
+-> ScrapeTaskAssigned
+-> Mock Scraper
+-> RawProduct
+-> Decision Agent
+-> DecisionRanked
+-> Agent Generator
+-> OutboundResponse
 ```
 
-The complete final recommendation also needs Amine's runtime services:
+For the fully live Kafka version, Amine's Orchestrator and Decision components still need long-running Kafka runtime loops:
 
 ```text
-msg.inbound -> Orchestrator -> scrape.task.assigned
-scrape.raw -> Decision Agent -> decision.ranked
+msg.inbound -> Orchestrator runtime -> scrape.task.assigned
+scrape.raw -> Decision runtime -> decision.ranked
 ```
 
 Until those runtime loops are running, the Telegram bot can confirm that a request was received, while the scraper and generator wait for their Kafka events.
@@ -191,16 +364,20 @@ Current expected result:
 9 passed
 ```
 
-## Useful Topics
+## Useful Kafka Topics
 
 The MVP uses these Kafka topics:
 
 ```text
 msg.inbound
+ner.extracted
 scrape.task.assigned
 scrape.raw
 decision.ranked
 response.outbound
+ambient.watch
+gov.audit
+gov.violation
 ```
 
 Shared schemas live in:
