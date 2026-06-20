@@ -1,4 +1,4 @@
-from agents.agent_generator.agent import build_outbound_response, build_response_message
+﻿from agents.agent_generator.agent import build_outbound_response, build_response_message
 from agents.webscraping.agent import build_mock_products
 from gateway.telegram_proxy import build_inbound_message, chat_id_from_user_id
 from shared.events.schemas import (
@@ -25,6 +25,7 @@ def test_mock_scraper_generates_rankable_products() -> None:
     task = ScrapeTaskAssigned(
         request_id="req_001",
         user_id="telegram_123",
+        channel=Channel.TELEGRAM,
         query=ProductQuery(product="phone", brand="Samsung", budget=3000),
     )
 
@@ -32,6 +33,9 @@ def test_mock_scraper_generates_rankable_products() -> None:
 
     assert len(products) >= 3
     assert {product.request_id for product in products} == {"req_001"}
+    assert {product.user_id for product in products} == {"telegram_123"}
+    assert {product.channel for product in products} == {"telegram"}
+    assert all(product.query == task.query for product in products)
     assert {"jumia", "avito"}.issubset({product.source for product in products})
     assert any(
         product.price <= 3000 and product.availability == Availability.IN_STOCK

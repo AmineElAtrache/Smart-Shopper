@@ -1,4 +1,4 @@
-# Smart Shopper
+﻿# Smart Shopper
 
 Smart Shopper is a PFA MVP for an AI shopping intelligence bot. The first goal is to prove this flow:
 
@@ -329,7 +329,7 @@ Request received (req_...). I am looking for offers now.
 
 ## Full MVP Integration Status
 
-The code from both parts works together in-process:
+The code from both parts now works together in-process and has Kafka runtime loops for the core agents:
 
 ```text
 InboundMessage
@@ -343,15 +343,34 @@ InboundMessage
 -> OutboundResponse
 ```
 
-For the fully live Kafka version, Amine's Orchestrator and Decision components still need long-running Kafka runtime loops:
+A no-Telegram integration runner is available for quick checks without Docker or Kafka:
 
-```text
-msg.inbound -> Orchestrator runtime -> scrape.task.assigned
-scrape.raw -> Decision runtime -> decision.ranked
+```powershell
+python -m scripts.run_local_pipeline
 ```
 
-Until those runtime loops are running, the Telegram bot can confirm that a request was received, while the scraper and generator wait for their Kafka events.
+Expected result:
 
+```text
+[integration] extracted ... entities
+[integration] mock scraper produced 3 products
+[integration] decision ranked 3 products
+
+=== Final response ===
+I found 3 good options for you:
+...
+```
+
+For the live Kafka version, run these services in separate terminals after starting Kafka, Redis, and MongoDB:
+
+```powershell
+python -m models.ner.grpc_server
+python -m agents.orchestrator.service
+python -m agents.webscraping.agent
+python -m agents.decision.service
+python -m agents.agent_generator.agent
+python -m gateway.telegram_proxy
+```
 ## Run Tests
 
 ```powershell
@@ -361,7 +380,7 @@ pytest -q
 Current expected result:
 
 ```text
-9 passed
+13 passed
 ```
 
 ## Useful Kafka Topics
