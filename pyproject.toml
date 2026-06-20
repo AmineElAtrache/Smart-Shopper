@@ -41,7 +41,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["shared*", "agents*", "gateway*", "models*"]
+include = ["shared*", "agents*", "gateway*", "models*", "generated*"]
 
 [tool.ruff]
 line-length = 100
