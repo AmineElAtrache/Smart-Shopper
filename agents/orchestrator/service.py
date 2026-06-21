@@ -1,11 +1,11 @@
-"""Kafka runtime for the Orchestrator Agent."""
+﻿"""Kafka runtime for the Orchestrator Agent."""
 
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from redis.asyncio import Redis
-from typing import Any
 
 from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.tools.cache_lookup import ProductCache
@@ -66,10 +66,12 @@ class OrchestratorService:
             await self.stop()
 
     async def handle_message(self, message: InboundMessage) -> None:
+        print(f"[orchestrator] received msg.inbound request_id={message.request_id}")
         extracted, task = await self._agent.handle_inbound(message)
         cached_response = await self._cache.get(task.query)
 
         await self._producer.publish(NER_EXTRACTED, extracted, key=message.request_id)
+        print(f"[orchestrator] published ner.extracted request_id={message.request_id}")
 
         if cached_response:
             response = OutboundResponse(
@@ -79,9 +81,11 @@ class OrchestratorService:
                 message=cached_response,
             )
             await self._producer.publish(RESPONSE_OUTBOUND, response, key=message.request_id)
+            print(f"[orchestrator] cache hit; published response.outbound request_id={message.request_id}")
             return
 
         await self._producer.publish(SCRAPE_TASK_ASSIGNED, task, key=message.request_id)
+        print(f"[orchestrator] published scrape.task.assigned request_id={message.request_id}")
 
 
 async def main() -> None:

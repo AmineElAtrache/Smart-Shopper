@@ -1,4 +1,4 @@
-"""Kafka runtime for the Decision Agent."""
+﻿"""Kafka runtime for the Decision Agent."""
 
 from __future__ import annotations
 
@@ -55,6 +55,7 @@ class DecisionService:
             await self.stop()
 
     async def handle_product(self, product: RawProduct) -> None:
+        print(f"[decision] received scrape.raw request_id={product.request_id} source={product.source}")
         self._pending[product.request_id].append(product)
         if product.request_id not in self._flush_tasks:
             self._flush_tasks[product.request_id] = asyncio.create_task(
@@ -80,6 +81,7 @@ class DecisionService:
             products=products,
         )
         await self._producer.publish(DECISION_RANKED, ranked, key=request_id)
+        print(f"[decision] published decision.ranked request_id={request_id} products={len(products)}")
 
 
 async def main() -> None:

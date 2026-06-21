@@ -1,4 +1,4 @@
-"""Mock WebScraping Agent for the Smart Shopper MVP."""
+﻿"""Mock WebScraping Agent for the Smart Shopper MVP."""
 
 from __future__ import annotations
 
@@ -29,6 +29,9 @@ def build_mock_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
     return [
         RawProduct(
             request_id=task.request_id,
+            user_id=task.user_id,
+            channel=task.channel,
+            query=query,
             source="jumia",
             title=f"{brand} Galaxy A15 128GB {product}",
             price=best_price,
@@ -41,6 +44,9 @@ def build_mock_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
         ),
         RawProduct(
             request_id=task.request_id,
+            user_id=task.user_id,
+            channel=task.channel,
+            query=query,
             source="avito",
             title=f"{brand} Galaxy A15 {product}",
             price=avito_price,
@@ -53,6 +59,9 @@ def build_mock_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
         ),
         RawProduct(
             request_id=task.request_id,
+            user_id=task.user_id,
+            channel=task.channel,
+            query=query,
             source="jumia",
             title=f"{brand} Galaxy A05 {product}",
             price=budget_price,
