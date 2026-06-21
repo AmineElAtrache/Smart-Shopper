@@ -1,4 +1,8 @@
-﻿"""Mock WebScraping Agent for the Smart Shopper MVP."""
+﻿"""WebScraping Agent for the Smart Shopper MVP.
+
+The agent now tries real scraper providers first and falls back to deterministic
+mock products when providers fail or return no products.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 
+from agents.webscraping.spiders import avito
 from shared.config.env import load_env_file
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -75,6 +80,25 @@ def build_mock_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
     ]
 
 
+async def scrape_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
+    """Try real providers, then fall back to mock products."""
+    products: list[RawProduct] = []
+
+    try:
+        products.extend(await avito.scrape(task))
+        if products:
+            print(f"[scraper] avito returned {len(products)} products for {task.request_id}")
+    except Exception as exc:
+        print(f"[scraper] avito failed for {task.request_id}: {exc}")
+
+    if products:
+        return products
+
+    fallback = build_mock_products(task)
+    print(f"[scraper] using mock fallback with {len(fallback)} products for {task.request_id}")
+    return fallback
+
+
 @dataclass(frozen=True)
 class MockScraperConfig:
     kafka_bootstrap_servers: str = DEFAULT_KAFKA_BOOTSTRAP_SERVERS
@@ -103,7 +127,7 @@ class MockScraperAgent:
         )
 
     async def handle_task(self, task: ScrapeTaskAssigned) -> list[RawProduct]:
-        products = build_mock_products(task)
+        products = await scrape_products(task)
         for product in products:
             await self._producer.publish(SCRAPE_RAW, product, key=task.request_id)
         return products
@@ -118,11 +142,11 @@ class MockScraperAgent:
 
         await self._producer.start()
         await consumer.start()
-        print("Mock scraper agent started. Waiting for scrape.task.assigned events.")
+        print("WebScraping agent started. Waiting for scrape.task.assigned events.")
         try:
             async for task in consumer.events(ScrapeTaskAssigned):
                 products = await self.handle_task(task)
-                print(f"Published {len(products)} mock products for {task.request_id}.")
+                print(f"Published {len(products)} products for {task.request_id}.")
         finally:
             await consumer.stop()
             await self._producer.stop()
@@ -136,4 +160,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("Mock scraper agent stopped.")
+        print("WebScraping agent stopped.")
