@@ -401,7 +401,7 @@ pytest -q
 Current expected result:
 
 ```text
-24 passed
+28 passed
 ```
 
 ## Useful Kafka Topics
