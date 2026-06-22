@@ -63,4 +63,4 @@ def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
     assert task.query.brand == "Samsung"
     assert task.query.product == "phone"
     assert task.query.budget == 3000
-    assert task.query.sites == ["jumia", "avito", "electrosalam", "mafiawaystore"]
+    assert task.query.sites == ["jumia", "avito", "electrosalam", "mafiawaystore", "moteur"]

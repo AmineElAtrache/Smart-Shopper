@@ -96,7 +96,7 @@ class ProductQuery(BaseModel):
     city: str | None = None
     color: str | None = None
     quality: str | None = None
-    sites: list[str] = Field(default_factory=lambda: ["jumia", "avito", "electrosalam", "mafiawaystore"])
+    sites: list[str] = Field(default_factory=lambda: ["jumia", "avito", "electrosalam", "mafiawaystore", "moteur"])
 
 
 class ScrapeTaskAssigned(UserEvent):
