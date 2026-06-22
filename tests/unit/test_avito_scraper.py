@@ -60,12 +60,30 @@ def test_avito_parse_products_from_fixture() -> None:
     assert all(product.price <= 3750 for product in products)
 
 
+def _patch_other_providers_empty(monkeypatch) -> None:
+    async def fake_empty(task):
+        return []
+
+    for provider in (
+        "electrosalam",
+        "mafiawaystore",
+        "moteur",
+        "mymarket",
+        "ultrapc",
+        "electroplanet",
+        "jumia",
+        "defacto",
+    ):
+        monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
+
+
 @pytest.mark.asyncio
 async def test_webscraping_agent_falls_back_when_avito_fails(monkeypatch) -> None:
     async def fail_scrape(task):
         raise RuntimeError("blocked")
 
     monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fail_scrape)
+    _patch_other_providers_empty(monkeypatch)
 
     products = await scrape_products(_task())
 
@@ -88,6 +106,7 @@ async def test_agent_publishes_avito_products(monkeypatch) -> None:
         return parse_products(html, task, page_url="https://www.avito.ma/fr/maroc/Samsung+phone")
 
     monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fake_scrape)
+    _patch_other_providers_empty(monkeypatch)
     producer = FakeProducer()
     agent = MockScraperAgent(config=MockScraperConfig(), producer=producer)
 

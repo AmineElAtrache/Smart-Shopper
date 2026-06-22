@@ -36,20 +36,30 @@ def test_mafiawaystore_parse_products_from_fixture() -> None:
     assert products[0].query == _task().query
 
 
+def _patch_other_providers_empty(monkeypatch) -> None:
+    async def fake_empty(task):
+        return []
+
+    for provider in (
+        "avito",
+        "electrosalam",
+        "moteur",
+        "mymarket",
+        "ultrapc",
+        "electroplanet",
+        "jumia",
+        "defacto",
+    ):
+        monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
+
+
 @pytest.mark.asyncio
 async def test_webscraping_agent_includes_mafiawaystore_products(monkeypatch) -> None:
-    async def fake_avito_scrape(task):
-        return []
-
-    async def fake_electrosalam_scrape(task):
-        return []
-
     async def fake_mafiawaystore_scrape(task):
         html = open("tests/fixtures/mafiawaystore_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://mafiawaystore.com/search?q=chemise")
 
-    monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fake_avito_scrape)
-    monkeypatch.setattr("agents.webscraping.agent.electrosalam.scrape", fake_electrosalam_scrape)
+    _patch_other_providers_empty(monkeypatch)
     monkeypatch.setattr("agents.webscraping.agent.mafiawaystore.scrape", fake_mafiawaystore_scrape)
 
     products = await scrape_products(_task())
@@ -68,18 +78,11 @@ class FakeProducer:
 
 @pytest.mark.asyncio
 async def test_agent_publishes_mafiawaystore_products(monkeypatch) -> None:
-    async def fake_avito_scrape(task):
-        return []
-
-    async def fake_electrosalam_scrape(task):
-        return []
-
     async def fake_mafiawaystore_scrape(task):
         html = open("tests/fixtures/mafiawaystore_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://mafiawaystore.com/search?q=chemise")
 
-    monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fake_avito_scrape)
-    monkeypatch.setattr("agents.webscraping.agent.electrosalam.scrape", fake_electrosalam_scrape)
+    _patch_other_providers_empty(monkeypatch)
     monkeypatch.setattr("agents.webscraping.agent.mafiawaystore.scrape", fake_mafiawaystore_scrape)
     producer = FakeProducer()
     agent = MockScraperAgent(config=MockScraperConfig(), producer=producer)

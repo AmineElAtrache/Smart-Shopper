@@ -1,4 +1,4 @@
-"""Jumia.ma scraper provider."""
+"""Electroplanet.ma scraper provider."""
 
 from __future__ import annotations
 
@@ -12,27 +12,8 @@ from agents.webscraping.spiders.base import absolute_url, budget_allows, build_s
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
-JUMIA_BASE_URL = "https://www.jumia.ma"
-JUMIA_SEARCH_URL = "https://www.jumia.ma/catalog/?q={query}"
-JUMIA_PRODUCT_TERMS = {
-    "phone": "smartphone",
-    "telephone": "smartphone",
-    "smartphone": "smartphone",
-    "laptop": "ordinateur portable",
-}
-PHONE_ACCESSORY_TERMS = {
-    "adaptateur",
-    "cable",
-    "câble",
-    "chargeur",
-    "coque",
-    "ecouteur",
-    "écouteur",
-    "etui",
-    "étui",
-    "pochette",
-    "support",
-}
+ELECTROPLANET_BASE_URL = "https://www.electroplanet.ma"
+ELECTROPLANET_SEARCH_URL = "https://www.electroplanet.ma/catalogsearch/result/?q={query}"
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -48,7 +29,7 @@ PRICE_RE = re.compile(
 
 
 def build_search_url(task: ScrapeTaskAssigned) -> str:
-    return JUMIA_SEARCH_URL.format(query=quote_plus(_build_jumia_search_text(task)))
+    return ELECTROPLANET_SEARCH_URL.format(query=quote_plus(build_search_text(task)))
 
 
 async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[RawProduct]:
@@ -111,14 +92,15 @@ def _parse_dom_products(html: str, task: ScrapeTaskAssigned, *, page_url: str) -
         return []
     soup = BeautifulSoup(html, "html.parser")
     products: list[RawProduct] = []
-    for card in soup.select("article.prd, article, div[data-sku], div.product-card"):
-        link, url = _extract_product_link(card, page_url)
+    for anchor in soup.select("a[href]"):
+        url = _clean_product_url(absolute_url(page_url, anchor.get("href")))
         if not url:
             continue
-        block_text = clean_text(card.get_text(" ", strip=True))
-        title = _extract_title(card, link, block_text)
+        block = _nearest_product_block(anchor)
+        block_text = clean_text(block.get_text(" ", strip=True) if block else anchor.get_text(" "))
+        title = _extract_title(anchor, block_text)
         price = _extract_sale_price(block_text)
-        rating = _extract_rating(block_text)
+        availability = Availability.IN_STOCK if re.search(r"en stock|disponible", block_text, re.IGNORECASE) else Availability.UNKNOWN
         if title and price is not None:
             products.append(
                 _raw_product(
@@ -126,36 +108,22 @@ def _parse_dom_products(html: str, task: ScrapeTaskAssigned, *, page_url: str) -
                     title=title,
                     price=price,
                     url=url,
-                    rating=rating,
+                    availability=availability,
                     metadata={"parser": "dom_card"},
                 )
             )
     return products
 
 
-def _extract_product_link(card, page_url: str):
-    for link in card.select("a[href]"):
-        url = _clean_product_url(absolute_url(page_url, link.get("href")))
-        if url:
-            return link, url
-    return None, None
-
-
-def _extract_title(card, link, block_text: str) -> str:
-    title_node = card.select_one(".name, h3, h2")
-    if title_node:
-        title = clean_text(title_node.get_text(" ", strip=True))
-        if title:
-            return title
-    if link is not None:
-        for attr in ("aria-label", "title"):
-            title = clean_text(link.get(attr))
-            if title:
-                return title
-        title = clean_text(link.get_text(" ", strip=True))
-        if title and _parse_price(title) is None:
-            return title
-    return clean_text(re.split(r"Prix|MAD|DH", block_text, maxsplit=1, flags=re.IGNORECASE)[0])
+def _nearest_product_block(anchor):
+    current = anchor
+    for _ in range(6):
+        if current is None:
+            return None
+        if _extract_sale_price(clean_text(current.get_text(" ", strip=True))) is not None:
+            return current
+        current = current.parent
+    return anchor.parent
 
 
 def _extract_sale_price(text: str) -> float | None:
@@ -186,14 +154,15 @@ def _parse_price(value: str | None) -> float | None:
         return None
 
 
-def _extract_rating(text: str) -> float | None:
-    match = re.search(r"(?P<rating>\d(?:[,.]\d)?)\s*(?:sur|out of|/)\s*5", text, re.IGNORECASE)
-    if not match:
-        return None
-    try:
-        return float(match.group("rating").replace(",", "."))
-    except ValueError:
-        return None
+def _extract_title(anchor, block_text: str) -> str:
+    for attr in ("aria-label", "title"):
+        title = clean_text(anchor.get(attr))
+        if title:
+            return title
+    title = clean_text(anchor.get_text(" ", strip=True))
+    if title and _parse_price(title) is None:
+        return title
+    return clean_text(re.split(r"Prix|MAD|DH", block_text, maxsplit=1, flags=re.IGNORECASE)[0])
 
 
 def _raw_product(
@@ -203,35 +172,29 @@ def _raw_product(
     price: float,
     url: str,
     metadata: dict[str, str],
-    rating: float | None = None,
+    availability: Availability = Availability.UNKNOWN,
 ) -> RawProduct:
     return RawProduct(
         request_id=task.request_id,
         user_id=task.user_id,
         channel=task.channel,
         query=task.query,
-        source="jumia",
+        source="electroplanet",
         title=title,
         price=price,
         currency=task.query.currency,
         url=url,
-        availability=Availability.UNKNOWN,
-        seller="Jumia",
-        rating=rating,
+        availability=availability,
+        seller="Electroplanet",
+        rating=None,
         metadata=metadata,
     )
 
 
 def _clean_product_url(url: str | None) -> str | None:
-    if not url or "jumia.ma" not in url:
+    if not url or "electroplanet.ma" not in url:
         return None
-    cleaned = url.split("?", 1)[0]
-    blocked_paths = ("/customer/", "/cart/", "/checkout/", "/wishlist/")
-    if any(path in cleaned for path in blocked_paths):
-        return None
-    if not cleaned.endswith(".html"):
-        return None
-    return cleaned
+    return url.split("?", 1)[0]
 
 
 def _walk_json(value):
@@ -265,22 +228,4 @@ def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
         return False
     if query.product and query.product.lower() not in searchable_text:
         return False
-    if query.product and query.product.lower() in {"phone", "telephone", "smartphone"}:
-        if any(term in searchable_text for term in PHONE_ACCESSORY_TERMS):
-            return False
     return True
-
-
-def _build_jumia_search_text(task: ScrapeTaskAssigned) -> str:
-    query = task.query
-    product = _localized_product_term(query.product)
-    if query.brand and query.brand.lower() == "samsung" and product == "smartphone":
-        product = "Galaxy"
-    parts = [query.brand, product, query.color]
-    return " ".join(part for part in parts if part).strip() or build_search_text(task)
-
-
-def _localized_product_term(product: str | None) -> str | None:
-    if not product:
-        return None
-    return JUMIA_PRODUCT_TERMS.get(product.lower(), product)

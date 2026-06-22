@@ -35,16 +35,30 @@ def test_electrosalam_parse_products_from_fixture() -> None:
     assert products[0].query == _task().query
 
 
-@pytest.mark.asyncio
-async def test_webscraping_agent_includes_electrosalam_products(monkeypatch) -> None:
-    async def fake_avito_scrape(task):
+def _patch_other_providers_empty(monkeypatch) -> None:
+    async def fake_empty(task):
         return []
 
+    for provider in (
+        "avito",
+        "mafiawaystore",
+        "moteur",
+        "mymarket",
+        "ultrapc",
+        "electroplanet",
+        "jumia",
+        "defacto",
+    ):
+        monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
+
+
+@pytest.mark.asyncio
+async def test_webscraping_agent_includes_electrosalam_products(monkeypatch) -> None:
     async def fake_electrosalam_scrape(task):
         html = open("tests/fixtures/electrosalam_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://electrosalam.ma/search?q=HP+omen")
 
-    monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fake_avito_scrape)
+    _patch_other_providers_empty(monkeypatch)
     monkeypatch.setattr("agents.webscraping.agent.electrosalam.scrape", fake_electrosalam_scrape)
 
     products = await scrape_products(_task())
@@ -63,14 +77,11 @@ class FakeProducer:
 
 @pytest.mark.asyncio
 async def test_agent_publishes_electrosalam_products(monkeypatch) -> None:
-    async def fake_avito_scrape(task):
-        return []
-
     async def fake_electrosalam_scrape(task):
         html = open("tests/fixtures/electrosalam_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://electrosalam.ma/search?q=HP+omen")
 
-    monkeypatch.setattr("agents.webscraping.agent.avito.scrape", fake_avito_scrape)
+    _patch_other_providers_empty(monkeypatch)
     monkeypatch.setattr("agents.webscraping.agent.electrosalam.scrape", fake_electrosalam_scrape)
     producer = FakeProducer()
     agent = MockScraperAgent(config=MockScraperConfig(), producer=producer)

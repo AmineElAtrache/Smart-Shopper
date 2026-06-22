@@ -10,7 +10,17 @@ import asyncio
 import os
 from dataclasses import dataclass
 
-from agents.webscraping.spiders import avito, electrosalam, mafiawaystore, moteur
+from agents.webscraping.spiders import (
+    avito,
+    defacto,
+    electroplanet,
+    electrosalam,
+    jumia,
+    mafiawaystore,
+    moteur,
+    mymarket,
+    ultrapc,
+)
 from shared.config.env import load_env_file
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -89,6 +99,11 @@ async def scrape_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
         ("electrosalam", electrosalam),
         ("mafiawaystore", mafiawaystore),
         ("moteur", moteur),
+        ("mymarket", mymarket),
+        ("ultrapc", ultrapc),
+        ("electroplanet", electroplanet),
+        ("jumia", jumia),
+        ("defacto", defacto),
     ):
         try:
             provider_products = await provider.scrape(task)
