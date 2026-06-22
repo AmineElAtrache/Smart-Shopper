@@ -12,12 +12,17 @@ from dataclasses import dataclass
 
 from agents.webscraping.spiders import (
     avito,
+    biougnach,
+    decathlon,
     defacto,
     electroplanet,
     electrosalam,
+    ikea,
     jumia,
     mafiawaystore,
+    marjane,
     moteur,
+    mubawab,
     mymarket,
     ultrapc,
 )
@@ -104,6 +109,11 @@ async def scrape_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
         ("electroplanet", electroplanet),
         ("jumia", jumia),
         ("defacto", defacto),
+        ("biougnach", biougnach),
+        ("marjane", marjane),
+        ("decathlon", decathlon),
+        ("mubawab", mubawab),
+        ("ikea", ikea),
     ):
         try:
             provider_products = await provider.scrape(task)

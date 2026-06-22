@@ -73,4 +73,9 @@ def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
         "ultrapc",
         "electroplanet",
         "defacto",
+        "biougnach",
+        "marjane",
+        "decathlon",
+        "mubawab",
+        "ikea",
     ]

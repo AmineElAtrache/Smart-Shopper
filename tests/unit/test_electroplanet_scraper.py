@@ -42,7 +42,7 @@ async def test_webscraping_agent_includes_electroplanet_products(monkeypatch) ->
         html = open("tests/fixtures/electroplanet_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.electroplanet.ma/catalogsearch/result/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "jumia", "defacto"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.electroplanet.scrape", fake_electroplanet_scrape)
 
@@ -69,7 +69,7 @@ async def test_agent_publishes_electroplanet_products(monkeypatch) -> None:
         html = open("tests/fixtures/electroplanet_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.electroplanet.ma/catalogsearch/result/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "jumia", "defacto"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.electroplanet.scrape", fake_electroplanet_scrape)
     producer = FakeProducer()

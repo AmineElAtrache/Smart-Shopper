@@ -20,6 +20,11 @@ DEFAULT_SITES = [
     "ultrapc",
     "electroplanet",
     "defacto",
+    "biougnach",
+    "marjane",
+    "decathlon",
+    "mubawab",
+    "ikea",
 ]
 
 

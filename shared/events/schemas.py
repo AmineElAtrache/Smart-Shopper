@@ -107,6 +107,11 @@ class ProductQuery(BaseModel):
             "ultrapc",
             "electroplanet",
             "defacto",
+            "biougnach",
+            "marjane",
+            "decathlon",
+            "mubawab",
+            "ikea",
         ]
     )
 
