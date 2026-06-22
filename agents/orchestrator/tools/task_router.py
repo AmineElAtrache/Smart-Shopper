@@ -10,7 +10,7 @@ from shared.events.schemas import (
     ScrapeTaskAssigned,
 )
 
-DEFAULT_SITES = ["jumia", "avito", "electrosalam"]
+DEFAULT_SITES = ["jumia", "avito", "electrosalam", "mafiawaystore"]
 
 
 def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
