@@ -8,7 +8,13 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from agents.webscraping.spiders.base import absolute_url, budget_allows, clean_text
+from agents.webscraping.spiders.base import (
+    absolute_url,
+    budget_allows,
+    clean_text,
+    matches_city,
+    matches_product,
+)
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
@@ -232,10 +238,7 @@ def _dedupe_and_filter(products: list[RawProduct], task: ScrapeTaskAssigned) -> 
 
 
 def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
-    query = task.query
     searchable_text = clean_text(f"{product.title} {product.url}").lower()
-    if query.product:
-        terms = PRODUCT_MATCH_TERMS.get(query.product.lower(), {query.product.lower()})
-        if not any(term in searchable_text for term in terms):
-            return False
-    return True
+    return matches_product(searchable_text, task.query, PRODUCT_MATCH_TERMS) and matches_city(
+        searchable_text, task.query
+    )

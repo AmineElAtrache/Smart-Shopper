@@ -8,7 +8,15 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from agents.webscraping.spiders.base import absolute_url, budget_allows, build_search_text, clean_text
+from agents.webscraping.spiders.base import (
+    absolute_url,
+    budget_allows,
+    build_search_text,
+    clean_text,
+    matches_brand,
+    matches_color,
+    matches_product,
+)
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
@@ -248,12 +256,9 @@ def _build_ikea_search_text(task: ScrapeTaskAssigned) -> str:
 
 
 def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
-    query = task.query
     searchable_text = clean_text(f"{product.title} {product.url}").lower()
-    if query.product:
-        product_terms = {query.product.lower(), PRODUCT_TERMS.get(query.product.lower(), query.product).lower()}
-        if not any(term in searchable_text for term in product_terms):
-            return False
-    if query.color and query.color.lower() not in searchable_text:
-        return False
-    return True
+    return (
+        matches_brand(searchable_text, task.query)
+        and matches_product(searchable_text, task.query)
+        and matches_color(searchable_text, task.query)
+    )
