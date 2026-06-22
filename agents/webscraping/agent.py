@@ -1,4 +1,4 @@
-﻿"""WebScraping Agent for the Smart Shopper MVP.
+"""WebScraping Agent for the Smart Shopper MVP.
 
 The agent now tries real scraper providers first and falls back to deterministic
 mock products when providers fail or return no products.
@@ -10,7 +10,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 
-from agents.webscraping.spiders import avito
+from agents.webscraping.spiders import avito, electrosalam
 from shared.config.env import load_env_file
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -84,12 +84,20 @@ async def scrape_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
     """Try real providers, then fall back to mock products."""
     products: list[RawProduct] = []
 
-    try:
-        products.extend(await avito.scrape(task))
-        if products:
-            print(f"[scraper] avito returned {len(products)} products for {task.request_id}")
-    except Exception as exc:
-        print(f"[scraper] avito failed for {task.request_id}: {exc}")
+    for provider_name, provider in (
+        ("avito", avito),
+        ("electrosalam", electrosalam),
+    ):
+        try:
+            provider_products = await provider.scrape(task)
+            products.extend(provider_products)
+            if provider_products:
+                print(
+                    f"[scraper] {provider_name} returned "
+                    f"{len(provider_products)} products for {task.request_id}"
+                )
+        except Exception as exc:
+            print(f"[scraper] {provider_name} failed for {task.request_id}: {exc}")
 
     if products:
         return products
@@ -97,7 +105,6 @@ async def scrape_products(task: ScrapeTaskAssigned) -> list[RawProduct]:
     fallback = build_mock_products(task)
     print(f"[scraper] using mock fallback with {len(fallback)} products for {task.request_id}")
     return fallback
-
 
 @dataclass(frozen=True)
 class MockScraperConfig:

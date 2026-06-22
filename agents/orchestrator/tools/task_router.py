@@ -1,4 +1,4 @@
-﻿"""Build scraping tasks from extracted entities."""
+"""Build scraping tasks from extracted entities."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from shared.events.schemas import (
     ScrapeTaskAssigned,
 )
 
-DEFAULT_SITES = ["jumia", "avito"]
+DEFAULT_SITES = ["jumia", "avito", "electrosalam"]
 
 
 def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
