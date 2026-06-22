@@ -22,6 +22,29 @@ def test_avito_build_search_url_uses_product_query() -> None:
     assert "phone" in url
 
 
+def test_avito_build_search_url_uses_city_and_color_entities() -> None:
+    task = ScrapeTaskAssigned(
+        request_id="req_002",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        query=ProductQuery(
+            product="phone",
+            brand="Samsung",
+            budget=3000,
+            city="Casablanca",
+            color="black",
+        ),
+    )
+
+    url = build_search_url(task)
+
+    assert url.startswith("https://www.avito.ma/fr/casablanca/")
+    assert "Samsung" in url
+    assert "telephone" in url
+    assert "noir" in url
+    assert "3000" not in url
+
+
 def test_avito_parse_products_from_fixture() -> None:
     html = open("tests/fixtures/avito_search.html", encoding="utf-8").read()
 

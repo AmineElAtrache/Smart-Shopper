@@ -1,4 +1,4 @@
-"""Build scraping tasks from extracted entities."""
+﻿"""Build scraping tasks from extracted entities."""
 
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
     brand: str | None = None
     budget: float | None = None
     currency = "MAD"
+    city: str | None = None
+    color: str | None = None
     quality: str | None = None
     sites = list(DEFAULT_SITES)
 
@@ -26,11 +28,15 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
             product = entity.value
         elif entity.type == EntityType.BRAND:
             brand = entity.value
-        elif entity.type == EntityType.BUDGET:
+        elif entity.type in {EntityType.PRICE, EntityType.BUDGET}:
             budget = float(entity.value)
             currency = entity.attributes.get("currency", currency)
         elif entity.type == EntityType.CURRENCY:
             currency = entity.value
+        elif entity.type == EntityType.CITY:
+            city = entity.value
+        elif entity.type == EntityType.COLOR:
+            color = entity.value
         elif entity.type == EntityType.QUALITY:
             quality = entity.value
 
@@ -39,6 +45,8 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
         brand=brand,
         budget=budget,
         currency=currency,
+        city=city,
+        color=color,
         quality=quality,
         sites=sites,
     )

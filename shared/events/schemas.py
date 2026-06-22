@@ -1,4 +1,4 @@
-"""Shared event schemas for the Kafka-based agent pipeline."""
+﻿"""Shared event schemas for the Kafka-based agent pipeline."""
 
 from __future__ import annotations
 
@@ -40,8 +40,11 @@ class EntityType(StrEnum):
     TARGET = "target"
     PRODUCT = "product"
     BRAND = "brand"
+    PRICE = "price"
     BUDGET = "budget"
     CURRENCY = "currency"
+    CITY = "city"
+    COLOR = "color"
     QUALITY = "quality"
     INTENT = "intent"
     SITE = "site"
@@ -90,6 +93,8 @@ class ProductQuery(BaseModel):
     brand: str | None = None
     budget: float | None = Field(default=None, ge=0)
     currency: Currency = Currency.MAD
+    city: str | None = None
+    color: str | None = None
     quality: str | None = None
     sites: list[str] = Field(default_factory=lambda: ["jumia", "avito"])
 
