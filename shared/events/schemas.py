@@ -1,4 +1,4 @@
-﻿"""Shared event schemas for the Kafka-based agent pipeline."""
+"""Shared event schemas for the Kafka-based agent pipeline."""
 
 from __future__ import annotations
 
@@ -96,7 +96,7 @@ class ProductQuery(BaseModel):
     city: str | None = None
     color: str | None = None
     quality: str | None = None
-    sites: list[str] = Field(default_factory=lambda: ["jumia", "avito"])
+    sites: list[str] = Field(default_factory=lambda: ["jumia", "avito", "electrosalam"])
 
 
 class ScrapeTaskAssigned(UserEvent):
