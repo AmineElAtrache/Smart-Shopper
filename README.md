@@ -1,4 +1,4 @@
-﻿# Smart Shopper
+# Smart Shopper
 
 Smart Shopper is a PFA MVP for an AI shopping intelligence bot. The first goal is to prove this flow:
 
@@ -253,9 +253,30 @@ Important: never commit your real Telegram token. `.env` is ignored by Git.
 
 ## Install Dependencies
 
+Recommended install for local development:
+
 ```powershell
 python -m pip install -e ".[dev]"
+python -m playwright install chromium
 ```
+
+The first command installs the Python package, including scraping dependencies such as Playwright and BeautifulSoup. The second command installs the local Chromium browser used by Playwright for live marketplace scraping.
+
+Alternative requirements-file install:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+```
+## Docker Python Image
+
+The Python base image installs the project dependencies and Playwright Chromium runtime:
+
+```powershell
+docker build -f docker/Dockerfile.python.base -t smart-shopper-python-base .
+```
+
+Use this image as the base for scraper, orchestrator, gateway, and agent containers.
 
 ## Start Infrastructure
 
@@ -380,7 +401,7 @@ pytest -q
 Current expected result:
 
 ```text
-13 passed
+20 passed
 ```
 
 ## Useful Kafka Topics
