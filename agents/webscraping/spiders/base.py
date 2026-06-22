@@ -15,7 +15,7 @@ SPACE_RE = re.compile(r"\s+")
 
 def build_search_text(task: ScrapeTaskAssigned) -> str:
     query = task.query
-    parts = [query.brand, query.product]
+    parts = [query.brand, query.product, query.color]
     return " ".join(part for part in parts if part).strip() or "phone"
 
 
