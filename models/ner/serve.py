@@ -55,6 +55,7 @@ PRODUCT_KEYWORDS = {
     "laptop": {"laptop", "pc", "ordinateur", "portable", "pc portable"},
     "tablet": {"tablet", "tablette", "ipad"},
     "headphones": {"headphones", "casque", "ecouteurs"},
+    "fridge": {"fridge", "refrigerator", "refrigerateur", "frigo", "telaja", "thalaja"},
     "golf": {"golf"},
     "car": {"voiture", "tomobile", "tomobil", "tonobile", "tonobil", "auto", "car"},
 }
@@ -67,6 +68,23 @@ PRODUCT_VALUE_ALIASES = {
     "tel": "phone",
     "smartphone": "phone",
     "voiture": "car",
+    "telaja": "fridge",
+    "thalaja": "fridge",
+    "frigo": "fridge",
+    "refrigerateur": "fridge",
+    "refrigerator": "fridge",
+}
+QUALITY_ALIASES = {
+    "jdida": "new",
+    "jdid": "new",
+    "new": "new",
+    "neuf": "new",
+    "occasion": "used",
+    "mosta3mal": "used",
+    "used": "used",
+    "maghalyach": "affordable",
+    "rkhis": "affordable",
+    "nadi": "good",
 }
 KNOWN_BRAND_VALUES = {brand.lower() for brand in BRANDS.values()} | set(BRANDS)
 UNKNOWN_BRAND_MIN_CONFIDENCE = 0.8
@@ -137,6 +155,10 @@ SPELLING_ALIASES = {
     "tonobile": "voiture",
     "tonobil": "voiture",
     "tomobila": "voiture",
+    "telaja": "fridge",
+    "thalaja": "fridge",
+    "frigo": "fridge",
+    "refrigerateur": "fridge",
     "k7la": "black",
     "k7al": "black",
     "kehla": "black",
@@ -169,7 +191,8 @@ LABEL_ALIASES = {
 }
 
 BUDGET_PATTERN = re.compile(
-    r"(?P<amount>\d+(?:[.,]\d+)?)\s*(?P<currency>mad|dh|dhs|dirham|dirhams)?",
+    r"(?<![A-Za-z0-9])(?P<amount>\d+(?:[.,]\d+)?)\s*"
+    r"(?P<currency>mad|ddh|dh|dhs|dirham|dirhams)?(?![A-Za-z0-9])",
     re.IGNORECASE,
 )
 TOKEN_PATTERN = re.compile(r"[\w]+", re.UNICODE)
@@ -368,6 +391,10 @@ def _derive_context_entities(
     if city:
         entities.append(ExtractedEntity(type=EntityType.CITY, value=city, confidence=0.7))
 
+    quality = _detect_alias(normalized_text, QUALITY_ALIASES)
+    if quality:
+        entities.append(ExtractedEntity(type=EntityType.QUALITY, value=quality, confidence=0.7))
+
     color = _detect_alias(normalized_text, COLOR_ALIASES)
     if color:
         entities.append(ExtractedEntity(type=EntityType.COLOR, value=color, confidence=0.7))
@@ -462,6 +489,8 @@ def _normalize_value(entity_type: EntityType, value: str) -> str:
         return CITY_ALIASES.get(compact, compact)
     if entity_type == EntityType.COLOR:
         return COLOR_ALIASES.get(compact, compact)
+    if entity_type == EntityType.QUALITY:
+        return QUALITY_ALIASES.get(compact, compact)
     if entity_type == EntityType.INTENT:
         return "watch" if compact in {"watch", "monitor", "notify", "hbet"} else "search"
     return compact if entity_type in {EntityType.QUALITY, EntityType.SITE} else value
@@ -477,7 +506,7 @@ def _normalize_amount(value: str) -> tuple[float | None, str]:
         return None, "MAD"
     amount = float(match.group("amount").replace(",", "."))
     raw_currency = (match.group("currency") or "MAD").upper()
-    currency = "MAD" if raw_currency in {"DH", "DHS", "DIRHAM", "DIRHAMS"} else raw_currency
+    currency = "MAD" if raw_currency in {"DDH", "DH", "DHS", "DIRHAM", "DIRHAMS"} else raw_currency
     return amount, currency
 
 
@@ -498,7 +527,13 @@ def _detect_product(normalized: str) -> str | None:
 
 def _detect_model_after_brand(normalized: str) -> str | None:
     tokens = TOKEN_PATTERN.findall(normalized)
-    blocked = set(BRANDS) | set(CITY_ALIASES) | set(COLOR_ALIASES) | MODEL_IGNORED_TOKENS
+    blocked = (
+        set(BRANDS)
+        | set(CITY_ALIASES)
+        | set(COLOR_ALIASES)
+        | set(QUALITY_ALIASES)
+        | MODEL_IGNORED_TOKENS
+    )
 
     for index, token in enumerate(tokens):
         if token not in BRANDS:
