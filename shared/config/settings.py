@@ -45,6 +45,7 @@ class Settings(BaseSettings):
 
     scrape_timeout_seconds: float = Field(default=20.0, alias="SCRAPE_TIMEOUT_SECONDS")
     scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
+    scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
 
     llm_provider: str = Field(default="template", alias="LLM_PROVIDER")

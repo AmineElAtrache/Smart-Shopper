@@ -31,7 +31,9 @@ async def run_smoke_test(timeout_seconds: float = 60.0) -> OutboundResponse:
     await producer.start()
     await consumer.start()
     try:
+        print(f"Publishing msg.inbound request_id={inbound.request_id} to {settings.kafka_bootstrap_servers}")
         await producer.publish(MSG_INBOUND, inbound, key=inbound.request_id)
+        print(f"Waiting up to {timeout_seconds:.0f}s for response.outbound request_id={inbound.request_id}")
 
         async def wait_for_response() -> OutboundResponse:
             async for event in consumer.events(OutboundResponse):
