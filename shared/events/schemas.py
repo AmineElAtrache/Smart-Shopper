@@ -1,4 +1,4 @@
-"""Shared event schemas for the Kafka-based agent pipeline."""
+﻿"""Shared event schemas for the Kafka-based agent pipeline."""
 
 from __future__ import annotations
 
@@ -50,6 +50,13 @@ class GovernanceSeverity(StrEnum):
     ERROR = "error"
     CRITICAL = "critical"
 
+
+class GovernanceAction(StrEnum):
+    AUDIT = "audit"
+    WARN = "warn"
+    THROTTLE = "throttle"
+    HALT = "halt"
+    QUARANTINE = "quarantine"
 
 class EntityType(StrEnum):
     TARGET = "target"

@@ -1,4 +1,4 @@
-"""Application settings loaded from environment variables."""
+﻿"""Application settings loaded from environment variables."""
 
 from __future__ import annotations
 
@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     scrape_timeout_seconds: float = Field(default=20.0, alias="SCRAPE_TIMEOUT_SECONDS")
     scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
+    user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")
+    governance_strict_robots: bool = Field(default=False, alias="GOVERNANCE_STRICT_ROBOTS")
+    governance_quarantine_pii: bool = Field(default=True, alias="GOVERNANCE_QUARANTINE_PII")
 
     llm_provider: str = Field(default="template", alias="LLM_PROVIDER")
     llm_http_base_url: str = Field(default="http://localhost:8081", alias="LLM_HTTP_BASE_URL")
