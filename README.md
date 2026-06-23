@@ -64,7 +64,7 @@ Responsibilities:
 - Provides JSON encode/decode helpers.
 - Provides Kafka producer/consumer wrappers.
 
-#### Hugging Face NER With Local Fallback
+#### Hugging Face NER With Context Enrichment
 
 File:
 
@@ -74,9 +74,10 @@ models/ner/serve.py
 
 Responsibilities:
 
-- Uses the fine-tuned Hugging Face model `ElAtrachAMINE/darija-ner-xlmroberta` when enabled.
+- Uses the fine-tuned Hugging Face model `ElAtrachAMINE/darija-ner-xlmroberta`.
+- Downloads the model once when needed, then reuses the local Hugging Face cache.
 - Normalizes NER output into the shared entity contract used by the Orchestrator.
-- Falls back to deterministic local rules when model dependencies or weights are not available.
+- Enriches model output with shopping context such as Darija aliases, prices, colors, and product model names.
 - Extracts brand, product, budget, currency, city, color, quality, intent, and site hints.
 
 Example:
@@ -261,9 +262,8 @@ SMART_SHOPPER_NER_MODEL=ElAtrachAMINE/darija-ner-xlmroberta
 Backend modes:
 
 ```text
-rules = use only the local rule fallback
-auto = use cached Hugging Face model if present, otherwise fallback rules
-hf    = download/use the Hugging Face model and fail loudly if it cannot load
+auto = download/use the Hugging Face model, then reuse the local cache
+hf    = same model path, intended for explicit live validation
 ```
 
 Important: never commit your real Telegram token. `.env` is ignored by Git.

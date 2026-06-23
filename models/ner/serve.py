@@ -1,8 +1,8 @@
 """NER service adapter for Moroccan shopping queries.
 
 The production path uses the fine-tuned Hugging Face token-classification model.
-A rule-based fallback stays available so local tests and development keep working
-when model dependencies or cached weights are not installed yet.
+Lightweight context enrichment fills normalized shopping fields that token models
+can miss, such as product models in "hp omen" or Darija price/color aliases.
 """
 
 from __future__ import annotations
@@ -116,33 +116,69 @@ BUDGET_PATTERN = re.compile(
     re.IGNORECASE,
 )
 TOKEN_PATTERN = re.compile(r"[\w]+", re.UNICODE)
+MODEL_STOP_TOKENS = {
+    "b",
+    "bi",
+    "f",
+    "fi",
+    "fel",
+    "l",
+    "li",
+    "we",
+    "w",
+    "ou",
+    "o",
+    "ana",
+    "3endi",
+    "hi",
+    "budget",
+    "price",
+    "prix",
+    "under",
+    "ta7t",
+    "avec",
+    "with",
+}
+MODEL_IGNORED_TOKENS = {
+    "bghit",
+    "baghi",
+    "kan9lb",
+    "nqelleb",
+    "chi",
+    "wahed",
+    "jdida",
+    "mosta3mal",
+    "used",
+    "new",
+    "neuf",
+    "occasion",
+    "mad",
+    "dh",
+    "dhs",
+    "dirham",
+    "dirhams",
+}
 
 
 def extract_entities(text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
     """Extract normalized entities for the orchestrator.
 
-    The public contract intentionally stays stable: callers receive shared
-    ``ExtractedEntity`` objects no matter whether the Hugging Face model or the
-    local fallback produced the prediction.
+    ``SMART_SHOPPER_NER_BACKEND=auto`` is the default production mode. It loads
+    the Hugging Face model from the local cache when available, or downloads it
+    once and reuses the cached files afterwards.
     """
     model_entities = _extract_with_model(text)
-    fallback_entities = _extract_with_rules(text, locale_hint=locale_hint)
-    return _merge_entities(model_entities, fallback_entities)
+    context_entities = _derive_context_entities(text, locale_hint=locale_hint)
+    return _merge_entities(model_entities, context_entities)
 
 
 def _extract_with_model(text: str) -> list[ExtractedEntity]:
     backend = os.getenv("SMART_SHOPPER_NER_BACKEND", "auto").lower()
-    if backend == "rules":
-        return []
+    if backend not in {"auto", "hf"}:
+        raise ValueError("SMART_SHOPPER_NER_BACKEND must be 'auto' or 'hf'")
 
-    try:
-        model_id = os.getenv("SMART_SHOPPER_NER_MODEL", DEFAULT_MODEL_ID)
-        allow_download = backend == "hf"
-        predictions = _get_pipeline(model_id, allow_download)(text)
-    except Exception:
-        if backend == "hf":
-            raise
-        return []
+    model_id = os.getenv("SMART_SHOPPER_NER_MODEL", DEFAULT_MODEL_ID)
+    predictions = _get_pipeline(model_id)(text)
 
     entities: list[ExtractedEntity] = []
     for prediction in predictions:
@@ -152,15 +188,12 @@ def _extract_with_model(text: str) -> list[ExtractedEntity]:
     return entities
 
 
-@lru_cache(maxsize=2)
-def _get_pipeline(model_id: str, allow_download: bool) -> Any:
+@lru_cache(maxsize=1)
+def _get_pipeline(model_id: str) -> Any:
     from transformers import AutoModelForTokenClassification, AutoTokenizer, pipeline
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=not allow_download)
-    model = AutoModelForTokenClassification.from_pretrained(
-        model_id,
-        local_files_only=not allow_download,
-    )
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForTokenClassification.from_pretrained(model_id)
     return pipeline(
         "token-classification",
         model=model,
@@ -202,25 +235,25 @@ def _prediction_to_entity(prediction: dict[str, Any]) -> ExtractedEntity | None:
     )
 
 
-def _extract_with_rules(text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
+def _derive_context_entities(text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
     normalized = text.lower().strip()
     entities: list[ExtractedEntity] = []
 
     brand = _detect_brand(normalized)
     if brand:
-        entities.append(ExtractedEntity(type=EntityType.BRAND, value=brand, confidence=0.9))
+        entities.append(ExtractedEntity(type=EntityType.BRAND, value=brand, confidence=0.7))
 
-    product = _detect_product(normalized)
+    product = _detect_product(normalized) or _detect_model_after_brand(normalized)
     if product:
-        entities.append(ExtractedEntity(type=EntityType.PRODUCT, value=product, confidence=0.85))
+        entities.append(ExtractedEntity(type=EntityType.PRODUCT, value=product, confidence=0.7))
 
     city = _detect_alias(normalized, CITY_ALIASES)
     if city:
-        entities.append(ExtractedEntity(type=EntityType.CITY, value=city, confidence=0.8))
+        entities.append(ExtractedEntity(type=EntityType.CITY, value=city, confidence=0.7))
 
     color = _detect_alias(normalized, COLOR_ALIASES)
     if color:
-        entities.append(ExtractedEntity(type=EntityType.COLOR, value=color, confidence=0.8))
+        entities.append(ExtractedEntity(type=EntityType.COLOR, value=color, confidence=0.7))
 
     budget = _detect_budget(normalized)
     if budget:
@@ -230,7 +263,7 @@ def _extract_with_rules(text: str, locale_hint: str | None = None) -> list[Extra
             ExtractedEntity(
                 type=EntityType.PRICE,
                 value=str(amount),
-                confidence=0.9,
+                confidence=0.7,
                 attributes=attributes,
             )
         )
@@ -238,16 +271,16 @@ def _extract_with_rules(text: str, locale_hint: str | None = None) -> list[Extra
             ExtractedEntity(
                 type=EntityType.BUDGET,
                 value=str(amount),
-                confidence=0.9,
+                confidence=0.7,
                 attributes=attributes,
             )
         )
-        entities.append(ExtractedEntity(type=EntityType.CURRENCY, value=currency, confidence=0.9))
+        entities.append(ExtractedEntity(type=EntityType.CURRENCY, value=currency, confidence=0.7))
 
     if any(word in normalized for word in ("notify", "watch", "monitor", "price drop", "hbet")):
-        entities.append(ExtractedEntity(type=EntityType.INTENT, value="watch", confidence=0.75))
+        entities.append(ExtractedEntity(type=EntityType.INTENT, value="watch", confidence=0.7))
     else:
-        entities.append(ExtractedEntity(type=EntityType.INTENT, value="search", confidence=0.8))
+        entities.append(ExtractedEntity(type=EntityType.INTENT, value="search", confidence=0.7))
 
     if locale_hint:
         entities.append(
@@ -263,12 +296,12 @@ def _extract_with_rules(text: str, locale_hint: str | None = None) -> list[Extra
 
 
 def _merge_entities(
-    primary: list[ExtractedEntity], fallback: list[ExtractedEntity]
+    primary: list[ExtractedEntity], context: list[ExtractedEntity]
 ) -> list[ExtractedEntity]:
     merged: list[ExtractedEntity] = []
     seen: set[EntityType] = set()
 
-    for entity in [*primary, *fallback]:
+    for entity in [*primary, *context]:
         if entity.type in seen:
             continue
         merged.append(entity)
@@ -337,6 +370,23 @@ def _detect_product(normalized: str) -> str | None:
     for product, keywords in PRODUCT_KEYWORDS.items():
         if any(keyword in normalized for keyword in keywords):
             return product
+    return None
+
+
+def _detect_model_after_brand(normalized: str) -> str | None:
+    tokens = TOKEN_PATTERN.findall(normalized)
+    blocked = set(BRANDS) | set(CITY_ALIASES) | set(COLOR_ALIASES) | MODEL_IGNORED_TOKENS
+
+    for index, token in enumerate(tokens):
+        if token not in BRANDS:
+            continue
+        for candidate in tokens[index + 1 : index + 4]:
+            if candidate in MODEL_STOP_TOKENS:
+                break
+            if candidate in blocked or BUDGET_PATTERN.fullmatch(candidate):
+                continue
+            if len(candidate) >= 2:
+                return candidate
     return None
 
 
