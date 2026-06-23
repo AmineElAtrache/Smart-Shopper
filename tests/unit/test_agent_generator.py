@@ -11,6 +11,7 @@ from shared.events.schemas import (
     ScoreBreakdown,
 )
 from shared.events.topics import RESPONSE_OUTBOUND
+from scripts.test_llm_generator import build_sample_ranked
 
 
 class FakeProducer:
@@ -151,3 +152,11 @@ def test_agent_generator_skips_ambient_watch_ranked_events() -> None:
 
     assert response is None
     assert producer.published == []
+
+def test_llm_generator_script_sample_ranked_has_required_facts() -> None:
+    event = build_sample_ranked()
+
+    assert event.request_id == "req_llm_test"
+    assert len(event.products) == 3
+    assert event.products[0].title == "Samsung Galaxy A15 128GB"
+    assert str(event.products[0].url) == "https://example.com/jumia-a15"
