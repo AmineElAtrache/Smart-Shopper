@@ -108,7 +108,7 @@ Preprocessing normalizes noisy text:
 samsng -> samsung
 phne -> phone
 casaa -> casablanca
-fs -> fes
+fes -> fes
 kehla / k7la -> black
 tomobil / tonobil -> voiture
 telaja / frigo / refrigerateur -> fridge

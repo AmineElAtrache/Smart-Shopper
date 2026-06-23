@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import UTC, datetime
 from typing import TypeVar
 
@@ -15,6 +15,22 @@ from shared.runtime.metrics import get_default_metrics
 from shared.runtime.retry import retry_async
 
 EventT = TypeVar("EventT", bound=BaseModel)
+
+KAFKA_START_RETRY_EXCEPTIONS = (Exception,)
+
+
+async def _start_with_retry(
+    start_callable: Callable[[], Awaitable[None]],
+    *,
+    attempts: int,
+    base_delay_seconds: float,
+) -> None:
+    await retry_async(
+        start_callable,
+        attempts=attempts,
+        base_delay_seconds=base_delay_seconds,
+        retry_exceptions=KAFKA_START_RETRY_EXCEPTIONS,
+    )
 
 
 def encode_event(event: BaseModel) -> bytes:
@@ -33,10 +49,14 @@ class KafkaEventProducer:
         client_id: str = "smart-shopper",
         *,
         publish_attempts: int = 3,
+        connect_attempts: int = 20,
+        connect_base_delay_seconds: float = 1.0,
     ) -> None:
         from aiokafka import AIOKafkaProducer
 
         self._publish_attempts = publish_attempts
+        self._connect_attempts = connect_attempts
+        self._connect_base_delay_seconds = connect_base_delay_seconds
         self._producer = AIOKafkaProducer(
             bootstrap_servers=bootstrap_servers,
             client_id=client_id,
@@ -45,7 +65,11 @@ class KafkaEventProducer:
         )
 
     async def start(self) -> None:
-        await self._producer.start()
+        await _start_with_retry(
+            self._producer.start,
+            attempts=self._connect_attempts,
+            base_delay_seconds=self._connect_base_delay_seconds,
+        )
 
     async def stop(self) -> None:
         await self._producer.stop()
@@ -92,9 +116,13 @@ class KafkaEventConsumer:
         group_id: str,
         client_id: str = "smart-shopper",
         auto_offset_reset: str = "earliest",
+        connect_attempts: int = 20,
+        connect_base_delay_seconds: float = 1.0,
     ) -> None:
         from aiokafka import AIOKafkaConsumer
 
+        self._connect_attempts = connect_attempts
+        self._connect_base_delay_seconds = connect_base_delay_seconds
         self._consumer = AIOKafkaConsumer(
             *topics,
             bootstrap_servers=bootstrap_servers,
@@ -104,7 +132,11 @@ class KafkaEventConsumer:
         )
 
     async def start(self) -> None:
-        await self._consumer.start()
+        await _start_with_retry(
+            self._consumer.start,
+            attempts=self._connect_attempts,
+            base_delay_seconds=self._connect_base_delay_seconds,
+        )
 
     async def stop(self) -> None:
         await self._consumer.stop()

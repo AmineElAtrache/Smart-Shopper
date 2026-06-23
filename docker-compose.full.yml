@@ -18,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.ner
+    restart: unless-stopped
     environment:
       SERVICE_NAME: ner
       NER_GRPC_PORT: "50051"
@@ -33,6 +34,7 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.orchestrator.service
+    restart: unless-stopped
     environment: &agent_env
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       REDIS_URL: redis://redis:6379/0
@@ -42,10 +44,14 @@ services:
       NER_GRPC_PORT: "50051"
       ENVIRONMENT: compose
     depends_on:
-      - kafka
-      - redis
-      - mongodb
-      - ner
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      ner:
+        condition: service_healthy
 
   scraper:
     build:
@@ -53,11 +59,13 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.webscraping.agent
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: scraper
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   decision:
     build:
@@ -65,11 +73,13 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.decision.service
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: decision
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   generator:
     build:
@@ -77,13 +87,16 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.agent_generator.agent
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: generator
       LLM_PROVIDER: template
     depends_on:
-      - kafka
-      - redis
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   ambient:
     build:
@@ -91,12 +104,15 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.ambient_scheduler.scheduler
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: ambient
     depends_on:
-      - kafka
-      - mongodb
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
 
   governance:
     build:
@@ -104,11 +120,13 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: agents.governance.agent
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: governance
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   gateway:
     build:
@@ -116,13 +134,16 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_MODULE: gateway.telegram_proxy
+    restart: unless-stopped
     environment:
       <<: *agent_env
       SERVICE_NAME: gateway
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     depends_on:
-      - kafka
-      - mongodb
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
 
 volumes:
   redis_data:
