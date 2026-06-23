@@ -20,6 +20,10 @@ class FakeNerPipeline:
             predictions.append({"entity_group": "BRAND", "word": "iPhone", "score": 0.99})
         if "phone" in normalized:
             predictions.append({"entity_group": "PRODUCT", "word": "phone", "score": 0.98})
+        if "pc" in normalized:
+            predictions.append({"entity_group": "PRODUCT", "word": "pc", "score": 0.99})
+        if "ykone" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "Kone", "score": 0.58})
         if "hp" in normalized:
             predictions.append({"entity_group": "BRAND", "word": "hp", "score": 0.99})
         if "fes" in normalized:
@@ -101,6 +105,16 @@ def test_ner_preprocesses_accents_and_darija_aliases() -> None:
     assert by_type["product"].value == "phone"
     assert by_type["city"].value == "fes"
     assert by_type["budget"].value == "4500.0"
+
+
+def test_ner_filters_weak_false_brand_from_darija_context() -> None:
+    entities = extract_entities("kan9lebe 3la chi pc ykone nadi mayfotch 3000ddh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert "brand" not in by_type
+    assert by_type["product"].value == "laptop"
+    assert by_type["budget"].value == "3000.0"
+    assert by_type["budget"].attributes["currency"] == "MAD"
 
 
 def test_task_router_maps_price_city_and_color_entities() -> None:

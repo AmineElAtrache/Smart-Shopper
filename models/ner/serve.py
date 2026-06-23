@@ -58,6 +58,18 @@ PRODUCT_KEYWORDS = {
     "golf": {"golf"},
     "car": {"voiture", "tomobile", "tomobil", "tonobile", "tonobil", "auto", "car"},
 }
+PRODUCT_VALUE_ALIASES = {
+    "pc": "laptop",
+    "ordinateur": "laptop",
+    "portable": "laptop",
+    "pc portable": "laptop",
+    "telephone": "phone",
+    "tel": "phone",
+    "smartphone": "phone",
+    "voiture": "car",
+}
+KNOWN_BRAND_VALUES = {brand.lower() for brand in BRANDS.values()} | set(BRANDS)
+UNKNOWN_BRAND_MIN_CONFIDENCE = 0.8
 
 CITY_ALIASES = {
     "casablanca": "casablanca",
@@ -320,6 +332,9 @@ def _prediction_to_entity(prediction: dict[str, Any]) -> ExtractedEntity | None:
         return None
 
     confidence = float(prediction.get("score") or 0.75)
+    if entity_type == EntityType.BRAND and _is_low_confidence_unknown_brand(value, confidence):
+        return None
+
     attributes: dict[str, str] = {}
     if entity_type in {EntityType.PRICE, EntityType.BUDGET}:
         amount, currency = _normalize_amount(value)
@@ -441,13 +456,19 @@ def _normalize_value(entity_type: EntityType, value: str) -> str:
     compact = value.lower()
     if entity_type == EntityType.BRAND:
         return BRANDS.get(compact, value.title())
+    if entity_type == EntityType.PRODUCT:
+        return PRODUCT_VALUE_ALIASES.get(compact, compact)
     if entity_type == EntityType.CITY:
         return CITY_ALIASES.get(compact, compact)
     if entity_type == EntityType.COLOR:
         return COLOR_ALIASES.get(compact, compact)
     if entity_type == EntityType.INTENT:
         return "watch" if compact in {"watch", "monitor", "notify", "hbet"} else "search"
-    return compact if entity_type in {EntityType.PRODUCT, EntityType.QUALITY, EntityType.SITE} else value
+    return compact if entity_type in {EntityType.QUALITY, EntityType.SITE} else value
+
+
+def _is_low_confidence_unknown_brand(value: str, confidence: float) -> bool:
+    return value.lower() not in KNOWN_BRAND_VALUES and confidence < UNKNOWN_BRAND_MIN_CONFIDENCE
 
 
 def _normalize_amount(value: str) -> tuple[float | None, str]:
