@@ -98,6 +98,20 @@ def ranked_product(price: float, title: str = "HP Omen") -> RankedProduct:
     )
 
 
+
+def test_ambient_watch_defaults_to_daily_interval_but_allows_premium_hourly_override() -> None:
+    normal_watch = AmbientWatch(
+        user_id="telegram_123",
+        query=ProductQuery(product="laptop", brand="HP", budget=6000),
+    )
+    premium_watch = AmbientWatch(
+        user_id="telegram_123",
+        query=ProductQuery(product="laptop", brand="HP", budget=6000),
+        interval_minutes=60,
+    )
+
+    assert normal_watch.interval_minutes == 1440
+    assert premium_watch.interval_minutes == 60
 def test_build_watch_notification_for_price_drop() -> None:
     message = build_watch_notification(product=ranked_product(5500), previous_price=6000)
 

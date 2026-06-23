@@ -204,7 +204,7 @@ class CacheWriteRequest(UserEvent):
 
 class AmbientWatch(UserEvent):
     query: ProductQuery
-    interval_minutes: int = Field(default=60, ge=15)
+    interval_minutes: int = Field(default=1440, ge=15)
     expires_at: datetime | None = None
     status: WatchStatus = WatchStatus.CREATED
     last_best_price: float | None = Field(default=None, ge=0)
