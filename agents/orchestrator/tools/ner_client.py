@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import grpc
 
-from generated.ner.v1 import ner_pb2, ner_pb2_grpc
 from models.ner.serve import extract_entities
 from shared.events.schemas import ExtractedEntity
 
@@ -20,6 +19,8 @@ class GrpcNerClient:
         self._timeout = timeout
 
     async def extract(self, text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
+        from generated.ner.v1 import ner_pb2, ner_pb2_grpc
+
         async with grpc.aio.insecure_channel(self._target) as channel:
             stub = ner_pb2_grpc.NerServiceStub(channel)
             response = await stub.Extract(

@@ -25,6 +25,17 @@ def test_rule_based_ner_extracts_city_and_color() -> None:
     assert by_type["color"].value == "black"
 
 
+def test_ner_normalizes_darija_vehicle_query() -> None:
+    entities = extract_entities("bghit tomobile golf kehla we ana 3endi hi 50000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Volkswagen"
+    assert by_type["product"].value == "golf"
+    assert by_type["color"].value == "black"
+    assert by_type["budget"].value == "50000.0"
+    assert by_type["budget"].attributes["currency"] == "MAD"
+
+
 def test_task_router_maps_price_city_and_color_entities() -> None:
     query = build_product_query(
         [
