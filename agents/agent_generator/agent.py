@@ -1,10 +1,11 @@
-﻿"""Agent Generator for final user-facing Smart Shopper responses."""
+"""Agent Generator for final user-facing Smart Shopper responses."""
 
 from __future__ import annotations
 
 import asyncio
 import os
 from dataclasses import dataclass
+from typing import Mapping
 
 from agents.agent_generator.tools.llm_client import LlmClient
 from agents.agent_generator.tools.response_validator import (
@@ -22,19 +23,30 @@ from shared.memory.factory import create_behavioral_memory, create_global_memory
 from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+DEFAULT_PRODUCT_LABELS = {
+    "price": "Price",
+    "source": "Source",
+    "score": "Score",
+    "link": "Link",
+}
 
 
-def build_product_block(products: list[RankedProduct]) -> str:
+def build_product_block(
+    products: list[RankedProduct],
+    *,
+    labels: Mapping[str, str] | None = None,
+) -> str:
+    label_map = {**DEFAULT_PRODUCT_LABELS, **dict(labels or {})}
     top_products = products[:3]
     lines: list[str] = []
     for index, product in enumerate(top_products, start=1):
         lines.extend(
             [
                 f"{index}. {product.title}",
-                f"   Price: {product.price:g} {product.currency}",
-                f"   Source: {product.source}",
-                f"   Score: {product.score}/100",
-                f"   Link: {product.url}",
+                f"   {label_map['price']}: {product.price:g} {product.currency}",
+                f"   {label_map['source']}: {product.source}",
+                f"   {label_map['score']}: {product.score}/100",
+                f"   {label_map['link']}: {product.url}",
                 "",
             ]
         )
@@ -45,18 +57,27 @@ def build_response_message(products: list[RankedProduct]) -> str:
     """Build a reliable response from ranked products without an LLM."""
     if not products:
         return (
-            "I could not find good product options for this request yet. "
-            "Try a different budget, brand, or product name."
+            "Hi, I could not find product options yet. "
+            "Send me what you are looking for and your budget, and I will help you choose."
         )
 
     top_products = products[:3]
     best = top_products[0]
-    intro = f"I found {len(top_products)} good option{'s' if len(top_products) != 1 else ''} for you:"
+    intro = f"I found {len(top_products)} good option{'s' if len(top_products) != 1 else ''} for you."
     best_reason = (
         f"Best choice: {best.title} because it has the strongest overall score, "
         f"a good price, and availability marked as {best.availability}."
     )
-    return build_composed_message(products, intro=intro, best_reason=best_reason)
+    why_this_order = "I ranked them by value, trust, quality, and availability."
+    next_step = "Open the best link first, then verify the seller and delivery details before buying."
+    return build_composed_message(
+        products,
+        intro=intro,
+        product_header="Options:",
+        best_reason=best_reason,
+        why_this_order=why_this_order,
+        next_step=next_step,
+    )
 
 
 def build_composed_message(
@@ -64,11 +85,17 @@ def build_composed_message(
     *,
     intro: str,
     best_reason: str,
+    product_header: str | None = None,
     why_this_order: str | None = None,
     next_step: str | None = None,
+    labels: Mapping[str, str] | None = None,
 ) -> str:
-    product_block = build_product_block(products)
-    parts = [intro.strip(), product_block, best_reason.strip()]
+    product_block = build_product_block(products, labels=labels)
+    parts = [intro.strip()]
+    if product_header:
+        parts.append(product_header.strip())
+    parts.append(product_block)
+    parts.append(best_reason.strip())
     if why_this_order:
         parts.append(why_this_order.strip())
     if next_step:
