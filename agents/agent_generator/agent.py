@@ -1,4 +1,4 @@
-"""Template-based Agent Generator for the Smart Shopper MVP."""
+﻿"""Agent Generator for final user-facing Smart Shopper responses."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass
 
 from agents.agent_generator.tools.llm_client import LlmClient
+from agents.agent_generator.tools.response_validator import ResponseValidationError, validate_response
 from shared.config import Settings, get_settings
 from shared.config.env import load_env_file
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
@@ -20,7 +21,7 @@ DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 
 
 def build_response_message(products: list[RankedProduct]) -> str:
-    """Build a readable MVP response from ranked products."""
+    """Build a reliable response from ranked products without an LLM."""
     if not products:
         return (
             "I could not find good product options for this request yet. "
@@ -102,7 +103,14 @@ class AgentGenerator:
             self._global_memory = self._global_memory or create_global_memory(settings)
             self._behavioral_memory = self._behavioral_memory or create_behavioral_memory(settings)
 
-    async def handle_ranked(self, event: DecisionRanked) -> OutboundResponse:
+    async def handle_ranked(self, event: DecisionRanked) -> OutboundResponse | None:
+        if event.watch_id:
+            print(
+                f"[generator] skipping ambient watch result request_id={event.request_id} "
+                f"watch_id={event.watch_id}"
+            )
+            return None
+
         response = build_outbound_response(event)
         behavior_context = None
         if self._behavioral_memory is not None:
@@ -113,6 +121,11 @@ class AgentGenerator:
                 response.message,
                 behavior_context=behavior_context,
             )
+            try:
+                validate_response(event, message)
+            except ResponseValidationError as exc:
+                print(f"[generator] generated response failed validation, using template: {exc}")
+                message = response.message
             response = OutboundResponse(
                 request_id=event.request_id,
                 user_id=event.user_id,
@@ -130,7 +143,7 @@ class AgentGenerator:
         consumer = KafkaEventConsumer(
             DECISION_RANKED,
             bootstrap_servers=self._config.kafka_bootstrap_servers,
-            group_id="agent-generator",
+            group_id=self._settings.generator_group_id if self._settings else "agent-generator",
             client_id="agent-generator",
         )
 
@@ -140,7 +153,8 @@ class AgentGenerator:
         try:
             async for event in consumer.events(DecisionRanked):
                 response = await self.handle_ranked(event)
-                print(f"Published response.outbound for {response.request_id}.")
+                if response is not None:
+                    print(f"Published response.outbound for {response.request_id}.")
         finally:
             await consumer.stop()
             await self._producer.stop()
