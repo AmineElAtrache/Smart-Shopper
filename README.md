@@ -64,7 +64,7 @@ Responsibilities:
 - Provides JSON encode/decode helpers.
 - Provides Kafka producer/consumer wrappers.
 
-#### Rule-Based NER
+#### Hugging Face NER With Local Fallback
 
 File:
 
@@ -74,8 +74,10 @@ models/ner/serve.py
 
 Responsibilities:
 
-- Extracts brand, product, budget, currency, and intent from user text.
-- Acts as the MVP placeholder for the future XLM-RoBERTa NER model.
+- Uses the fine-tuned Hugging Face model `ElAtrachAMINE/darija-ner-xlmroberta` when enabled.
+- Normalizes NER output into the shared entity contract used by the Orchestrator.
+- Falls back to deterministic local rules when model dependencies or weights are not available.
+- Extracts brand, product, budget, currency, city, color, quality, intent, and site hints.
 
 Example:
 
@@ -249,6 +251,21 @@ MONGODB_URI=mongodb://localhost:27017
 MONGODB_DATABASE=smart_shopper
 ```
 
+NER model variables:
+
+```text
+SMART_SHOPPER_NER_BACKEND=auto
+SMART_SHOPPER_NER_MODEL=ElAtrachAMINE/darija-ner-xlmroberta
+```
+
+Backend modes:
+
+```text
+rules = use only the local rule fallback
+auto = use cached Hugging Face model if present, otherwise fallback rules
+hf    = download/use the Hugging Face model and fail loudly if it cannot load
+```
+
 Important: never commit your real Telegram token. `.env` is ignored by Git.
 
 ## Install Dependencies
@@ -401,7 +418,7 @@ pytest -q
 Current expected result:
 
 ```text
-32 passed
+77 passed
 ```
 
 ## Useful Kafka Topics
