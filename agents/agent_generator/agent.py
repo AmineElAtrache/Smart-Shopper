@@ -59,9 +59,20 @@ def build_response_message(products: list[RankedProduct]) -> str:
     return build_composed_message(products, intro=intro, best_reason=best_reason)
 
 
-def build_composed_message(products: list[RankedProduct], *, intro: str, best_reason: str) -> str:
+def build_composed_message(
+    products: list[RankedProduct],
+    *,
+    intro: str,
+    best_reason: str,
+    why_this_order: str | None = None,
+    next_step: str | None = None,
+) -> str:
     product_block = build_product_block(products)
     parts = [intro.strip(), product_block, best_reason.strip()]
+    if why_this_order:
+        parts.append(why_this_order.strip())
+    if next_step:
+        parts.append(next_step.strip())
     return "\n\n".join(part for part in parts if part)
 
 

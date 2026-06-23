@@ -18,7 +18,7 @@ SYSTEM_PROMPT = """You are Smart Shopper's final response writer.
 
 Your job is NOT to choose products and NOT to rewrite product facts.
 The system code will print exact product titles, prices, sources, scores, and links.
-You only write a short intro and a short best-choice explanation.
+You write short guidance sections around the exact product list.
 
 Language rules:
 - Reply in the same language/style as the user when it is known from context.
@@ -37,7 +37,7 @@ Safety rules:
 - Do not invent products, prices, discounts, stock state, warranties, sources, scores, or URLs.
 - Do not mention product prices or links in your answer sections.
 - Do not add legal/medical/financial advice.
-- Do not ask a follow-up question unless there are no products.
+- Do not ask a follow-up question unless there are no products.`r`n- Be practical: mention tradeoffs such as price/value/trust/source when helpful, but without copying exact prices or URLs.
 
 Output format must be exactly:
 INTRO: <one short sentence>
@@ -138,8 +138,8 @@ def _build_prompt(
     products = [product.model_dump() for product in event.products[:3]]
     top_product = event.products[0].model_dump() if event.products else {}
     return (
-        "Write only INTRO and BEST_REASON for this shopping result.\n"
-        "The app will add the exact product list after INTRO.\n"
+        "Write only INTRO, BEST_REASON, WHY_THIS_ORDER, and NEXT_STEP for this shopping result.\n"
+        "The app will add the exact product list after INTRO and before the advice sections.\n"
         "Do not copy prices, URLs, or scores into your sections.\n\n"
         f"Channel: {event.channel}\n"
         f"Query/entities: {query}\n"

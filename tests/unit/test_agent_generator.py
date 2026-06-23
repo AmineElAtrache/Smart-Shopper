@@ -1,7 +1,12 @@
 ﻿import asyncio
 
-from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig, build_composed_message
-from agents.agent_generator.tools.response_validator import ResponseValidationError, materialize_llm_response, validate_response
+from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig
+from agents.agent_generator.tools.response_validator import (
+    ResponseValidationError,
+    materialize_llm_response,
+    validate_response,
+)
+from scripts.test_llm_generator import build_sample_ranked
 from shared.events.schemas import (
     Availability,
     Channel,
@@ -11,7 +16,6 @@ from shared.events.schemas import (
     ScoreBreakdown,
 )
 from shared.events.topics import RESPONSE_OUTBOUND
-from scripts.test_llm_generator import build_sample_ranked
 
 
 class FakeProducer:
@@ -114,11 +118,13 @@ def test_agent_generator_publishes_template_response_and_records_memory() -> Non
     assert len(behavioral_memory.recorded) == 1
 
 
-def test_agent_generator_accepts_labelled_llm_style_and_keeps_exact_facts() -> None:
+def test_agent_generator_accepts_productive_llm_style_and_keeps_exact_facts() -> None:
     event = make_ranked()
     llm_message = (
         "INTRO: I found a couple of solid Samsung options that fit your budget.\n"
-        "BEST_REASON: The first option is the best balance because it has the strongest score and trusted source."
+        "BEST_REASON: The first option is the best balance because it has the strongest score and trusted source.\n"
+        "WHY_THIS_ORDER: The ranking favors better value and stronger trust signals.\n"
+        "NEXT_STEP: Start with option #1, then verify the seller page before buying."
     )
     producer = FakeProducer()
     generator = make_generator(producer=producer, llm_client=FakeLlmClient(llm_message))
@@ -134,6 +140,8 @@ def test_agent_generator_accepts_labelled_llm_style_and_keeps_exact_facts() -> N
     assert "1890 MAD" in response.message
     assert "https://example.com/jumia-a05" in response.message
     assert "strongest score" in response.message
+    assert "ranking favors better value" in response.message
+    assert "verify the seller page" in response.message
 
 
 def test_agent_generator_falls_back_when_llm_returns_unusable_unlabelled_text() -> None:
@@ -148,11 +156,16 @@ def test_agent_generator_falls_back_when_llm_returns_unusable_unlabelled_text() 
     assert "2499 MAD" in response.message
 
 
-def test_materialize_llm_response_composes_intro_reason_with_exact_product_block() -> None:
+def test_materialize_llm_response_composes_productive_sections_with_exact_product_block() -> None:
     event = make_ranked()
     message = materialize_llm_response(
         event,
-        "INTRO: Hadi chi options zwina lik.\nBEST_REASON: Lwel kayban ahsan hit score dyalo tali3.",
+        (
+            "INTRO: Hadi chi options zwina lik.\n"
+            "BEST_REASON: Lwel kayban ahsan hit score dyalo tali3.\n"
+            "WHY_THIS_ORDER: Ranking kaychof value w trust.\n"
+            "NEXT_STEP: Bda b option #1 w verify seller."
+        ),
         fallback_message="fallback",
     )
 
@@ -161,6 +174,8 @@ def test_materialize_llm_response_composes_intro_reason_with_exact_product_block
     assert "2499 MAD" in message
     assert "https://example.com/jumia-a15" in message
     assert "Lwel kayban ahsan" in message
+    assert "Ranking kaychof value" in message
+    assert "verify seller" in message
 
 
 def test_agent_generator_skips_ambient_watch_ranked_events() -> None:
@@ -171,6 +186,7 @@ def test_agent_generator_skips_ambient_watch_ranked_events() -> None:
 
     assert response is None
     assert producer.published == []
+
 
 def test_llm_generator_script_sample_ranked_has_required_facts() -> None:
     event = build_sample_ranked()
