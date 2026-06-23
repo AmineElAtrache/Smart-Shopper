@@ -252,3 +252,66 @@ def test_ambient_ranked_result_does_not_notify_when_price_is_not_better() -> Non
     assert response is None
     assert producer.published == []
     assert collection.docs["watch_1"]["last_seen_price"] == 5500
+
+
+def test_ambient_watch_lifecycle_create_scrape_then_notify_on_price_drop() -> None:
+    """End-to-end unit flow: register watch -> due scrape -> ranked price drop -> notify."""
+    collection = FakeCollection()
+    producer = FakeProducer()
+    scheduler = make_scheduler(collection, producer)
+
+    watch = AmbientWatch(
+        request_id="watch_lifecycle_1",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        query=ProductQuery(product="laptop", brand="HP", budget=6000),
+        last_best_price=6000,
+    )
+
+    asyncio.run(scheduler.handle_watch(watch))
+    assert collection.docs["watch_lifecycle_1"]["status"] == WatchStatus.ACTIVE
+    assert collection.docs["watch_lifecycle_1"]["expires_at"] is not None
+
+    collection.docs["watch_lifecycle_1"]["next_run_at"] = datetime.now(UTC) - timedelta(seconds=1)
+    due_count = asyncio.run(scheduler.run_due_once())
+    assert due_count == 1
+    assert producer.published[0][0] == SCRAPE_TASK_ASSIGNED
+    assert producer.published[0][1].watch_id == "watch_lifecycle_1"
+
+    ranked = DecisionRanked(
+        request_id="req_watch_lifecycle_1",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        watch_id="watch_lifecycle_1",
+        query=watch.query,
+        products=[ranked_product(5500), ranked_product(6200, title="HP Omen 2")],
+    )
+    response = asyncio.run(scheduler.handle_ranked(ranked))
+
+    assert response is not None
+    assert producer.published[-1][0] == RESPONSE_OUTBOUND
+    assert "Price drop detected" in response.message
+    assert collection.docs["watch_lifecycle_1"]["last_best_price"] == 5500
+
+
+def test_ambient_expired_watch_does_not_send_price_drop_notification() -> None:
+    collection = FakeCollection()
+    producer = FakeProducer()
+    scheduler = make_scheduler(collection, producer)
+    collection.docs["watch_1"] = {
+        "watch_id": "watch_1",
+        "status": WatchStatus.EXPIRED,
+        "last_best_price": 6000,
+    }
+    event = DecisionRanked(
+        request_id="req_1",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        watch_id="watch_1",
+        products=[ranked_product(5500)],
+    )
+
+    response = asyncio.run(scheduler.handle_ranked(event))
+
+    assert response is None
+    assert producer.published == []
