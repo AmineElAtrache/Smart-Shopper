@@ -6,10 +6,15 @@ import asyncio
 import os
 from dataclasses import dataclass
 
+from agents.agent_generator.tools.llm_client import LlmClient
+from shared.config import Settings, get_settings
 from shared.config.env import load_env_file
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import DecisionRanked, OutboundResponse, RankedProduct
 from shared.events.topics import DECISION_RANKED, RESPONSE_OUTBOUND
+from shared.memory import BehavioralMemory, GlobalMemory
+from shared.memory.factory import create_behavioral_memory, create_global_memory
+from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 
@@ -77,17 +82,48 @@ class AgentGenerator:
         self,
         *,
         config: AgentGeneratorConfig,
+        settings: Settings | None = None,
         producer: KafkaEventProducer | None = None,
+        global_memory: GlobalMemory | None = None,
+        behavioral_memory: BehavioralMemory | None = None,
+        llm_client: LlmClient | None = None,
     ) -> None:
         self._config = config
+        self._settings = settings
         self._producer = producer or KafkaEventProducer(
             config.kafka_bootstrap_servers,
             client_id="agent-generator",
         )
+        self._global_memory = global_memory
+        self._behavioral_memory = behavioral_memory
+        self._llm_client = llm_client
+        if settings is not None:
+            self._llm_client = self._llm_client or LlmClient(settings)
+            self._global_memory = self._global_memory or create_global_memory(settings)
+            self._behavioral_memory = self._behavioral_memory or create_behavioral_memory(settings)
 
     async def handle_ranked(self, event: DecisionRanked) -> OutboundResponse:
         response = build_outbound_response(event)
+        behavior_context = None
+        if self._behavioral_memory is not None:
+            behavior_context = await self._behavioral_memory.build_generation_context(event.user_id)
+        if self._llm_client is not None:
+            message = await self._llm_client.generate_recommendation(
+                event,
+                response.message,
+                behavior_context=behavior_context,
+            )
+            response = OutboundResponse(
+                request_id=event.request_id,
+                user_id=event.user_id,
+                channel=event.channel,
+                message=message,
+            )
         await self._producer.publish(RESPONSE_OUTBOUND, response, key=event.request_id)
+        if self._global_memory is not None and event.query is not None:
+            await self._global_memory.set_cached_response(event.query, response.message)
+        if self._behavioral_memory is not None:
+            await self._behavioral_memory.record_generation(event, response)
         return response
 
     async def run(self) -> None:
@@ -111,7 +147,16 @@ class AgentGenerator:
 
 
 async def main() -> None:
-    await AgentGenerator(config=AgentGeneratorConfig.from_env()).run()
+    settings = get_settings()
+    health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
+    await health.start()
+    try:
+        await AgentGenerator(
+            config=AgentGeneratorConfig(kafka_bootstrap_servers=settings.kafka_bootstrap_servers),
+            settings=settings,
+        ).run()
+    finally:
+        await health.stop()
 
 
 if __name__ == "__main__":

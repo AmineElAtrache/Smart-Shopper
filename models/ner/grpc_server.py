@@ -1,4 +1,4 @@
-"""gRPC server for the rule-based NER placeholder."""
+"""gRPC server for the Smart Shopper NER model service."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import grpc
 from generated.ner.v1 import ner_pb2, ner_pb2_grpc
 from models.ner.serve import extract_entities
 from shared.config import get_settings
+from shared.runtime import HealthServer
 
 
 class NerService(ner_pb2_grpc.NerServiceServicer):
@@ -33,11 +34,18 @@ class NerService(ner_pb2_grpc.NerServiceServicer):
 
 
 async def serve(host: str = "0.0.0.0", port: int = 50051) -> None:
+    settings = get_settings()
+    health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
+    await health.start()
     server = grpc.aio.server()
     ner_pb2_grpc.add_NerServiceServicer_to_server(NerService(), server)
     server.add_insecure_port(f"{host}:{port}")
+    extract_entities(settings.ner_warmup_text)
     await server.start()
-    await server.wait_for_termination()
+    try:
+        await server.wait_for_termination()
+    finally:
+        await health.stop()
 
 
 async def main() -> None:

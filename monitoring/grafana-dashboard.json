@@ -1,0 +1,31 @@
+{
+  "title": "Smart Shopper Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Services Up",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(up{job=\"smart-shopper-agents\"})" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Errors",
+      "gridPos": { "x": 6, "y": 0, "w": 9, "h": 4 },
+      "targets": [
+        { "expr": "increase(smart_shopper_errors_total[5m])" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Outbound Responses",
+      "gridPos": { "x": 15, "y": 0, "w": 9, "h": 4 },
+      "targets": [
+        { "expr": "increase(smart_shopper_response_outbound_total[5m])" }
+      ]
+    }
+  ]
+}

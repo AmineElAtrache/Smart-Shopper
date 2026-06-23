@@ -1,1 +1,29 @@
-groups: []
+groups:
+  - name: smart-shopper-service-health
+    rules:
+      - alert: SmartShopperServiceDown
+        expr: up{job="smart-shopper-agents"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Smart Shopper service is down"
+          description: "{{ $labels.instance }} has not responded to Prometheus for 2 minutes."
+
+      - alert: SmartShopperHighErrorRate
+        expr: increase(smart_shopper_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Smart Shopper error rate is elevated"
+          description: "More than five service errors were recorded in the last 5 minutes."
+
+      - alert: SmartShopperNoResponses
+        expr: increase(smart_shopper_response_outbound_total[15m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No outbound recommendations produced"
+          description: "The system has not produced outbound responses in the last 15 minutes."

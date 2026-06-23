@@ -312,7 +312,7 @@ Final target:
 
 MVP:
 
-- Rule-based NER placeholder.
+- Hugging Face NER adapter with Darija/French/English preprocessing and enrichment.
 
 Current repo status:
 
@@ -523,6 +523,12 @@ Purpose:
 - Avoid scraping if fresh data exists.
 - Share product data across all users.
 
+Current implementation:
+
+- `shared/memory/global_memory.py`
+- Uses Redis for product-query response cache, price history, site health, and robots snapshots.
+- Agent Generator writes successful final responses back into this cache.
+
 ### 10.2 Tier 2 - Per-User Shared Memory
 
 Technology:
@@ -560,6 +566,13 @@ Purpose:
 - Remember user-specific constraints.
 - Support watchlists.
 
+Current implementation:
+
+- `shared/memory/user_memory.py`
+- Gateway records inbound and outbound user history.
+- Orchestrator records structured searches and applies remembered city, budget, currency, and site preferences.
+- Ambient Scheduler stores watch metadata per user.
+
 ### 10.3 Tier 3 - Private Behavioral Memory
 
 Technology:
@@ -592,6 +605,13 @@ Purpose:
 
 - Personalize the final text response.
 - Keep behavioral data private to the Agent Generator.
+
+Current implementation:
+
+- `shared/memory/behavioral_memory.py`
+- Agent Generator reads private behavior context before LLM generation.
+- Agent Generator records response interactions, response count, and preferred sources.
+- `agents/agent_generator/tools/behavior_analyzer.py` contains helper inference functions for future behavior updates.
 
 ## 11. Cache Behavior
 
@@ -882,35 +902,24 @@ tests/
 - Decision Agent wrapper.
 - 100-point scoring engine.
 - Product deduplication inside scoring engine.
-- Unit tests for shared contracts, NER/orchestrator, and decision ranking.
+- Unit tests for shared contracts, NER/orchestrator, decision ranking, services, and scrapers.
 - Docker Compose for Kafka, Redis, MongoDB, and Jaeger.
 - Protobuf NER service contract.
+- Telegram gateway runtime.
+- WebScraping Agent with registered marketplace providers.
+- Agent Generator with template response and LLM fallback client.
+- Ambient Scheduler runtime.
+- Governance Agent runtime and rules.
+- Production Dockerfiles, Kubernetes base/overlays, monitoring config, CI, and runbooks.
 
 ### Mostly Stubbed
 
-- Telegram Gateway.
-- WebScraping Agent.
-- Jumia spider.
-- Avito spider.
-- Social spider.
-- Playwright scraper tool.
-- Scrapy runner.
-- Proxy rotator.
-- Agent Generator.
-- LLM client.
+- Social marketplace adapters.
 - Response validator.
 - Behavior analyzer.
-- Ambient Scheduler.
-- Governance Agent.
-- PII scanner.
-- Rate limiter.
-- Robots checker.
-- Fraud detector.
-- Standalone dedup engine.
-- Real NER model server.
-- Kubernetes manifests.
-- Prometheus app metrics.
-- Grafana dashboards.
+- Advanced LLM response validation and personalization.
+- Production-grade scraper sandboxing.
+- Full external observability stack installation.
 
 ## 17. Important Current Code Mapping
 
@@ -937,21 +946,16 @@ tests/
 
 ## 18. Current Test Status
 
-The current unit tests pass when the repository root is added to `PYTHONPATH`.
+The current unit suite covers shared contracts, NER/orchestrator behavior, service publishing, decision ranking, provider parsers, the local pipeline, and deployment-readiness helpers.
 
-Command:
+Recommended command:
 
 ```powershell
-$env:PYTHONPATH='.'; pytest -q
+python -m pip install -e ".[dev]"
+python -m pytest tests\unit -q
 ```
 
-Result:
-
-```text
-5 passed
-```
-
-Plain `pytest -q` may fail in this local environment because Python cannot import local packages such as `agents` and `shared` unless the repo root is on `PYTHONPATH` or the package is installed in editable mode.
+Plain `pytest -q` can fail in local environments when the repository root is not installed or added to `PYTHONPATH`.
 
 ## 19. Known Inconsistencies Between Documents
 

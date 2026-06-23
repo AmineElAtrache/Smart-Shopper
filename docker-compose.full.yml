@@ -1,0 +1,129 @@
+services:
+  kafka:
+    extends:
+      file: docker-compose.yml
+      service: kafka
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+
+  mongodb:
+    extends:
+      file: docker-compose.yml
+      service: mongodb
+
+  ner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ner
+    environment:
+      SERVICE_NAME: ner
+      NER_GRPC_PORT: "50051"
+      HF_HOME: /models/huggingface
+      SMART_SHOPPER_NER_BACKEND: auto
+      SMART_SHOPPER_NER_MODEL: ElAtrachAMINE/darija-ner-xlmroberta
+    ports:
+      - "50051:50051"
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.orchestrator.service
+    environment: &agent_env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      REDIS_URL: redis://redis:6379/0
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: smart_shopper
+      NER_GRPC_HOST: ner
+      NER_GRPC_PORT: "50051"
+      ENVIRONMENT: compose
+    depends_on:
+      - kafka
+      - redis
+      - mongodb
+      - ner
+
+  scraper:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.webscraping.agent
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: scraper
+    depends_on:
+      - kafka
+
+  decision:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.decision.service
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: decision
+    depends_on:
+      - kafka
+
+  generator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.agent_generator.agent
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: generator
+      LLM_PROVIDER: template
+    depends_on:
+      - kafka
+      - redis
+
+  ambient:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.ambient_scheduler.scheduler
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: ambient
+    depends_on:
+      - kafka
+      - mongodb
+
+  governance:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: agents.governance.agent
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: governance
+    depends_on:
+      - kafka
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: gateway.telegram_proxy
+    environment:
+      <<: *agent_env
+      SERVICE_NAME: gateway
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      - kafka
+      - mongodb
+
+volumes:
+  redis_data:
+  mongo_data:

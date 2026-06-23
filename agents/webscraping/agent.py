@@ -27,9 +27,11 @@ from agents.webscraping.spiders import (
     ultrapc,
 )
 from shared.config.env import load_env_file
+from shared.config import get_settings
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 from shared.events.topics import SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 
@@ -187,7 +189,15 @@ class MockScraperAgent:
 
 
 async def main() -> None:
-    await MockScraperAgent(config=MockScraperConfig.from_env()).run()
+    settings = get_settings()
+    health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
+    await health.start()
+    try:
+        await MockScraperAgent(
+            config=MockScraperConfig(kafka_bootstrap_servers=settings.kafka_bootstrap_servers)
+        ).run()
+    finally:
+        await health.stop()
 
 
 if __name__ == "__main__":

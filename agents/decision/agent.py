@@ -20,5 +20,6 @@ class DecisionAgent:
             request_id=request_id,
             user_id=user_id,
             channel=channel,
+            query=query,
             products=rank_products(products, query),
         )

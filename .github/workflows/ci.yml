@@ -1,0 +1,35 @@
+name: Smart Shopper CI
+
+on:
+  push:
+    branches: ["master", "main", "feature/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run unit tests
+        env:
+          SMART_SHOPPER_NER_BACKEND: auto
+        run: python -m pytest tests/unit -q
+      - name: Validate Kubernetes manifests render
+        run: kubectl kustomize deploy/k8s/base > /tmp/smart-shopper-k8s.yaml
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build service image
+        run: docker build -f docker/Dockerfile.service -t smart-shopper/service:ci .
+      - name: Build NER image
+        run: docker build -f docker/Dockerfile.ner -t smart-shopper/ner:ci .

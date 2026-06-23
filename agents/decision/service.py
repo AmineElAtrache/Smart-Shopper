@@ -11,6 +11,7 @@ from shared.config import Settings, get_settings
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import ProductQuery, RawProduct
 from shared.events.topics import DECISION_RANKED, SCRAPE_RAW
+from shared.runtime import HealthServer
 
 
 class DecisionService:
@@ -85,8 +86,14 @@ class DecisionService:
 
 
 async def main() -> None:
-    service = DecisionService(get_settings())
-    await service.run_forever()
+    settings = get_settings()
+    health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
+    await health.start()
+    try:
+        service = DecisionService(settings)
+        await service.run_forever()
+    finally:
+        await health.stop()
 
 
 if __name__ == "__main__":

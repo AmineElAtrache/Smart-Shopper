@@ -1,0 +1,221 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-ner
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: smart-shopper-ner }
+  template:
+    metadata:
+      labels: { app: smart-shopper-ner }
+    spec:
+      containers:
+        - name: ner
+          image: smart-shopper/ner:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: grpc, containerPort: 50051 }
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "1000m", memory: "3Gi" }
+            limits: { cpu: "2", memory: "6Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-orchestrator
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: smart-shopper-orchestrator }
+  template:
+    metadata:
+      labels: { app: smart-shopper-orchestrator }
+    spec:
+      containers:
+        - name: orchestrator
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.orchestrator.service }
+            - { name: SERVICE_NAME, value: orchestrator }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-scraper
+spec:
+  replicas: 3
+  selector:
+    matchLabels: { app: smart-shopper-scraper }
+  template:
+    metadata:
+      labels: { app: smart-shopper-scraper }
+    spec:
+      containers:
+        - name: scraper
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.webscraping.agent }
+            - { name: SERVICE_NAME, value: scraper }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "500m", memory: "1Gi" }
+            limits: { cpu: "2", memory: "3Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-decision
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: smart-shopper-decision }
+  template:
+    metadata:
+      labels: { app: smart-shopper-decision }
+    spec:
+      containers:
+        - name: decision
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.decision.service }
+            - { name: SERVICE_NAME, value: decision }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-generator
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: smart-shopper-generator }
+  template:
+    metadata:
+      labels: { app: smart-shopper-generator }
+    spec:
+      containers:
+        - name: generator
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.agent_generator.agent }
+            - { name: SERVICE_NAME, value: generator }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-ambient
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: smart-shopper-ambient }
+  template:
+    metadata:
+      labels: { app: smart-shopper-ambient }
+    spec:
+      containers:
+        - name: ambient
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.ambient_scheduler.scheduler }
+            - { name: SERVICE_NAME, value: ambient }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-governance
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: smart-shopper-governance }
+  template:
+    metadata:
+      labels: { app: smart-shopper-governance }
+    spec:
+      containers:
+        - name: governance
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: agents.governance.agent }
+            - { name: SERVICE_NAME, value: governance }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-shopper-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: smart-shopper-gateway }
+  template:
+    metadata:
+      labels: { app: smart-shopper-gateway }
+    spec:
+      containers:
+        - name: gateway
+          image: smart-shopper/service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_MODULE, value: gateway.telegram_proxy }
+            - { name: SERVICE_NAME, value: gateway }
+          envFrom:
+            - configMapRef: { name: smart-shopper-config }
+            - secretRef: { name: smart-shopper-secrets }
+          ports:
+            - { name: metrics, containerPort: 8000 }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
