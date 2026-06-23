@@ -1,7 +1,11 @@
 ﻿import asyncio
 from datetime import UTC, datetime, timedelta
 
-from agents.ambient_scheduler.scheduler import AmbientScheduler, build_watch_notification
+from agents.ambient_scheduler.scheduler import (
+    DEFAULT_WATCH_TTL_DAYS,
+    AmbientScheduler,
+    build_watch_notification,
+)
 from shared.config import Settings
 from shared.events.schemas import (
     AmbientWatch,
@@ -51,6 +55,15 @@ class FakeCollection:
         doc.update(update_doc.get("$set", {}))
         self.docs[watch_id] = doc
 
+    def update_many(self, filter_doc, update_doc) -> None:
+        now = filter_doc["expires_at"]["$lte"]
+        for doc in self.docs.values():
+            if doc.get("status") != filter_doc.get("status"):
+                continue
+            expires_at = doc.get("expires_at")
+            if expires_at is not None and expires_at <= now:
+                doc.update(update_doc.get("$set", {}))
+
     def find_one(self, filter_doc):
         doc = self.docs.get(filter_doc.get("watch_id"))
         if doc is None:
@@ -62,14 +75,14 @@ class FakeCollection:
 
     def find(self, filter_doc):
         now = filter_doc["next_run_at"]["$lte"]
+        expires_after = filter_doc["expires_at"]["$gt"]
         result = []
         for doc in self.docs.values():
             if doc.get("status") != filter_doc.get("status"):
                 continue
             if doc.get("next_run_at") > now:
                 continue
-            expires_at = doc.get("expires_at")
-            if expires_at is not None and expires_at <= datetime.now(UTC):
+            if doc.get("expires_at") <= expires_after:
                 continue
             result.append(doc)
         return result
@@ -98,7 +111,6 @@ def ranked_product(price: float, title: str = "HP Omen") -> RankedProduct:
     )
 
 
-
 def test_ambient_watch_defaults_to_daily_interval_but_allows_premium_hourly_override() -> None:
     normal_watch = AmbientWatch(
         user_id="telegram_123",
@@ -112,6 +124,29 @@ def test_ambient_watch_defaults_to_daily_interval_but_allows_premium_hourly_over
 
     assert normal_watch.interval_minutes == 1440
     assert premium_watch.interval_minutes == 60
+
+
+def test_ambient_watch_defaults_to_seven_day_expiry_when_missing() -> None:
+    collection = FakeCollection()
+    producer = FakeProducer()
+    scheduler = make_scheduler(collection, producer)
+    watch = AmbientWatch(
+        request_id="watch_1",
+        user_id="telegram_123",
+        query=ProductQuery(product="laptop", brand="HP", budget=6000),
+    )
+
+    before = datetime.now(UTC)
+    asyncio.run(scheduler.handle_watch(watch))
+    after = datetime.now(UTC)
+
+    expires_at = collection.docs["watch_1"]["expires_at"]
+    assert before + timedelta(days=DEFAULT_WATCH_TTL_DAYS) <= expires_at <= after + timedelta(
+        days=DEFAULT_WATCH_TTL_DAYS
+    )
+    assert collection.docs["watch_1"]["status"] == WatchStatus.ACTIVE
+
+
 def test_build_watch_notification_for_price_drop() -> None:
     message = build_watch_notification(product=ranked_product(5500), previous_price=6000)
 
@@ -144,6 +179,29 @@ def test_ambient_due_watch_emits_scrape_task_with_watch_id() -> None:
     task = producer.published[0][1]
     assert task.watch_id == "watch_1"
     assert task.user_id == "telegram_123"
+
+
+def test_ambient_expired_watch_is_marked_expired_and_not_scraped() -> None:
+    collection = FakeCollection()
+    producer = FakeProducer()
+    scheduler = make_scheduler(collection, producer)
+    collection.docs["watch_1"] = {
+        "watch_id": "watch_1",
+        "request_id": "watch_1",
+        "user_id": "telegram_123",
+        "channel": Channel.TELEGRAM,
+        "query": ProductQuery(product="laptop", brand="HP", budget=6000).model_dump(),
+        "interval_minutes": 60,
+        "expires_at": datetime.now(UTC) - timedelta(seconds=1),
+        "status": WatchStatus.ACTIVE,
+        "next_run_at": datetime.now(UTC) - timedelta(seconds=1),
+    }
+
+    count = asyncio.run(scheduler.run_due_once())
+
+    assert count == 0
+    assert producer.published == []
+    assert collection.docs["watch_1"]["status"] == WatchStatus.EXPIRED
 
 
 def test_ambient_ranked_result_sends_notification_for_new_best_price() -> None:

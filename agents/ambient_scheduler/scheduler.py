@@ -24,6 +24,8 @@ from shared.memory import UserMemory
 from shared.memory.factory import create_user_memory
 from shared.runtime import HealthServer
 
+DEFAULT_WATCH_TTL_DAYS = 7
+
 
 class AmbientScheduler:
     def __init__(
@@ -74,6 +76,7 @@ class AmbientScheduler:
     async def handle_watch(self, watch: AmbientWatch) -> None:
         now = datetime.now(UTC)
         document = watch.model_dump()
+        document["expires_at"] = watch.expires_at or now + timedelta(days=DEFAULT_WATCH_TTL_DAYS)
         document.update(
             {
                 "watch_id": watch.request_id,
@@ -148,18 +151,34 @@ class AmbientScheduler:
 
     async def run_due_once(self) -> int:
         now = datetime.now(UTC)
+        self._expire_old_watches(now)
         due_watches = list(
             self._collection.find(
                 {
                     "status": WatchStatus.ACTIVE,
                     "next_run_at": {"$lte": now},
-                    "$or": [{"expires_at": None}, {"expires_at": {"$gt": now}}],
+                    "expires_at": {"$gt": now},
                 }
             )
         )
         for watch in due_watches:
             await self._emit_scrape_task(watch)
         return len(due_watches)
+
+    def _expire_old_watches(self, now: datetime) -> None:
+        self._collection.update_many(
+            {
+                "status": WatchStatus.ACTIVE,
+                "expires_at": {"$lte": now},
+            },
+            {
+                "$set": {
+                    "status": WatchStatus.EXPIRED,
+                    "updated_at": now,
+                    "expired_at": now,
+                }
+            },
+        )
 
     async def run_forever(self) -> None:
         await self.start()
@@ -187,7 +206,7 @@ class AmbientScheduler:
             await asyncio.sleep(30)
 
     async def _emit_scrape_task(self, watch: dict[str, Any]) -> None:
-        interval_minutes = int(watch.get("interval_minutes") or 60)
+        interval_minutes = int(watch.get("interval_minutes") or AmbientWatch.model_fields["interval_minutes"].default)
         event_payload = {field: watch[field] for field in AmbientWatch.model_fields if field in watch}
         event = AmbientWatch.model_validate(event_payload)
         task = ScrapeTaskAssigned(
