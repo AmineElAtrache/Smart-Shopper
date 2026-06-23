@@ -80,6 +80,7 @@ class DecisionService:
             channel=first.channel,
             query=first.query or ProductQuery(),
             products=products,
+            watch_id=str(first.metadata.get("watch_id") or "") or None,
         )
         await self._producer.publish(DECISION_RANKED, ranked, key=request_id)
         print(f"[decision] published decision.ranked request_id={request_id} products={len(products)}")

@@ -1,4 +1,4 @@
-"""WebScraping Agent for the Smart Shopper MVP.
+﻿"""WebScraping Agent for the Smart Shopper MVP.
 
 The agent now tries real scraper providers first and falls back to deterministic
 mock products when providers fail or return no products.
@@ -165,6 +165,8 @@ class MockScraperAgent:
     async def handle_task(self, task: ScrapeTaskAssigned) -> list[RawProduct]:
         products = await scrape_products(task)
         for product in products:
+            if task.watch_id:
+                product.metadata["watch_id"] = task.watch_id
             await self._producer.publish(SCRAPE_RAW, product, key=task.request_id)
         return products
 
