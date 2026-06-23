@@ -1,405 +1,335 @@
 # Smart Shopper
 
-Smart Shopper is a PFA MVP for an AI shopping intelligence bot. The first goal is to prove this flow:
+Smart Shopper is a multi-agent shopping intelligence MVP for Moroccan marketplace search. A user sends a natural message in Darija, French, English, or mixed language, and the system extracts the shopping intent, searches supported websites, ranks products, and generates a response.
+
+Current high-level flow:
 
 ```text
-Telegram -> Kafka -> Orchestrator -> Mock Scraper -> Decision Agent -> Agent Generator -> Telegram
-```
-
-The project is split into two main development parts:
-
-- **Amine's part:** core intelligence pipeline.
-- **Mounim's part:** Telegram gateway, scraper side, and response generation side.
-
-## Project Flow
-
-```text
-Telegram user
--> Telegram Gateway
+Telegram / Frontend
+-> User Proxy Gateway
 -> Kafka msg.inbound
 -> Orchestrator + NER
 -> Kafka scrape.task.assigned
--> Mock WebScraping Agent
+-> WebScraping Agent
 -> Kafka scrape.raw
 -> Decision Agent
 -> Kafka decision.ranked
 -> Agent Generator
 -> Kafka response.outbound
--> Telegram Gateway
--> Telegram user
+-> Telegram / Frontend
 ```
 
-## Amine's Part - Core Pipeline
+## Current Status
 
-Amine owns the internal intelligence pipeline: understanding the user request, building the product query, and ranking scraped products.
+Implemented so far:
 
-Main flow:
+- Shared Pydantic event contracts for all agents.
+- Kafka producer/consumer wrappers and topic constants.
+- Orchestrator agent that calls NER and builds `ProductQuery`.
+- Hugging Face Darija NER model integration with preprocessing and context enrichment.
+- Live scraper providers for Moroccan marketplaces.
+- Decision agent with deduplication and 100-point scoring.
+- Agent generator that formats final recommendations.
+- Telegram gateway skeleton/runtime.
+- Local no-Kafka integration runner for quick testing.
+- Docker Python base image with Playwright support.
+
+Supported scraper providers currently registered:
 
 ```text
-msg.inbound
--> Orchestrator
--> NER
--> scrape.task.assigned
--> scrape.raw
--> Decision Agent
--> decision.ranked
+jumia
+avito
+electrosalam
+mafiawaystore
+moteur
+mymarket
+ultrapc
+electroplanet
+defacto
+biougnach
+marjane
+decathlon
+mubawab
+ikea
 ```
 
-### Implemented Components
+## NER Model
 
-#### Shared Contracts
+The NER service is the part that converts messy user text into clean shopping entities.
 
-Files:
+Model used:
 
 ```text
-shared/events/schemas.py
-shared/events/topics.py
-shared/events/kafka.py
+ElAtrachAMINE/darija-ner-xlmroberta
 ```
 
-Responsibilities:
-
-- Defines shared Pydantic event schemas.
-- Defines Kafka topic constants.
-- Provides JSON encode/decode helpers.
-- Provides Kafka producer/consumer wrappers.
-
-#### Hugging Face NER With Local Fallback
-
-File:
+Main file:
 
 ```text
 models/ner/serve.py
 ```
 
-Responsibilities:
-
-- Uses the fine-tuned Hugging Face model `ElAtrachAMINE/darija-ner-xlmroberta` when enabled.
-- Normalizes NER output into the shared entity contract used by the Orchestrator.
-- Falls back to deterministic local rules when model dependencies or weights are not available.
-- Extracts brand, product, budget, currency, city, color, quality, intent, and site hints.
-
-Example:
+Libraries used:
 
 ```text
-Find me a Samsung phone under 3000 MAD
+transformers     Hugging Face model/tokenizer loading
+torch            XLM-RoBERTa inference runtime
+safetensors      model weight loading
+rapidfuzz        typo and fuzzy matching
+unicodedata      accent cleanup
+re               token and price parsing
+pydantic         shared entity schemas
 ```
 
-Extracted entities:
+### NER Flow
+
+![NER Model Flow](<ner model flow.png>)
 
 ```text
-brand=Samsung
-product=phone
-budget=3000
-currency=MAD
+Raw user text
+-> preprocessing / normalization
+-> Hugging Face NER model
+-> entity normalization
+-> context enrichment
+-> weak prediction filtering
+-> final entities
+-> Orchestrator ProductQuery
+```
+
+Example raw input:
+
+```text
+bghit samsng phne black f casaa b 3000dh
+```
+
+Preprocessing normalizes noisy text:
+
+```text
+samsng -> samsung
+phne -> phone
+casaa -> casablanca
+fès -> fes
+kehla / k7la -> black
+tomobil / tonobil -> voiture
+telaja / frigo / refrigerateur -> fridge
+```
+
+Normalized input:
+
+```text
+bghit samsung phone black f casablanca b 3000dh
+```
+
+The Hugging Face model extracts entities such as:
+
+```text
+BRAND
+PRODUCT
+PRICE
+CITY
+COLOR
+QUALITY
+```
+
+Entity normalization converts model output to the shared contract:
+
+```json
+[
+  {"type": "brand", "value": "Samsung"},
+  {"type": "product", "value": "phone"},
+  {"type": "color", "value": "black"},
+  {"type": "city", "value": "casablanca"},
+  {"type": "budget", "value": "3000.0", "attributes": {"currency": "MAD"}},
+  {"type": "intent", "value": "search"}
+]
+```
+
+Context enrichment fills shopping-specific gaps the model may miss. For example:
+
+```text
+bghit hp omen f fes b 6000dh
+```
+
+If the model extracts `HP`, `fes`, and `6000dh` but misses `omen`, enrichment applies:
+
+```text
+known brand + next unknown word = product/model
+```
+
+Final result:
+
+```text
+brand=HP
+product=omen
+city=fes
+budget=6000 MAD
 intent=search
 ```
 
-#### Orchestrator Agent
+Weak prediction filtering removes low-confidence false entities. Example: the Darija word `ykone` was sometimes predicted as brand `Kone`; unknown brands below confidence `0.8` are rejected.
 
-Files:
+The final entities are passed to the Orchestrator and converted into:
 
-```text
-agents/orchestrator/agent.py
-agents/orchestrator/tools/ner_client.py
-agents/orchestrator/tools/task_router.py
-agents/orchestrator/tools/cache_lookup.py
+```python
+ProductQuery(
+    product="phone",
+    brand="Samsung",
+    budget=3000.0,
+    currency="MAD",
+    city="casablanca",
+    color="black",
+    quality=None,
+)
 ```
-
-Responsibilities:
-
-- Receives an `InboundMessage`.
-- Calls the NER client.
-- Creates a `NerExtracted` event.
-- Builds a `ScrapeTaskAssigned` event.
-- Converts extracted entities into a structured `ProductQuery`.
-- Provides Redis cache key/helper logic for product queries.
-
-Current status:
-
-- Core Orchestrator logic is implemented.
-- Long-running Kafka runtime loop is not implemented yet.
-
-#### Decision Agent
-
-Files:
-
-```text
-agents/decision/agent.py
-agents/decision/tools/scoring_engine.py
-```
-
-Responsibilities:
-
-- Receives raw scraped products.
-- Deduplicates products.
-- Scores products using the 100-point scoring model.
-- Returns a `DecisionRanked` event.
-
-Scoring model:
-
-```text
-Price:        40 points
-Trust/source: 30 points
-Quality:      20 points
-Availability: 10 points
-Total:       100 points
-```
-
-Current status:
-
-- Core Decision logic is implemented.
-- Long-running Kafka runtime loop is not implemented yet.
-
-## Mounim's Part - Gateway, Scraper, Generator
-
-Mounim owns the user side, scraper side, and response side.
-
-Main flow:
-
-```text
-Telegram Gateway
--> msg.inbound
-scrape.task.assigned
--> Mock Scraper
--> scrape.raw
-decision.ranked
--> Agent Generator
--> response.outbound
--> Telegram Gateway
--> Telegram user
-```
-
-### Implemented Components
-
-#### Telegram Gateway
-
-File:
-
-```text
-gateway/telegram_proxy.py
-```
-
-Responsibilities:
-
-- Starts a Telegram bot using `python-telegram-bot`.
-- Converts user text into the shared `InboundMessage` schema.
-- Publishes messages to Kafka topic `msg.inbound`.
-- Consumes final responses from `response.outbound`.
-- Sends final messages back to the Telegram user.
-- Stores simple inbound/outbound history in MongoDB when available.
-
-#### Mock WebScraping Agent
-
-File:
-
-```text
-agents/webscraping/agent.py
-```
-
-Responsibilities:
-
-- Consumes scraping tasks from `scrape.task.assigned`.
-- Generates deterministic mock Jumia and Avito products.
-- Publishes `RawProduct` events to `scrape.raw`.
-
-This is intentionally mock data for the first MVP. Real Jumia/Avito scraping is future work.
-
-#### Template Agent Generator
-
-File:
-
-```text
-agents/agent_generator/agent.py
-```
-
-Responsibilities:
-
-- Consumes ranked product results from `decision.ranked`.
-- Builds a readable recommendation message.
-- Publishes `OutboundResponse` to `response.outbound`.
-
-This is intentionally template-based for the first MVP. Gemini/Groq LLM generation is future work.
-
-#### Local Environment Loader
-
-File:
-
-```text
-shared/config/env.py
-```
-
-Responsibilities:
-
-- Loads local `.env` values for MVP services.
-- Allows services to run without manually setting every environment variable in PowerShell.
 
 ## Environment Setup
 
-Create a local `.env` file from the example:
+Create your local `.env`:
 
 ```powershell
 copy .env.example .env
 ```
 
-Required variables:
+Important variables:
 
-```text
+```env
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-TELEGRAM_BOT_TOKEN=replace_with_your_telegram_bot_token
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DATABASE=smart_shopper
-```
+TELEGRAM_BOT_TOKEN=replace_with_your_token
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=smart_shopper
 
-NER model variables:
-
-```text
+NER_GRPC_HOST=localhost
+NER_GRPC_PORT=50051
 SMART_SHOPPER_NER_BACKEND=auto
 SMART_SHOPPER_NER_MODEL=ElAtrachAMINE/darija-ner-xlmroberta
+HF_HOME=.cache/huggingface
+TOKENIZERS_PARALLELISM=false
 ```
 
-Backend modes:
+NER backend modes:
 
 ```text
-rules = use only the local rule fallback
-auto = use cached Hugging Face model if present, otherwise fallback rules
-hf    = download/use the Hugging Face model and fail loudly if it cannot load
+auto = download/use the Hugging Face model, then reuse the local cache
+hf   = same model path, intended for explicit live validation
 ```
 
-Important: never commit your real Telegram token. `.env` is ignored by Git.
+Important: never commit your real `.env` or Telegram token.
 
 ## Install Dependencies
 
-Recommended install for local development:
+Recommended:
 
 ```powershell
 python -m pip install -e ".[dev]"
 python -m playwright install chromium
 ```
 
-The first command installs the Python package, including scraping dependencies such as Playwright and BeautifulSoup. The second command installs the local Chromium browser used by Playwright for live marketplace scraping.
-
-Alternative requirements-file install:
+Alternative:
 
 ```powershell
 python -m pip install -r requirements.txt
 python -m playwright install chromium
 ```
-## Docker Python Image
 
-The Python base image installs the project dependencies and Playwright Chromium runtime:
+The first NER run may download the Hugging Face model. After that, the local Hugging Face cache is reused.
+
+## Test NER Locally
+
+Run from the project root:
 
 ```powershell
-docker build -f docker/Dockerfile.python.base -t smart-shopper-python-base .
+$env:SMART_SHOPPER_NER_BACKEND="auto"
+$env:SMART_SHOPPER_NER_MODEL="ElAtrachAMINE/darija-ner-xlmroberta"
 ```
 
-Use this image as the base for scraper, orchestrator, gateway, and agent containers.
-
-## Start Infrastructure
+Messy spelling test:
 
 ```powershell
-docker compose up -d kafka redis mongodb
+python -c "from models.ner.serve import extract_entities; print([e.model_dump() for e in extract_entities('bghit samsng phne black f casaa b 3000dh')])"
 ```
 
-Check that services are running:
+Expected important entities:
 
-```powershell
-docker compose ps
+```text
+brand=Samsung
+product=phone
+color=black
+city=casablanca
+budget=3000 MAD
 ```
 
-Expected services:
-
-- Kafka on `localhost:9092`
-- Redis on `localhost:6379`
-- MongoDB on `localhost:27017`
-
-## Run Mounim's Services
-
-Open three PowerShell terminals from the project root.
-
-Terminal 1:
+Product model test:
 
 ```powershell
-python -m agents.webscraping.agent
+python -c "from models.ner.serve import extract_entities; print([e.model_dump() for e in extract_entities('bghit hp omen f fes b 6000dh')])"
 ```
 
 Expected:
 
 ```text
-Mock scraper agent started. Waiting for scrape.task.assigned events.
+brand=HP
+product=omen
+city=fes
+budget=6000 MAD
 ```
 
-Terminal 2:
+Appliance query test:
 
 ```powershell
-python -m agents.agent_generator.agent
+python -c "from models.ner.serve import extract_entities; print([e.model_dump() for e in extract_entities('kan9lebe 3la chi telaja fes tkone jdida we maghalyach')])"
 ```
 
 Expected:
 
 ```text
-Agent generator started. Waiting for decision.ranked events.
+product=fridge
+city=fes
+quality=new
+intent=search
 ```
 
-Terminal 3:
+Budget query test:
 
 ```powershell
-python -m gateway.telegram_proxy
+python -c "from models.ner.serve import extract_entities; print([e.model_dump() for e in extract_entities('kan9lebe 3la chi pc ykone nadi mayfotch 3000ddh')])"
 ```
 
 Expected:
 
 ```text
-Telegram gateway started. Listening for messages and outbound responses.
+product=laptop
+budget=3000 MAD
+intent=search
 ```
 
-Then send a message to the Telegram bot:
+## Run Local Pipeline
 
-```text
-Find me a Samsung phone under 3000 MAD
-```
-
-Expected immediate reply:
-
-```text
-Request received (req_...). I am looking for offers now.
-```
-
-## Full MVP Integration Status
-
-The code from both parts now works together in-process and has Kafka runtime loops for the core agents:
-
-```text
-InboundMessage
--> Orchestrator + NER
--> ScrapeTaskAssigned
--> Mock Scraper
--> RawProduct
--> Decision Agent
--> DecisionRanked
--> Agent Generator
--> OutboundResponse
-```
-
-A no-Telegram integration runner is available for quick checks without Docker or Kafka:
+A no-Telegram, no-Kafka local integration check is available:
 
 ```powershell
 python -m scripts.run_local_pipeline
 ```
 
-Expected result:
+It runs:
 
 ```text
-[integration] extracted ... entities
-[integration] mock scraper produced 3 products
-[integration] decision ranked 3 products
-
-=== Final response ===
-I found 3 good options for you:
-...
+InboundMessage
+-> Orchestrator + NER
+-> ScrapeTaskAssigned
+-> WebScraping/mock products
+-> Decision ranking
+-> Agent Generator response
 ```
 
-For the live Kafka version, run these services in separate terminals after starting Kafka, Redis, and MongoDB:
+## Run Services With Infrastructure
+
+Start infrastructure:
+
+```powershell
+docker compose up -d kafka redis mongodb
+```
+
+Then run services in separate terminals:
 
 ```powershell
 python -m models.ner.grpc_server
@@ -409,21 +339,44 @@ python -m agents.decision.service
 python -m agents.agent_generator.agent
 python -m gateway.telegram_proxy
 ```
+
+## Docker / AWS Notes
+
+The NER model is large, so production should avoid downloading it on every container start.
+
+Recommended production approach:
+
+```text
+build Docker image
+-> pre-download/cache Hugging Face model
+-> run NER as its own service/container
+-> other agents call NER through gRPC
+```
+
+Important environment variables for containers:
+
+```env
+SMART_SHOPPER_NER_BACKEND=auto
+SMART_SHOPPER_NER_MODEL=ElAtrachAMINE/darija-ner-xlmroberta
+HF_HOME=.cache/huggingface
+TOKENIZERS_PARALLELISM=false
+```
+
+Only the NER service should load the model. Other agents should not each load the 1GB+ model into memory.
+
 ## Run Tests
 
 ```powershell
-pytest -q
+python -m pytest tests\unit -q
 ```
 
 Current expected result:
 
 ```text
-77 passed
+82 passed
 ```
 
-## Useful Kafka Topics
-
-The MVP uses these Kafka topics:
+## Kafka Topics
 
 ```text
 msg.inbound
@@ -437,13 +390,13 @@ gov.audit
 gov.violation
 ```
 
-Shared schemas live in:
+Shared schemas:
 
 ```text
 shared/events/schemas.py
 ```
 
-Shared topic constants live in:
+Topic constants:
 
 ```text
 shared/events/topics.py

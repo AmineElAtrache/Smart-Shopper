@@ -1,12 +1,54 @@
 import asyncio
 
+import pytest
+
 from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.tools.task_router import build_product_query
+from models.ner import serve as ner_serve
 from models.ner.serve import extract_entities
 from shared.events.schemas import EntityType, ExtractedEntity, InboundMessage
 
 
-def test_rule_based_ner_extracts_brand_product_and_budget() -> None:
+class FakeNerPipeline:
+    def __call__(self, text: str) -> list[dict[str, object]]:
+        normalized = text.lower()
+        predictions: list[dict[str, object]] = []
+
+        if "samsung" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "Samsung", "score": 0.99})
+        if "iphone" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "iPhone", "score": 0.99})
+        if "phone" in normalized:
+            predictions.append({"entity_group": "PRODUCT", "word": "phone", "score": 0.98})
+        if "pc" in normalized:
+            predictions.append({"entity_group": "PRODUCT", "word": "pc", "score": 0.99})
+        if "fridge" in normalized:
+            predictions.append({"entity_group": "PRODUCT", "word": "fridge", "score": 0.99})
+        if "ykone" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "Kone", "score": 0.58})
+        if "hp" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "hp", "score": 0.99})
+        if "fes" in normalized:
+            predictions.append({"entity_group": "CITY", "word": "fes", "score": 0.99})
+        if "casablanca" in normalized:
+            predictions.append({"entity_group": "CITY", "word": "Casablanca", "score": 0.99})
+        if "black" in normalized:
+            predictions.append({"entity_group": "COLOR", "word": "black", "score": 0.99})
+        if "3000" in normalized:
+            predictions.append({"entity_group": "PRICE", "word": "3000 dh", "score": 0.99})
+        if "6000" in normalized:
+            predictions.append({"entity_group": "PRICE", "word": "6000dh", "score": 0.99})
+
+        return predictions
+
+
+@pytest.fixture(autouse=True)
+def fake_hf_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SMART_SHOPPER_NER_BACKEND", "auto")
+    monkeypatch.setattr(ner_serve, "_get_pipeline", lambda model_id: FakeNerPipeline())
+
+
+def test_ner_model_extracts_brand_product_and_budget() -> None:
     entities = extract_entities("Bghit Samsung phone b 3000 dh")
     by_type = {entity.type: entity for entity in entities}
 
@@ -17,7 +59,7 @@ def test_rule_based_ner_extracts_brand_product_and_budget() -> None:
     assert by_type["budget"].attributes["currency"] == "MAD"
 
 
-def test_rule_based_ner_extracts_city_and_color() -> None:
+def test_ner_enrichment_extracts_city_and_color() -> None:
     entities = extract_entities("Bghit Samsung phone black f Casablanca b 3000 dh")
     by_type = {entity.type: entity for entity in entities}
 
@@ -25,7 +67,7 @@ def test_rule_based_ner_extracts_city_and_color() -> None:
     assert by_type["color"].value == "black"
 
 
-def test_ner_normalizes_darija_vehicle_query() -> None:
+def test_ner_enrichment_normalizes_darija_vehicle_query() -> None:
     entities = extract_entities("bghit tomobile golf kehla we ana 3endi hi 50000dh")
     by_type = {entity.type: entity for entity in entities}
 
@@ -34,6 +76,59 @@ def test_ner_normalizes_darija_vehicle_query() -> None:
     assert by_type["color"].value == "black"
     assert by_type["budget"].value == "50000.0"
     assert by_type["budget"].attributes["currency"] == "MAD"
+
+
+def test_ner_enrichment_detects_model_name_after_brand() -> None:
+    entities = extract_entities("bghit hp omen f fes b 6000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "HP"
+    assert by_type["product"].value == "omen"
+    assert by_type["city"].value == "fes"
+    assert by_type["budget"].value == "6000.0"
+
+
+def test_ner_preprocesses_misspellings_before_model() -> None:
+    entities = extract_entities("bghit samsng phne black f casaa b 3000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Samsung"
+    assert by_type["product"].value == "phone"
+    assert by_type["city"].value == "casablanca"
+    assert by_type["color"].value == "black"
+    assert by_type["budget"].value == "3000.0"
+
+
+def test_ner_preprocesses_accents_and_darija_aliases() -> None:
+    entities = extract_entities("bghit iphon f f\u00e8s b 4500dhs")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Apple"
+    assert by_type["product"].value == "phone"
+    assert by_type["city"].value == "fes"
+    assert by_type["budget"].value == "4500.0"
+
+
+def test_ner_filters_weak_false_brand_from_darija_context() -> None:
+    entities = extract_entities("kan9lebe 3la chi pc ykone nadi mayfotch 3000ddh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert "brand" not in by_type
+    assert by_type["product"].value == "laptop"
+    assert by_type["budget"].value == "3000.0"
+    assert by_type["budget"].attributes["currency"] == "MAD"
+
+
+def test_ner_does_not_parse_digits_inside_darija_words() -> None:
+    entities = extract_entities("kan9lebe 3la chi telaja fes tkone jdida we maghalyach")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["product"].value == "fridge"
+    assert by_type["city"].value == "fes"
+    assert by_type["quality"].value == "new"
+    assert "price" not in by_type
+    assert "budget" not in by_type
+    assert "currency" not in by_type
 
 
 def test_task_router_maps_price_city_and_color_entities() -> None:
