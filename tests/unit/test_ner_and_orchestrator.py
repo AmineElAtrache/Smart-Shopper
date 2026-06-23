@@ -16,6 +16,8 @@ class FakeNerPipeline:
 
         if "samsung" in normalized:
             predictions.append({"entity_group": "BRAND", "word": "Samsung", "score": 0.99})
+        if "iphone" in normalized:
+            predictions.append({"entity_group": "BRAND", "word": "iPhone", "score": 0.99})
         if "phone" in normalized:
             predictions.append({"entity_group": "PRODUCT", "word": "phone", "score": 0.98})
         if "hp" in normalized:
@@ -78,6 +80,27 @@ def test_ner_enrichment_detects_model_name_after_brand() -> None:
     assert by_type["product"].value == "omen"
     assert by_type["city"].value == "fes"
     assert by_type["budget"].value == "6000.0"
+
+
+def test_ner_preprocesses_misspellings_before_model() -> None:
+    entities = extract_entities("bghit samsng phne black f casaa b 3000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Samsung"
+    assert by_type["product"].value == "phone"
+    assert by_type["city"].value == "casablanca"
+    assert by_type["color"].value == "black"
+    assert by_type["budget"].value == "3000.0"
+
+
+def test_ner_preprocesses_accents_and_darija_aliases() -> None:
+    entities = extract_entities("bghit iphon f f\u00e8s b 4500dhs")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Apple"
+    assert by_type["product"].value == "phone"
+    assert by_type["city"].value == "fes"
+    assert by_type["budget"].value == "4500.0"
 
 
 def test_task_router_maps_price_city_and_color_entities() -> None:

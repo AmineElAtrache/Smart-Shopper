@@ -76,6 +76,7 @@ Responsibilities:
 
 - Uses the fine-tuned Hugging Face model `ElAtrachAMINE/darija-ner-xlmroberta`.
 - Downloads the model once when needed, then reuses the local Hugging Face cache.
+- Preprocesses noisy Darija/French/English text with spelling aliases, accent cleanup, and fuzzy matching.
 - Normalizes NER output into the shared entity contract used by the Orchestrator.
 - Enriches model output with shopping context such as Darija aliases, prices, colors, and product model names.
 - Extracts brand, product, budget, currency, city, color, quality, intent, and site hints.
@@ -418,7 +419,7 @@ pytest -q
 Current expected result:
 
 ```text
-77 passed
+80 passed
 ```
 
 ## Useful Kafka Topics

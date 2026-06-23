@@ -1,18 +1,27 @@
 """NER service adapter for Moroccan shopping queries.
 
 The production path uses the fine-tuned Hugging Face token-classification model.
-Lightweight context enrichment fills normalized shopping fields that token models
-can miss, such as product models in "hp omen" or Darija price/color aliases.
+A preprocessing layer cleans noisy Darija/French/English shopping text before
+model inference, and context enrichment fills normalized fields that token
+models can miss, such as product models in "hp omen" or Darija price aliases.
 """
 
 from __future__ import annotations
 
 import os
 import re
+import unicodedata
+from difflib import SequenceMatcher
 from functools import lru_cache
 from typing import Any
 
 from shared.events.schemas import EntityType, ExtractedEntity
+
+try:
+    from rapidfuzz import fuzz, process
+except ImportError:  # pragma: no cover - rapidfuzz is declared in project deps.
+    fuzz = None
+    process = None
 
 DEFAULT_MODEL_ID = "ElAtrachAMINE/darija-ner-xlmroberta"
 
@@ -74,9 +83,11 @@ COLOR_ALIASES = {
     "k7al": "black",
     "k7la": "black",
     "kehla": "black",
+    "kahla": "black",
     "white": "white",
     "blanc": "white",
     "biad": "white",
+    "byad": "white",
     "blue": "blue",
     "bleu": "blue",
     "red": "red",
@@ -90,6 +101,40 @@ COLOR_ALIASES = {
     "or": "gold",
     "silver": "silver",
     "argent": "silver",
+}
+
+SPELLING_ALIASES = {
+    "samsng": "samsung",
+    "samsong": "samsung",
+    "samsonge": "samsung",
+    "iphon": "iphone",
+    "iphne": "iphone",
+    "appel": "apple",
+    "hewlett": "hp",
+    "packard": "hp",
+    "hpq": "hp",
+    "casaa": "casablanca",
+    "casablaca": "casablanca",
+    "casablnca": "casablanca",
+    "rbaat": "rabat",
+    "marrakesh": "marrakech",
+    "f?s": "fes",
+    "fez": "fes",
+    "tomobile": "voiture",
+    "tomobil": "voiture",
+    "tonobile": "voiture",
+    "tonobil": "voiture",
+    "tomobila": "voiture",
+    "k7la": "black",
+    "k7al": "black",
+    "kehla": "black",
+    "kahla": "black",
+    "noire": "black",
+    "phne": "phone",
+    "fone": "phone",
+    "telephon": "telephone",
+    "labtop": "laptop",
+    "laptope": "laptop",
 }
 
 LABEL_ALIASES = {
@@ -158,6 +203,15 @@ MODEL_IGNORED_TOKENS = {
     "dirham",
     "dirhams",
 }
+FUZZY_CHOICES = sorted(
+    set(BRANDS) | set(CITY_ALIASES) | set(COLOR_ALIASES) | {kw for kws in PRODUCT_KEYWORDS.values() for kw in kws}
+)
+FUZZY_REPLACEMENTS = {
+    **{alias: alias for alias in BRANDS},
+    **CITY_ALIASES,
+    **COLOR_ALIASES,
+    **{keyword: product for product, keywords in PRODUCT_KEYWORDS.items() for keyword in keywords},
+}
 
 
 def extract_entities(text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
@@ -167,9 +221,56 @@ def extract_entities(text: str, locale_hint: str | None = None) -> list[Extracte
     the Hugging Face model from the local cache when available, or downloads it
     once and reuses the cached files afterwards.
     """
-    model_entities = _extract_with_model(text)
-    context_entities = _derive_context_entities(text, locale_hint=locale_hint)
+    normalized_text = _preprocess_text(text)
+    model_entities = _extract_with_model(normalized_text)
+    context_entities = _derive_context_entities(
+        original_text=text,
+        normalized_text=normalized_text,
+        locale_hint=locale_hint,
+    )
     return _merge_entities(model_entities, context_entities)
+
+
+def _preprocess_text(text: str) -> str:
+    ascii_text = _strip_accents(text.lower())
+    tokens = TOKEN_PATTERN.findall(ascii_text)
+    normalized_tokens = [_normalize_token(token) for token in tokens]
+    return " ".join(normalized_tokens)
+
+
+def _strip_accents(text: str) -> str:
+    return "".join(
+        character
+        for character in unicodedata.normalize("NFKD", text)
+        if not unicodedata.combining(character)
+    )
+
+
+def _normalize_token(token: str) -> str:
+    if token in SPELLING_ALIASES:
+        return SPELLING_ALIASES[token]
+    if len(token) < 4 or token.isdigit():
+        return token
+
+    match = _fuzzy_match(token, FUZZY_CHOICES, threshold=88)
+    if match is None:
+        return token
+    return FUZZY_REPLACEMENTS.get(match, match)
+
+
+def _fuzzy_match(token: str, choices: list[str], threshold: int) -> str | None:
+    if process is not None and fuzz is not None:
+        result = process.extractOne(token, choices, scorer=fuzz.WRatio, score_cutoff=threshold)
+        return str(result[0]) if result else None
+
+    best_choice = None
+    best_score = 0.0
+    for choice in choices:
+        score = SequenceMatcher(None, token, choice).ratio() * 100
+        if score > best_score:
+            best_choice = choice
+            best_score = score
+    return best_choice if best_choice is not None and best_score >= threshold else None
 
 
 def _extract_with_model(text: str) -> list[ExtractedEntity]:
@@ -235,27 +336,28 @@ def _prediction_to_entity(prediction: dict[str, Any]) -> ExtractedEntity | None:
     )
 
 
-def _derive_context_entities(text: str, locale_hint: str | None = None) -> list[ExtractedEntity]:
-    normalized = text.lower().strip()
+def _derive_context_entities(
+    *, original_text: str, normalized_text: str, locale_hint: str | None = None
+) -> list[ExtractedEntity]:
     entities: list[ExtractedEntity] = []
 
-    brand = _detect_brand(normalized)
+    brand = _detect_brand(normalized_text)
     if brand:
         entities.append(ExtractedEntity(type=EntityType.BRAND, value=brand, confidence=0.7))
 
-    product = _detect_product(normalized) or _detect_model_after_brand(normalized)
+    product = _detect_product(normalized_text) or _detect_model_after_brand(normalized_text)
     if product:
         entities.append(ExtractedEntity(type=EntityType.PRODUCT, value=product, confidence=0.7))
 
-    city = _detect_alias(normalized, CITY_ALIASES)
+    city = _detect_alias(normalized_text, CITY_ALIASES)
     if city:
         entities.append(ExtractedEntity(type=EntityType.CITY, value=city, confidence=0.7))
 
-    color = _detect_alias(normalized, COLOR_ALIASES)
+    color = _detect_alias(normalized_text, COLOR_ALIASES)
     if color:
         entities.append(ExtractedEntity(type=EntityType.COLOR, value=color, confidence=0.7))
 
-    budget = _detect_budget(normalized)
+    budget = _detect_budget(normalized_text)
     if budget:
         amount, currency = budget
         attributes = {"currency": currency}
@@ -277,7 +379,7 @@ def _derive_context_entities(text: str, locale_hint: str | None = None) -> list[
         )
         entities.append(ExtractedEntity(type=EntityType.CURRENCY, value=currency, confidence=0.7))
 
-    if any(word in normalized for word in ("notify", "watch", "monitor", "price drop", "hbet")):
+    if any(word in normalized_text for word in ("notify", "watch", "monitor", "price drop", "hbet")):
         entities.append(ExtractedEntity(type=EntityType.INTENT, value="watch", confidence=0.7))
     else:
         entities.append(ExtractedEntity(type=EntityType.INTENT, value="search", confidence=0.7))
@@ -288,7 +390,7 @@ def _derive_context_entities(text: str, locale_hint: str | None = None) -> list[
                 type=EntityType.SITE,
                 value=locale_hint,
                 confidence=0.5,
-                attributes={"kind": "locale_hint"},
+                attributes={"kind": "locale_hint", "original_text": original_text},
             )
         )
 
