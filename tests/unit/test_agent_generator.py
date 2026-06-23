@@ -1,7 +1,7 @@
 ﻿import asyncio
 
-from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig
-from agents.agent_generator.tools.response_validator import ResponseValidationError, validate_response
+from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig, build_composed_message
+from agents.agent_generator.tools.response_validator import ResponseValidationError, materialize_llm_response, validate_response
 from shared.events.schemas import (
     Availability,
     Channel,
@@ -114,14 +114,11 @@ def test_agent_generator_publishes_template_response_and_records_memory() -> Non
     assert len(behavioral_memory.recorded) == 1
 
 
-def test_agent_generator_accepts_valid_llm_response() -> None:
+def test_agent_generator_accepts_labelled_llm_style_and_keeps_exact_facts() -> None:
     event = make_ranked()
     llm_message = (
-        "Best options:\n"
-        "Samsung Galaxy A15 128GB - 2499 MAD - jumia - Score 88/100 - "
-        "https://example.com/jumia-a15\n"
-        "Samsung Galaxy A05 - 1890 MAD - jumia - Score 84/100 - "
-        "https://example.com/jumia-a05"
+        "INTRO: I found a couple of solid Samsung options that fit your budget.\n"
+        "BEST_REASON: The first option is the best balance because it has the strongest score and trusted source."
     )
     producer = FakeProducer()
     generator = make_generator(producer=producer, llm_client=FakeLlmClient(llm_message))
@@ -129,10 +126,17 @@ def test_agent_generator_accepts_valid_llm_response() -> None:
     response = asyncio.run(generator.handle_ranked(event))
 
     assert response is not None
-    assert response.message == llm_message
+    assert "solid Samsung options" in response.message
+    assert "Samsung Galaxy A15 128GB" in response.message
+    assert "2499 MAD" in response.message
+    assert "https://example.com/jumia-a15" in response.message
+    assert "Samsung Galaxy A05" in response.message
+    assert "1890 MAD" in response.message
+    assert "https://example.com/jumia-a05" in response.message
+    assert "strongest score" in response.message
 
 
-def test_agent_generator_falls_back_when_llm_drops_urls_or_prices() -> None:
+def test_agent_generator_falls_back_when_llm_returns_unusable_unlabelled_text() -> None:
     producer = FakeProducer()
     generator = make_generator(producer=producer, llm_client=FakeLlmClient("A nice Samsung option."))
 
@@ -142,6 +146,21 @@ def test_agent_generator_falls_back_when_llm_drops_urls_or_prices() -> None:
     assert "A nice Samsung option" not in response.message
     assert "https://example.com/jumia-a15" in response.message
     assert "2499 MAD" in response.message
+
+
+def test_materialize_llm_response_composes_intro_reason_with_exact_product_block() -> None:
+    event = make_ranked()
+    message = materialize_llm_response(
+        event,
+        "INTRO: Hadi chi options zwina lik.\nBEST_REASON: Lwel kayban ahsan hit score dyalo tali3.",
+        fallback_message="fallback",
+    )
+
+    assert "Hadi chi options zwina lik" in message
+    assert "Samsung Galaxy A15 128GB" in message
+    assert "2499 MAD" in message
+    assert "https://example.com/jumia-a15" in message
+    assert "Lwel kayban ahsan" in message
 
 
 def test_agent_generator_skips_ambient_watch_ranked_events() -> None:

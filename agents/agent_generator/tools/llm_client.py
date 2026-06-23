@@ -14,6 +14,36 @@ PROVIDER_DEFAULT_BASE_URLS = {
     "gemini": "https://generativelanguage.googleapis.com/v1beta",
 }
 
+SYSTEM_PROMPT = """You are Smart Shopper's final response writer.
+
+Your job is NOT to choose products and NOT to rewrite product facts.
+The system code will print exact product titles, prices, sources, scores, and links.
+You only write a short intro and a short best-choice explanation.
+
+Language rules:
+- Reply in the same language/style as the user when it is known from context.
+- If the user writes Darija/Arabizi, use simple Moroccan Darija/Arabizi.
+- If the user writes French, use French.
+- If the user writes English, use English.
+- If language is unknown, use simple English.
+
+Channel rules:
+- For WhatsApp or Telegram, keep it compact and mobile-friendly.
+- No markdown tables.
+- No long paragraphs.
+- No emojis unless the user uses emojis first.
+
+Safety rules:
+- Do not invent products, prices, discounts, stock state, warranties, sources, scores, or URLs.
+- Do not mention product prices or links in your answer sections.
+- Do not add legal/medical/financial advice.
+- Do not ask a follow-up question unless there are no products.
+
+Output format must be exactly:
+INTRO: <one short sentence>
+BEST_REASON: <one short sentence explaining why product #1 is the best among the listed options>
+"""
+
 
 class LlmClient:
     def __init__(self, settings: Settings) -> None:
@@ -62,16 +92,10 @@ class LlmClient:
                 json={
                     "model": self._settings.llm_model,
                     "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are Smart Shopper. Write concise shopping recommendations. "
-                                "Never invent products, prices, sources, scores, or URLs."
-                            ),
-                        },
+                        {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": prompt},
                     ],
-                    "temperature": 0.2,
+                    "temperature": 0.15,
                 },
             )
             response.raise_for_status()
@@ -85,7 +109,7 @@ class LlmClient:
         fallback_message: str,
         behavior_context: dict | None,
     ) -> str:
-        prompt = _build_prompt(event, fallback_message, behavior_context)
+        prompt = f"{SYSTEM_PROMPT}\n\n{_build_prompt(event, fallback_message, behavior_context)}"
         async with httpx.AsyncClient(timeout=self._settings.llm_timeout_seconds) as client:
             response = await client.post(
                 f"{self._base_url(provider).rstrip('/')}/models/{self._settings.llm_model}:generateContent",
@@ -112,15 +136,15 @@ def _build_prompt(
 ) -> str:
     query = event.query.model_dump() if event.query is not None else {}
     products = [product.model_dump() for product in event.products[:3]]
+    top_product = event.products[0].model_dump() if event.products else {}
     return (
-        "Rewrite the fallback response into a helpful final shopping answer.\n"
-        "Hard rules:\n"
-        "- Use only the products listed below.\n"
-        "- Keep every listed product price, source, score, and URL exactly visible.\n"
-        "- Do not add products, claims, discounts, stock status, or URLs that are not in the data.\n"
-        "- If behavior context asks for tone/language, adapt style only, not facts.\n\n"
-        f"Query: {query}\n"
-        f"Private generator behavior context: {behavior_context or {}}\n"
-        f"Products: {products}\n"
-        f"Fallback response:\n{fallback_message}"
+        "Write only INTRO and BEST_REASON for this shopping result.\n"
+        "The app will add the exact product list after INTRO.\n"
+        "Do not copy prices, URLs, or scores into your sections.\n\n"
+        f"Channel: {event.channel}\n"
+        f"Query/entities: {query}\n"
+        f"Behavior/language context: {behavior_context or {}}\n"
+        f"Top product to explain: {top_product}\n"
+        f"All listed products for context only: {products}\n"
+        f"Safe template if needed:\n{fallback_message}"
     )
