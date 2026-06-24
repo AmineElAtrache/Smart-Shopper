@@ -8,6 +8,27 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from pathlib import Path
+
+
+def _configure_console_output() -> None:
+    """Use UTF-8 on Windows so Arabic/French accents print correctly."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+
+def _save_response(message: str, *, user_text: str | None) -> Path | None:
+    """Write the response to a UTF-8 file when Arabic script is present."""
+    if not user_text or not any("\u0600" <= char <= "\u06ff" for char in user_text + message):
+        return None
+    output_path = Path("last_llm_response.txt")
+    output_path.write_text(message, encoding="utf-8")
+    return output_path
 
 from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig, build_outbound_response
 from agents.agent_generator.tools.behavior_analyzer import resolve_generation_context
@@ -85,6 +106,7 @@ def build_sample_ranked(*, user_text: str | None = None) -> DecisionRanked:
 
 
 async def main() -> None:
+    _configure_console_output()
     settings = get_settings()
     user_text = " ".join(sys.argv[1:]).strip() or None
     event = build_sample_ranked(user_text=user_text)
@@ -112,6 +134,9 @@ async def main() -> None:
     print(f"used_llm={response.message != template}")
     print("\n=== Final response ===")
     print(response.message)
+    saved = _save_response(response.message, user_text=event.user_text)
+    if saved is not None:
+        print(f"\n(Arabic saved to {saved.resolve()} — open in VS Code/Notepad if the terminal shows broken text.)")
 
     if producer.published and producer.published[0][0] != RESPONSE_OUTBOUND:
         raise RuntimeError(f"Unexpected topic: {producer.published[0][0]}")
