@@ -95,10 +95,9 @@ def build_response_message(products: list[RankedProduct]) -> str:
 
     top_products = products[:3]
     intro = f"Here are {len(top_products)} option{'s' if len(top_products) != 1 else ''} from your search."
-    closing = (
-        "These are listed by score using price, trust, and availability, without favoring any option. "
-        "Review the details and decide what works for you."
-    )
+    from agents.agent_generator.tools.response_copy import localized_closing
+
+    closing = localized_closing("en", seed=intro)
     return build_composed_message(
         products,
         intro=intro,
@@ -137,7 +136,9 @@ def build_localized_response(event: DecisionRanked) -> str:
     language = infer_language(event.user_text or "")
     if language == "darija":
         return build_darija_response(event)
-    return build_response_message(event.products)
+    from agents.agent_generator.tools.response_copy import build_standard_response
+
+    return build_standard_response(event, language)
 
 
 def build_outbound_response(event: DecisionRanked) -> OutboundResponse:

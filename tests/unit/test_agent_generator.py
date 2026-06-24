@@ -114,7 +114,8 @@ def test_agent_generator_publishes_neutral_template_response_and_records_memory(
     assert producer.published[0][0] == RESPONSE_OUTBOUND
     assert "Samsung Galaxy A15 128GB" in response.message
     assert "https://example.com/jumia-a15" in response.message
-    assert "without favoring any option" in response.message
+    assert "without favoring" not in response.message.lower()
+    assert "no recommendation" not in response.message.lower()
     assert "best choice" not in response.message.lower()
     assert len(global_memory.cached) == 1
     assert len(behavioral_memory.recorded) == 1
@@ -135,7 +136,7 @@ def test_agent_generator_rejects_biased_llm_closing_and_uses_neutral_template() 
 
     assert response is not None
     assert "2499 MAD | jumia | 88/100" in response.message
-    assert "without favoring any option" in response.message
+    assert "without favoring" not in response.message.lower()
     assert "best balance" not in response.message.lower()
     assert "start with option" not in response.message.lower()
 
@@ -155,7 +156,7 @@ def test_materialize_llm_response_supports_neutral_darija_sections() -> None:
         (
             "INTRO: Hahuma 2 khityarat li lqit lik f Samsung.\n"
             "PRODUCT_HEADER: Tafasil dyal kol khityar:\n"
-            "CLOSING: Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. "
+            "CLOSING: Tartib dyal l-lista kay7seb taman w thiqa. "
             "Qra l-ma3lomat w khod l-karar li 3jbek."
         ),
         fallback_message="fallback",
@@ -232,7 +233,7 @@ def test_materialize_llm_response_rejects_repetitive_closing() -> None:
 
     assert "homhomhom" not in message
     assert "l-ahsen" not in message.lower()
-    assert "karar" in message.lower() or "khtiar" in message.lower()
+    assert "karar" in message.lower() or "khtiar" in message.lower() or "khtar" in message.lower()
     assert len(message) < 1200
 
 
@@ -255,7 +256,8 @@ def test_build_darija_response_is_neutral_and_localized() -> None:
     assert "Lien:" in message
     assert "l-ahsen" not in message.lower()
     assert "verify" not in message.lower()
-    assert "karar" in message.lower() or "khtiar" in message.lower()
+    assert "bla tafdil" not in message.lower()
+    assert "karar" in message.lower() or "khtiar" in message.lower() or "khtar" in message.lower()
 
 
 def test_materialize_rejects_mixed_language_darija_closing() -> None:
@@ -277,7 +279,7 @@ def test_materialize_rejects_mixed_language_darija_closing() -> None:
         fallback_message="fallback",
     )
 
-    assert "karar" in message.lower() or "khtiar" in message.lower()
+    assert "karar" in message.lower() or "khtiar" in message.lower() or "khtar" in message.lower()
     assert "verify seller" not in message.lower()
     assert "best choice" not in message.lower()
 
@@ -292,14 +294,42 @@ def test_darija_closing_varies_with_user_text() -> None:
 
 def test_stale_darija_closing_rejects_prompt_echo() -> None:
     from agents.agent_generator.tools.darija_copy import DARIJA_CLOSING_VARIANTS, is_stale_darija_closing
+    from agents.agent_generator.tools.text_safety import mentions_neutrality_disclaimer
 
     assert is_stale_darija_closing(
         "Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. Chouf l-ma3lomat w dir l-karar li 3jbek."
     )
-    assert is_stale_darija_closing(DARIJA_CLOSING_VARIANTS[1])
-    assert not is_stale_darija_closing(
+    assert not is_stale_darija_closing(DARIJA_CLOSING_VARIANTS[1])
+    assert mentions_neutrality_disclaimer(
         "Tartib dyal l-lista kay7seb taman w thiqa bla tafdil. Khtar li bghiti mn ba3d ma t-qra."
     )
+
+
+def test_materialize_rejects_neutrality_disclaimer_closing() -> None:
+    event = make_ranked()
+    message = materialize_llm_response(
+        event,
+        (
+            "INTRO: Here are 2 options from your search.\n"
+            "CLOSING: These options are listed without favoring any option. Review and decide."
+        ),
+        fallback_message="fallback",
+    )
+
+    assert "without favoring" not in message.lower()
+    assert "2499 MAD" in message
+
+
+def test_localized_closing_varies_with_user_text() -> None:
+    from agents.agent_generator.tools.response_copy import localized_closing
+
+    closing_en_a = localized_closing("en", seed="I need a Samsung phone under 3000 MAD in Casablanca")
+    closing_en_b = localized_closing("en", seed="Looking for gaming laptop under 5000 dirhams")
+    closing_fr_a = localized_closing("fr", seed="Je cherche un telephone Samsung pas cher")
+    closing_fr_b = localized_closing("fr", seed="Je veux un laptop portable pour etudier")
+    assert closing_en_a != closing_en_b or closing_fr_a != closing_fr_b
+    assert "sans favoriser" not in closing_fr_a.lower()
+    assert "without favoring" not in closing_en_a.lower()
 
 
 def test_sanitize_llm_prose_strips_repetition() -> None:

@@ -15,7 +15,13 @@ from agents.agent_generator.tools.darija_copy import (
     is_stale_darija_closing,
     seed_for_event,
 )
-from agents.agent_generator.tools.text_safety import REPETITION_PATTERN, is_neutral_prose, is_usable_prose, sanitize_llm_prose
+from agents.agent_generator.tools.text_safety import (
+    REPETITION_PATTERN,
+    is_objective_prose,
+    is_usable_prose,
+    mentions_neutrality_disclaimer,
+    sanitize_llm_prose,
+)
 from shared.events.schemas import DecisionRanked, RankedProduct
 
 URL_PATTERN = re.compile(r"https?://[^\s)]+")
@@ -60,7 +66,7 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
         product_header = sections.get("product_header")
         if product_header and (
             _header_contains_product_facts(product_header)
-            or not is_neutral_prose(product_header)
+            or not is_objective_prose(product_header)
             or (
                 _language(event) == "darija"
                 and not is_coherent_darija(product_header)
@@ -169,12 +175,12 @@ def _resolve_intro(event: DecisionRanked, intro: str | None, *, seed: str) -> st
         if (
             is_coherent_darija(cleaned)
             and is_usable_prose(cleaned, max_length=180)
-            and is_neutral_prose(cleaned)
+            and is_objective_prose(cleaned)
             and _is_clean_intro(cleaned)
         ):
             return cleaned
         return darija_intro(count, hint, seed=seed)
-    if is_usable_prose(cleaned, max_length=180) and is_neutral_prose(cleaned) and _is_clean_intro(cleaned):
+    if is_usable_prose(cleaned, max_length=180) and is_objective_prose(cleaned) and _is_clean_intro(cleaned):
         return cleaned
     return _default_intro(event, seed=seed)
 
@@ -189,13 +195,18 @@ def _resolve_closing(event: DecisionRanked, closing: str | None, *, seed: str) -
         if (
             is_coherent_darija(cleaned)
             and is_usable_prose(cleaned, max_length=320)
-            and is_neutral_prose(cleaned)
+            and is_objective_prose(cleaned)
             and _ends_cleanly(cleaned)
             and not is_stale_darija_closing(cleaned)
+            and not mentions_neutrality_disclaimer(cleaned)
         ):
             return cleaned
         return darija_closing(seed=seed)
-    if is_usable_prose(cleaned, max_length=320) and is_neutral_prose(cleaned) and _ends_cleanly(cleaned):
+    if (
+        is_usable_prose(cleaned, max_length=320)
+        and is_objective_prose(cleaned)
+        and _ends_cleanly(cleaned)
+    ):
         return cleaned
     return _default_closing(event, seed=seed)
 
@@ -264,36 +275,23 @@ def _header_contains_product_facts(header: str) -> bool:
 
 
 def _default_intro(event: DecisionRanked, *, seed: str = "") -> str:
+    from agents.agent_generator.tools.response_copy import localized_intro
+
     count = min(3, len(event.products))
     language = _language(event)
+    resolved_seed = seed or _seed(event)
     if language == "darija":
-        return darija_intro(count, _product_hint(event), seed=seed or _seed(event))
-    if language == "fr":
-        suffix = "s" if count != 1 else ""
-        return f"Voici {count} option{suffix} pour ta recherche."
-    if language == "ar":
-        return f"إليك {count} خيارات من بحثك."
-    return f"Here are {count} option{'s' if count != 1 else ''} from your search."
+        return darija_intro(count, _product_hint(event), seed=resolved_seed)
+    return localized_intro(language, count, seed=resolved_seed)
 
 
 def _default_closing(event: DecisionRanked, *, seed: str = "") -> str:
+    from agents.agent_generator.tools.response_copy import localized_closing
+
     language = _language(event)
     if language == "darija":
         return darija_closing(seed=seed or _seed(event))
-    if language == "fr":
-        return (
-            "Liste par score selon le prix, la confiance et la disponibilite, sans favoriser une option. "
-            "Compare les details et choisis ce qui te convient."
-        )
-    if language == "ar":
-        return (
-            "مرتبة حسب السعر والثقة والتوفر دون تفضيل خيار على آخر. "
-            "راجع التفاصيل واختر ما يناسبك."
-        )
-    return (
-        "These are listed by score using price, trust, and availability, without favoring any option. "
-        "Review the details and decide what works for you."
-    )
+    return localized_closing(language, seed=seed or _seed(event))
 
 
 def _validate_product_facts(product: RankedProduct, message: str) -> None:

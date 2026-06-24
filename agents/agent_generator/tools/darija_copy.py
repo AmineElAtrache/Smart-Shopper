@@ -28,7 +28,7 @@ DARIJA_MARKER_PATTERN = re.compile(
     r"\b("
     r"l9it|bghit|kayna|chouf|qbel|taman|khityar|khityarat|rattab|rattabt|3la|"
     r"t2akked|lbayi3|wjoud|thiqa|qima|daba|afak|chno|wach|kayn|bghiti|n9leb|"
-    r"3tini|mn|f|w|d|b|l|hahuma|tartib|karar|qra|ma3lomat|tafdil|talab|tafasil|"
+    r"3tini|mn|f|w|d|b|l|hahuma|tartib|karar|qra|ma3lomat|talab|tafasil|"
     r"nata2ij|7sab|dir|khod|wahda|bla|khtar|waqt|b7al"
     r")\b|[3790]",
     re.IGNORECASE,
@@ -36,36 +36,35 @@ DARIJA_MARKER_PATTERN = re.compile(
 
 DARIJA_CLOSING_VARIANTS = (
     (
-        "Rattabt l-lista 3la taman, thiqa, w l-wjoud b tartib bla ma n-favori wahda. "
-        "Qra l-ma3lomat dyal kol wa7da w khod l-karar li 3jbek."
-    ),
-    (
-        "L-lista m-rattba 3la taman, thiqa, w l-wjoud bla tafdil. "
-        "Chouf l-ma3lomat w dir l-karar li 3jbek."
-    ),
-    (
-        "Hadi l-ma3lomat li lqit, m-rattbin 3la taman w thiqa bla ma n-pushi wahda. "
-        "Qra kol wa7da w khod waqt dyalek f l-khtiar."
-    ),
-    (
-        "M-rattbt l-khityarat 3la taman w thiqa, bla ma n-7eb wahda 3la wahda. "
-        "Chouf chno kayn w khod l-karar li y-m3ek."
-    ),
-    (
-        "Tartib dyal l-lista kay7seb taman, thiqa, w l-wjoud, bla tafdil mn jiha dyali. "
+        "L-lista m-rattba 3la taman, thiqa, w l-wjoud. "
         "Qra tafasil kol khityar w khtar li bghiti."
     ),
     (
-        "Hadi ghir ma3lomat m-3aradin b tartib, ma kayn la pression w la tawsiya. "
-        "Chouf l-ma3lomat w goul li bghiti."
+        "Tartib kay7seb taman, thiqa, w l-wjoud dyal kol wa7da. "
+        "Chouf l-ma3lomat w dir l-karar dyalek."
     ),
     (
-        "Kol khityar f l-lista 3ndo taman, tqyim, w ma7all dyalo, m-rattbin b tartib neutral. "
-        "Khod l-wqt dyalek w khtar li y-3jbek."
+        "Kol khityar 3ndo taman, tqyim, w ma7all dyalo. "
+        "Khod l-wqt dyalek w chouf li y-m3ek."
     ),
     (
-        "L-ma3lomat m-7etota b tartib 3la taman, thiqa, w l-wjoud bla bias. "
-        "Dir l-karar dyalek mn ba3d ma t-qra tafasil."
+        "Hadi tafasil li lqit, m-7etotin 3la taman w thiqa. "
+        "Goul li bghiti mn ba3d ma t-qra."
+    ),
+    (
+        "L-ma3lomat lta7t m-rattba 3la taman, thiqa, w l-wjoud. "
+        "Chouf kol wa7da w khod l-karar li 3jbek."
+    ),
+    (
+        "Dakchi li lqit m-rattab 3la taman w thiqa. "
+        "Qra w khtar li bghiti."
+    ),
+    (
+        "Hahuma kol khityar b taman, tqyim, w ma7all dyalo. "
+        "Chouf tafasil w khtar li bghiti."
+    ),
+    (
+        "Mn ba3d ma t-chouf taman w tqyim, khod l-karar li y-m3ek."
     ),
 )
 
@@ -79,24 +78,24 @@ def is_coherent_darija(text: str) -> bool:
     return bool(DARIJA_MARKER_PATTERN.search(cleaned))
 
 
+LEGACY_STALE_DARIJA_CLOSINGS = (
+    "Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. Qra l-ma3lomat w khod l-karar li 3jbek.",
+    "Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. Chouf l-ma3lomat w dir l-karar li 3jbek.",
+    "Tartib dyal l-lista kay7seb taman w thiqa bla tafdil. Khtar li bghiti mn ba3d ma t-qra.",
+    "L-lista m-rattba 3la taman, thiqa, w l-wjoud bla tafdil. Chouf l-ma3lomat w dir l-karar li 3jbek.",
+)
+
+
 def is_stale_darija_closing(text: str) -> bool:
     normalized = _normalize_phrase(text)
     if not normalized:
         return True
+    legacy = {_normalize_phrase(phrase) for phrase in LEGACY_STALE_DARIJA_CLOSINGS}
+    if normalized in legacy:
+        return True
     first = _normalize_phrase(_first_sentence(text))
-    for variant in DARIJA_CLOSING_VARIANTS:
-        variant_norm = _normalize_phrase(variant)
-        if normalized == variant_norm:
-            return True
-        if first and first == _normalize_phrase(_first_sentence(variant)):
-            return True
-    prompt_echo = _normalize_phrase(
-        "Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. Qra l-ma3lomat w khod l-karar li 3jbek."
-    )
-    hybrid_echo = _normalize_phrase(
-        "Rattabt l-lista 3la taman, thiqa, w l-wjoud bla tafdil. Chouf l-ma3lomat w dir l-karar li 3jbek."
-    )
-    return normalized in {prompt_echo, hybrid_echo}
+    legacy_first = {_normalize_phrase(_first_sentence(phrase)) for phrase in LEGACY_STALE_DARIJA_CLOSINGS}
+    return bool(first and first in legacy_first)
 
 
 def build_darija_response(event: DecisionRanked) -> str:
