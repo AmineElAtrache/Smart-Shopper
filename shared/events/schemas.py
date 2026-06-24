@@ -140,6 +140,7 @@ class ProductQuery(BaseModel):
 
 class ScrapeTaskAssigned(UserEvent):
     query: ProductQuery
+    user_text: str | None = None
     watch_id: str | None = None
 
 
@@ -188,6 +189,7 @@ class RankedProduct(BaseModel):
 
 class DecisionRanked(UserEvent):
     query: ProductQuery | None = None
+    user_text: str | None = None
     watch_id: str | None = None
     products: list[RankedProduct]
 

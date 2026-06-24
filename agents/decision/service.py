@@ -74,6 +74,7 @@ class DecisionService:
             return
 
         first = products[0]
+        user_text = str(first.metadata.get("user_text") or "").strip() or None
         ranked = self._agent.rank(
             request_id=request_id,
             user_id=first.user_id or "unknown",
@@ -81,6 +82,7 @@ class DecisionService:
             query=first.query or ProductQuery(),
             products=products,
             watch_id=str(first.metadata.get("watch_id") or "") or None,
+            user_text=user_text,
         )
         await self._producer.publish(DECISION_RANKED, ranked, key=request_id)
         print(f"[decision] published decision.ranked request_id={request_id} products={len(products)}")

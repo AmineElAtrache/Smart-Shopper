@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass
 from typing import Mapping
 
+from agents.agent_generator.tools.behavior_analyzer import resolve_generation_context
 from agents.agent_generator.tools.llm_client import LlmClient
 from agents.agent_generator.tools.response_validator import (
     ResponseValidationError,
@@ -35,11 +36,24 @@ def build_product_block(
     products: list[RankedProduct],
     *,
     labels: Mapping[str, str] | None = None,
+    style: str = "labeled",
 ) -> str:
     label_map = {**DEFAULT_PRODUCT_LABELS, **dict(labels or {})}
     top_products = products[:3]
     lines: list[str] = []
     for index, product in enumerate(top_products, start=1):
+        if style == "natural":
+            lines.extend(
+                [
+                    (
+                        f"{index}. {product.title} - {product.price:g} {product.currency} "
+                        f"| {product.source} | {product.score}/100"
+                    ),
+                    f"   {product.url}",
+                    "",
+                ]
+            )
+            continue
         lines.extend(
             [
                 f"{index}. {product.title}",
@@ -89,8 +103,9 @@ def build_composed_message(
     why_this_order: str | None = None,
     next_step: str | None = None,
     labels: Mapping[str, str] | None = None,
+    product_style: str = "labeled",
 ) -> str:
-    product_block = build_product_block(products, labels=labels)
+    product_block = build_product_block(products, labels=labels, style=product_style)
     parts = [intro.strip()]
     if product_header:
         parts.append(product_header.strip())
@@ -163,6 +178,7 @@ class AgentGenerator:
         behavior_context = None
         if self._behavioral_memory is not None:
             behavior_context = await self._behavioral_memory.build_generation_context(event.user_id)
+        behavior_context = resolve_generation_context(event, behavior_context)
         if self._llm_client is not None:
             llm_text = await self._llm_client.generate_recommendation(
                 event,

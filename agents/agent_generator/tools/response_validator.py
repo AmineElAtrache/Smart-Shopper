@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from agents.agent_generator.tools.behavior_analyzer import infer_language
+from agents.agent_generator.tools.text_safety import REPETITION_PATTERN, is_usable_prose, sanitize_llm_prose
 from shared.events.schemas import DecisionRanked, RankedProduct
 
 URL_PATTERN = re.compile(r"https?://[^\s)]+")
@@ -11,6 +13,7 @@ SECTION_NAMES = (
     "GENERAL_REPLY",
     "INTRO",
     "PRODUCT_HEADER",
+    "CLOSING",
     "PRICE_LABEL",
     "SOURCE_LABEL",
     "SCORE_LABEL",
@@ -34,10 +37,23 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
     sections = _parse_llm_sections(llm_text)
     if sections:
         if not event.products:
-            return sections.get("general_reply") or sections.get("intro") or fallback_message
+            general_reply = sections.get("general_reply") or sections.get("intro") or fallback_message
+            cleaned = sanitize_llm_prose(general_reply, max_length=400)
+            return cleaned if is_usable_prose(cleaned, max_length=400) else fallback_message
 
         from agents.agent_generator.agent import build_composed_message
 
+        closing = sections.get("closing") or _join_closing_sections(sections)
+        intro = sections.get("intro")
+        product_header = sections.get("product_header")
+        if product_header and _header_contains_product_facts(product_header):
+            product_header = None
+
+        intro = _resolve_intro(event, intro)
+        closing = _resolve_closing(event, closing)
+        product_style = "natural" if not any(
+            sections.get(key) for key in ("price_label", "source_label", "score_label", "link_label")
+        ) else "labeled"
         labels = {
             "price": sections.get("price_label") or "Price",
             "source": sections.get("source_label") or "Source",
@@ -46,12 +62,13 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
         }
         return build_composed_message(
             event.products,
-            intro=sections.get("intro") or _default_intro(event),
-            product_header=sections.get("product_header") or "Options:",
-            best_reason=sections.get("best_reason") or _default_best_reason(event.products[0]),
-            why_this_order=sections.get("why_this_order"),
-            next_step=sections.get("next_step"),
+            intro=intro,
+            product_header=product_header,
+            best_reason=closing,
+            why_this_order=None,
+            next_step=None,
             labels=labels,
+            product_style=product_style,
         )
     return llm_text.strip() or fallback_message
 
@@ -73,22 +90,105 @@ def validate_response(event: DecisionRanked, message: str) -> None:
 
 
 def _parse_llm_sections(text: str) -> dict[str, str]:
+    section_limits = {
+        "intro": 180,
+        "product_header": 60,
+        "closing": 320,
+        "general_reply": 400,
+        "best_reason": 220,
+        "why_this_order": 180,
+        "next_step": 180,
+    }
     sections: dict[str, str] = {}
     for match in SECTION_PATTERN.finditer(text.strip()):
         key = match.group(1).lower()
-        value = _clean_section(match.group(2))
+        value = _clean_section(match.group(2), max_length=section_limits.get(key, 320))
         if value:
             sections[key] = value
     return sections
 
 
-def _clean_section(value: str) -> str:
-    return re.sub(r"\s+", " ", value).strip().strip('"')
+def _clean_section(value: str, *, max_length: int = 320) -> str:
+    return sanitize_llm_prose(value, max_length=max_length)
+
+
+def _resolve_intro(event: DecisionRanked, intro: str | None) -> str:
+    cleaned = _clean_section(intro or "", max_length=180)
+    if is_usable_prose(cleaned, max_length=180):
+        return cleaned
+    return _default_intro(event)
+
+
+def _resolve_closing(event: DecisionRanked, closing: str | None) -> str:
+    raw = closing or ""
+    if raw and REPETITION_PATTERN.search(raw):
+        return _default_closing(event)
+    cleaned = _clean_section(raw, max_length=320)
+    if is_usable_prose(cleaned, max_length=320) and _ends_cleanly(cleaned):
+        return cleaned
+    return _default_closing(event)
+
+
+def _ends_cleanly(text: str) -> bool:
+    stripped = text.strip()
+    return bool(stripped) and stripped[-1] in ".!?؟…"
+
+
+def _join_closing_sections(sections: dict[str, str]) -> str:
+    parts = [
+        sections.get("best_reason"),
+        sections.get("why_this_order"),
+        sections.get("next_step"),
+    ]
+    return " ".join(part.strip() for part in parts if part and part.strip())
+
+
+def _header_contains_product_facts(header: str) -> bool:
+    lowered = header.lower()
+    if URL_PATTERN.search(header):
+        return True
+    if re.search(r"\b\d{3,}\b", header):
+        return True
+    if any(token in lowered for token in ("http", "mad", "price:", "source:", "score:", "link:")):
+        return True
+    return len(header) > 80
 
 
 def _default_intro(event: DecisionRanked) -> str:
     count = min(3, len(event.products))
+    language = infer_language(event.user_text or "")
+    if language == "darija":
+        return f"L9it lik {count} option{'s' if count != 1 else ''} mzyanin."
+    if language == "fr":
+        suffix = "s" if count != 1 else ""
+        return f"J'ai trouve {count} bonne option{suffix} pour toi."
+    if language == "ar":
+        return f"وجدت {count} خيارات مناسبة لك."
     return f"I found {count} good option{'s' if count != 1 else ''} for you."
+
+
+def _default_closing(event: DecisionRanked) -> str:
+    language = infer_language(event.user_text or "")
+    if language == "darija":
+        return (
+            "L'option 1 hiya l'ahsen: score 3ali, taman mzyan, w kayna f stock. "
+            "Rattbehom 3la value, thiqa, w disponibilite. "
+            "Bda b option 1 w verify seller w delivery qbel ma tchri."
+        )
+    if language == "fr":
+        return (
+            "L'option 1 est la meilleure: bon score, bon prix, et disponible. "
+            "Je les ai classees selon le rapport qualite-prix, la confiance et la disponibilite. "
+            "Commence par l'option 1 et verifie le vendeur avant d'acheter."
+        )
+    if language == "ar":
+        return (
+            "الخيار الأول هو الأفضل: تقييم أعلى وسعر مناسب ومتوفر. "
+            "رتبتها حسب القيمة والثقة والجودة والتوفر. "
+            "ابدأ بالخيار الأول وتحقق من البائع قبل الشراء."
+        )
+    product = event.products[0]
+    return _default_best_reason(product)
 
 
 def _default_best_reason(product: RankedProduct) -> str:

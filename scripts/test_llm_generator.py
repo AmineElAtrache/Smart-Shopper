@@ -7,8 +7,10 @@ DecisionRanked event and sends it through the real AgentGenerator class.
 from __future__ import annotations
 
 import asyncio
+import sys
 
 from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig, build_outbound_response
+from agents.agent_generator.tools.behavior_analyzer import resolve_generation_context
 from shared.config import get_settings
 from shared.events.schemas import (
     Availability,
@@ -34,19 +36,21 @@ class NoopGlobalMemory:
         return None
 
 
-class NoopBehavioralMemory:
+class ContextBehavioralMemory:
     async def build_generation_context(self, user_id):
-        return {"tone": "concise", "language": "en"}
+        return {"user_id": user_id}
 
     async def record_generation(self, event, response) -> None:
         return None
 
 
-def build_sample_ranked() -> DecisionRanked:
+def build_sample_ranked(*, user_text: str | None = None) -> DecisionRanked:
+    message = user_text or "Bghit Samsung phone b 3000 dh"
     return DecisionRanked(
         request_id="req_llm_test",
         user_id="telegram_123",
         channel=Channel.TELEGRAM,
+        user_text=message,
         query=ProductQuery(product="phone", brand="Samsung", budget=3000),
         products=[
             RankedProduct(
@@ -82,7 +86,8 @@ def build_sample_ranked() -> DecisionRanked:
 
 async def main() -> None:
     settings = get_settings()
-    event = build_sample_ranked()
+    user_text = " ".join(sys.argv[1:]).strip() or None
+    event = build_sample_ranked(user_text=user_text)
     template = build_outbound_response(event).message
     producer = PrintOnlyProducer()
     generator = AgentGenerator(
@@ -90,16 +95,19 @@ async def main() -> None:
         settings=settings,
         producer=producer,
         global_memory=NoopGlobalMemory(),
-        behavioral_memory=NoopBehavioralMemory(),
+        behavioral_memory=ContextBehavioralMemory(),
     )
 
     response = await generator.handle_ranked(event)
     if response is None:
         raise RuntimeError("Agent Generator did not produce a response.")
 
+    context = resolve_generation_context(event, {"user_id": event.user_id})
     print("=== LLM Generator Test ===")
     print(f"provider={settings.llm_provider}")
     print(f"model={settings.llm_model}")
+    print(f"user_text={event.user_text}")
+    print(f"detected_language={context.get('language')}")
     print(f"published_topic={producer.published[0][0] if producer.published else None}")
     print(f"used_llm={response.message != template}")
     print("\n=== Final response ===")

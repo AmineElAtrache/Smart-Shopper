@@ -73,4 +73,5 @@ def build_scrape_task(message: InboundMessage, entities: list[ExtractedEntity]) 
         user_id=message.user_id,
         channel=message.channel,
         query=build_product_query(entities),
+        user_text=message.text.strip(),
     )

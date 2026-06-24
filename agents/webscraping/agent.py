@@ -235,6 +235,8 @@ class MockScraperAgent:
         for product in products:
             if task.watch_id:
                 product.metadata["watch_id"] = task.watch_id
+            if task.user_text:
+                product.metadata["user_text"] = task.user_text
             await self._producer.publish(SCRAPE_RAW, product, key=task.request_id)
         return products
 

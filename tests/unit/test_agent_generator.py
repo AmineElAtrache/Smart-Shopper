@@ -124,13 +124,9 @@ def test_agent_generator_accepts_productive_llm_style_and_keeps_exact_facts() ->
     llm_message = (
         "INTRO: I found a couple of solid Samsung options that fit your budget.\n"
         "PRODUCT_HEADER: Best matches I found:\n"
-        "PRICE_LABEL: Price\n"
-        "SOURCE_LABEL: Store\n"
-        "SCORE_LABEL: Match\n"
-        "LINK_LABEL: Open\n"
-        "BEST_REASON: The first option is the best balance because it has strong value and a trusted source.\n"
-        "WHY_THIS_ORDER: The ranking favors better value and stronger trust signals.\n"
-        "NEXT_STEP: Start with option #1, then verify the seller page before buying."
+        "CLOSING: The first option is the best balance because it has strong value and a trusted source. "
+        "The ranking favors better value and stronger trust signals. "
+        "Start with option #1, then verify the seller page before buying."
     )
     producer = FakeProducer()
     generator = make_generator(producer=producer, llm_client=FakeLlmClient(llm_message))
@@ -140,9 +136,7 @@ def test_agent_generator_accepts_productive_llm_style_and_keeps_exact_facts() ->
     assert response is not None
     assert "solid Samsung options" in response.message
     assert "Best matches I found" in response.message
-    assert "Store: jumia" in response.message
-    assert "Match: 88/100" in response.message
-    assert "Open: https://example.com/jumia-a15" in response.message
+    assert "2499 MAD | jumia | 88/100" in response.message
     assert "Samsung Galaxy A15 128GB" in response.message
     assert "2499 MAD" in response.message
     assert "https://example.com/jumia-a15" in response.message
@@ -150,7 +144,6 @@ def test_agent_generator_accepts_productive_llm_style_and_keeps_exact_facts() ->
     assert "1890 MAD" in response.message
     assert "https://example.com/jumia-a05" in response.message
     assert "strong value" in response.message
-    assert "ranking favors better value" in response.message
     assert "verify the seller page" in response.message
 
 
@@ -161,21 +154,17 @@ def test_materialize_llm_response_supports_darija_labels_and_human_sections() ->
         (
             "INTRO: L9it lik had l-options li kaybano mzyanin 3la budget dyalk.\n"
             "PRODUCT_HEADER: Ahsen choices:\n"
-            "PRICE_LABEL: Taman\n"
-            "SOURCE_LABEL: Source\n"
-            "SCORE_LABEL: Score\n"
-            "LINK_LABEL: Lien\n"
-            "BEST_REASON: Lwel kayban ahsen balance bin value w thiqa.\n"
-            "WHY_THIS_ORDER: Ranking kaychof value, trust, quality w availability.\n"
-            "NEXT_STEP: Bda b option #1 w verify seller qbel ma tchri."
+            "CLOSING: Lwel kayban ahsen balance bin value w thiqa. "
+            "Ranking kaychof value, trust, quality w availability. "
+            "Bda b option #1 w verify seller qbel ma tchri."
         ),
         fallback_message="fallback",
     )
 
     assert "L9it lik" in message
     assert "Ahsen choices" in message
-    assert "Taman: 2499 MAD" in message
-    assert "Lien: https://example.com/jumia-a15" in message
+    assert "2499 MAD | jumia | 88/100" in message
+    assert "https://example.com/jumia-a15" in message
     assert "Samsung Galaxy A15 128GB" in message
     assert "Lwel kayban" in message
     assert "verify seller" in message
@@ -219,6 +208,39 @@ def test_agent_generator_skips_ambient_watch_ranked_events() -> None:
 
     assert response is None
     assert producer.published == []
+
+
+def test_materialize_llm_response_rejects_repetitive_closing() -> None:
+    event = make_ranked()
+    event = DecisionRanked(
+        request_id=event.request_id,
+        user_id=event.user_id,
+        channel=event.channel,
+        user_text="Bghit Samsung phone b 3000 dh",
+        query=event.query,
+        products=event.products,
+    )
+    message = materialize_llm_response(
+        event,
+        (
+            "INTRO: Bghit, ghadi 3 options ghadi fiha Samsung.\n"
+            "CLOSING: Lihya Samsung Galaxy A15 128GB khairi, ghadi score ghadi qawi. "
+            "Raktibhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhomhom"
+        ),
+        fallback_message="fallback",
+    )
+
+    assert "homhomhom" not in message
+    assert "L'option 1 hiya l'ahsen" in message
+    assert len(message) < 1200
+
+
+def test_sanitize_llm_prose_strips_repetition() -> None:
+    from agents.agent_generator.tools.text_safety import sanitize_llm_prose
+
+    cleaned = sanitize_llm_prose("Good answer. Raktibhomhomhomhomhomhomhomhom")
+    assert "homhom" not in cleaned
+    assert cleaned.startswith("Good answer.")
 
 
 def test_llm_generator_script_sample_ranked_has_required_facts() -> None:

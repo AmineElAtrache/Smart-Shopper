@@ -12,6 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from agents.agent_generator.tools.behavior_analyzer import infer_language, infer_tone
 from shared.events.schemas import DecisionRanked, OutboundResponse
 
 
@@ -55,10 +56,15 @@ class BehavioralMemory:
         top_sources = [product.source for product in ranked.products[:3]]
         profile = await self.get_profile(ranked.user_id)
         preferred_sources = _merge_sources(profile.preferred_sources, top_sources)
+        language = profile.language
+        tone = profile.tone
+        if ranked.user_text:
+            language = infer_language(ranked.user_text)
+            tone = infer_tone(ranked.user_text)
         updates = {
             "user_id": ranked.user_id,
-            "tone": profile.tone,
-            "language": profile.language,
+            "tone": tone,
+            "language": language,
             "response_count": profile.response_count + 1,
             "preferred_sources": preferred_sources,
             "last_interaction_at": now,
