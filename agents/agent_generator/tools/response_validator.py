@@ -5,7 +5,17 @@ from __future__ import annotations
 import re
 
 from agents.agent_generator.tools.behavior_analyzer import infer_language
-from agents.agent_generator.tools.text_safety import REPETITION_PATTERN, is_usable_prose, sanitize_llm_prose
+from agents.agent_generator.tools.darija_copy import (
+    DARIJA_LABELS,
+    build_darija_empty_reply,
+    darija_closing,
+    darija_intro,
+    darija_product_header,
+    is_coherent_darija,
+    is_stale_darija_closing,
+    seed_for_event,
+)
+from agents.agent_generator.tools.text_safety import REPETITION_PATTERN, is_neutral_prose, is_usable_prose, sanitize_llm_prose
 from shared.events.schemas import DecisionRanked, RankedProduct
 
 URL_PATTERN = re.compile(r"https?://[^\s)]+")
@@ -39,6 +49,8 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
         if not event.products:
             general_reply = sections.get("general_reply") or sections.get("intro") or fallback_message
             cleaned = sanitize_llm_prose(general_reply, max_length=400)
+            if _language(event) == "darija":
+                return cleaned if is_coherent_darija(cleaned) else build_darija_empty_reply()
             return cleaned if is_usable_prose(cleaned, max_length=400) else fallback_message
 
         from agents.agent_generator.agent import build_composed_message
@@ -46,20 +58,35 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
         closing = sections.get("closing") or _join_closing_sections(sections)
         intro = sections.get("intro")
         product_header = sections.get("product_header")
-        if product_header and _header_contains_product_facts(product_header):
+        if product_header and (
+            _header_contains_product_facts(product_header)
+            or not is_neutral_prose(product_header)
+            or (
+                _language(event) == "darija"
+                and not is_coherent_darija(product_header)
+            )
+            or _header_duplicates_intro(product_header, intro)
+        ):
             product_header = None
 
-        intro = _resolve_intro(event, intro)
-        closing = _resolve_closing(event, closing)
-        product_style = "natural" if not any(
-            sections.get(key) for key in ("price_label", "source_label", "score_label", "link_label")
-        ) else "labeled"
-        labels = {
-            "price": sections.get("price_label") or "Price",
-            "source": sections.get("source_label") or "Source",
-            "score": sections.get("score_label") or "Score",
-            "link": sections.get("link_label") or "Link",
-        }
+        intro = _resolve_intro(event, intro, seed=seed_for_event(event))
+        closing = _resolve_closing(event, closing, seed=seed_for_event(event))
+        language = _language(event)
+        if language == "darija":
+            labels = DARIJA_LABELS
+            product_style = "darija"
+            if not product_header:
+                product_header = darija_product_header(seed=seed_for_event(event))
+        else:
+            labels = {
+                "price": sections.get("price_label") or "Price",
+                "source": sections.get("source_label") or "Source",
+                "score": sections.get("score_label") or "Score",
+                "link": sections.get("link_label") or "Link",
+            }
+            product_style = "natural" if not any(
+                sections.get(key) for key in ("price_label", "source_label", "score_label", "link_label")
+            ) else "labeled"
         return build_composed_message(
             event.products,
             intro=intro,
@@ -70,6 +97,10 @@ def materialize_llm_response(event: DecisionRanked, llm_text: str, *, fallback_m
             labels=labels,
             product_style=product_style,
         )
+    if _language(event) == "darija" and event.products:
+        from agents.agent_generator.tools.darija_copy import build_darija_response
+
+        return build_darija_response(event)
     return llm_text.strip() or fallback_message
 
 
@@ -112,21 +143,77 @@ def _clean_section(value: str, *, max_length: int = 320) -> str:
     return sanitize_llm_prose(value, max_length=max_length)
 
 
-def _resolve_intro(event: DecisionRanked, intro: str | None) -> str:
-    cleaned = _clean_section(intro or "", max_length=180)
-    if is_usable_prose(cleaned, max_length=180):
+def _language(event: DecisionRanked) -> str:
+    return infer_language(event.user_text or "")
+
+
+def _seed(event: DecisionRanked) -> str:
+    return seed_for_event(event)
+
+
+def _ensure_sentence(text: str) -> str:
+    stripped = text.strip()
+    if not stripped:
+        return ""
+    if stripped[-1] not in ".!?؟…":
+        return f"{stripped}."
+    return stripped
+
+
+def _resolve_intro(event: DecisionRanked, intro: str | None, *, seed: str) -> str:
+    cleaned = _ensure_sentence(_clean_section(intro or "", max_length=180))
+    language = _language(event)
+    count = min(3, len(event.products))
+    hint = _product_hint(event)
+    if language == "darija":
+        if (
+            is_coherent_darija(cleaned)
+            and is_usable_prose(cleaned, max_length=180)
+            and is_neutral_prose(cleaned)
+            and _is_clean_intro(cleaned)
+        ):
+            return cleaned
+        return darija_intro(count, hint, seed=seed)
+    if is_usable_prose(cleaned, max_length=180) and is_neutral_prose(cleaned) and _is_clean_intro(cleaned):
         return cleaned
-    return _default_intro(event)
+    return _default_intro(event, seed=seed)
 
 
-def _resolve_closing(event: DecisionRanked, closing: str | None) -> str:
+def _resolve_closing(event: DecisionRanked, closing: str | None, *, seed: str) -> str:
     raw = closing or ""
     if raw and REPETITION_PATTERN.search(raw):
-        return _default_closing(event)
-    cleaned = _clean_section(raw, max_length=320)
-    if is_usable_prose(cleaned, max_length=320) and _ends_cleanly(cleaned):
+        return _default_closing(event, seed=seed)
+    cleaned = _ensure_sentence(_clean_section(raw, max_length=320))
+    language = _language(event)
+    if language == "darija":
+        if (
+            is_coherent_darija(cleaned)
+            and is_usable_prose(cleaned, max_length=320)
+            and is_neutral_prose(cleaned)
+            and _ends_cleanly(cleaned)
+            and not is_stale_darija_closing(cleaned)
+        ):
+            return cleaned
+        return darija_closing(seed=seed)
+    if is_usable_prose(cleaned, max_length=320) and is_neutral_prose(cleaned) and _ends_cleanly(cleaned):
         return cleaned
-    return _default_closing(event)
+    return _default_closing(event, seed=seed)
+
+
+def _product_hint(event: DecisionRanked) -> str | None:
+    if event.query is None:
+        return None
+    if _language(event) == "darija":
+        if event.query.brand:
+            return event.query.brand
+        product = event.query.product
+        if product:
+            mapping = {"phone": "tilifun", "laptop": "portable", "chair": "kursi", "shoes": "snniitra"}
+            return mapping.get(product.lower(), product)
+        return None
+    if event.query.brand and event.query.product:
+        return f"{event.query.brand} {event.query.product}"
+    return event.query.product or event.query.brand
 
 
 def _ends_cleanly(text: str) -> bool:
@@ -143,58 +230,69 @@ def _join_closing_sections(sections: dict[str, str]) -> str:
     return " ".join(part.strip() for part in parts if part and part.strip())
 
 
+def _is_clean_intro(text: str) -> bool:
+    if URL_PATTERN.search(text):
+        return False
+    if re.search(r"\b\d{3,}\b", text):
+        return False
+    if re.search(r"\b1[\.)]\s", text):
+        return False
+    return len(text) <= 180
+
+
+def _header_duplicates_intro(header: str, intro: str | None) -> bool:
+    if not intro:
+        return False
+    normalized_header = re.sub(r"\s+", " ", header.strip().lower())
+    normalized_intro = re.sub(r"\s+", " ", intro.strip().lower())
+    if not normalized_header or not normalized_intro:
+        return False
+    return normalized_header.startswith(normalized_intro[: min(24, len(normalized_intro))])
+
+
 def _header_contains_product_facts(header: str) -> bool:
     lowered = header.lower()
     if URL_PATTERN.search(header):
         return True
     if re.search(r"\b\d{3,}\b", header):
         return True
+    if re.search(r"\b1[\.)]", header):
+        return True
     if any(token in lowered for token in ("http", "mad", "price:", "source:", "score:", "link:")):
         return True
     return len(header) > 80
 
 
-def _default_intro(event: DecisionRanked) -> str:
+def _default_intro(event: DecisionRanked, *, seed: str = "") -> str:
     count = min(3, len(event.products))
-    language = infer_language(event.user_text or "")
+    language = _language(event)
     if language == "darija":
-        return f"L9it lik {count} option{'s' if count != 1 else ''} mzyanin."
+        return darija_intro(count, _product_hint(event), seed=seed or _seed(event))
     if language == "fr":
         suffix = "s" if count != 1 else ""
-        return f"J'ai trouve {count} bonne option{suffix} pour toi."
+        return f"Voici {count} option{suffix} pour ta recherche."
     if language == "ar":
-        return f"وجدت {count} خيارات مناسبة لك."
-    return f"I found {count} good option{'s' if count != 1 else ''} for you."
+        return f"إليك {count} خيارات من بحثك."
+    return f"Here are {count} option{'s' if count != 1 else ''} from your search."
 
 
-def _default_closing(event: DecisionRanked) -> str:
-    language = infer_language(event.user_text or "")
+def _default_closing(event: DecisionRanked, *, seed: str = "") -> str:
+    language = _language(event)
     if language == "darija":
-        return (
-            "L'option 1 hiya l'ahsen: score 3ali, taman mzyan, w kayna f stock. "
-            "Rattbehom 3la value, thiqa, w disponibilite. "
-            "Bda b option 1 w verify seller w delivery qbel ma tchri."
-        )
+        return darija_closing(seed=seed or _seed(event))
     if language == "fr":
         return (
-            "L'option 1 est la meilleure: bon score, bon prix, et disponible. "
-            "Je les ai classees selon le rapport qualite-prix, la confiance et la disponibilite. "
-            "Commence par l'option 1 et verifie le vendeur avant d'acheter."
+            "Liste par score selon le prix, la confiance et la disponibilite, sans favoriser une option. "
+            "Compare les details et choisis ce qui te convient."
         )
     if language == "ar":
         return (
-            "الخيار الأول هو الأفضل: تقييم أعلى وسعر مناسب ومتوفر. "
-            "رتبتها حسب القيمة والثقة والجودة والتوفر. "
-            "ابدأ بالخيار الأول وتحقق من البائع قبل الشراء."
+            "مرتبة حسب السعر والثقة والتوفر دون تفضيل خيار على آخر. "
+            "راجع التفاصيل واختر ما يناسبك."
         )
-    product = event.products[0]
-    return _default_best_reason(product)
-
-
-def _default_best_reason(product: RankedProduct) -> str:
     return (
-        f"Best choice: {product.title} because it has the strongest overall score, "
-        f"a good price, and availability marked as {product.availability}."
+        "These are listed by score using price, trust, and availability, without favoring any option. "
+        "Review the details and decide what works for you."
     )
 
 

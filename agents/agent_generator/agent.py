@@ -7,7 +7,12 @@ import os
 from dataclasses import dataclass
 from typing import Mapping
 
-from agents.agent_generator.tools.behavior_analyzer import resolve_generation_context
+from agents.agent_generator.tools.behavior_analyzer import infer_language, resolve_generation_context
+from agents.agent_generator.tools.darija_copy import (
+    DARIJA_LABELS,
+    build_darija_response,
+    is_coherent_darija,
+)
 from agents.agent_generator.tools.llm_client import LlmClient
 from agents.agent_generator.tools.response_validator import (
     ResponseValidationError,
@@ -42,6 +47,19 @@ def build_product_block(
     top_products = products[:3]
     lines: list[str] = []
     for index, product in enumerate(top_products, start=1):
+        if style == "darija":
+            lines.extend(
+                [
+                    f"{index}. {product.title}",
+                    (
+                        f"   {label_map['price']}: {product.price:g} {product.currency} "
+                        f"| {product.source} | {label_map['score']} {product.score}/100"
+                    ),
+                    f"   {label_map['link']}: {product.url}",
+                    "",
+                ]
+            )
+            continue
         if style == "natural":
             lines.extend(
                 [
@@ -72,25 +90,22 @@ def build_response_message(products: list[RankedProduct]) -> str:
     if not products:
         return (
             "Hi, I could not find product options yet. "
-            "Send me what you are looking for and your budget, and I will help you choose."
+            "Send me what you are looking for and your budget, and I will search for options."
         )
 
     top_products = products[:3]
-    best = top_products[0]
-    intro = f"I found {len(top_products)} good option{'s' if len(top_products) != 1 else ''} for you."
-    best_reason = (
-        f"Best choice: {best.title} because it has the strongest overall score, "
-        f"a good price, and availability marked as {best.availability}."
+    intro = f"Here are {len(top_products)} option{'s' if len(top_products) != 1 else ''} from your search."
+    closing = (
+        "These are listed by score using price, trust, and availability, without favoring any option. "
+        "Review the details and decide what works for you."
     )
-    why_this_order = "I ranked them by value, trust, quality, and availability."
-    next_step = "Open the best link first, then verify the seller and delivery details before buying."
     return build_composed_message(
         products,
         intro=intro,
-        product_header="Options:",
-        best_reason=best_reason,
-        why_this_order=why_this_order,
-        next_step=next_step,
+        product_header="Details:",
+        best_reason=closing,
+        why_this_order=None,
+        next_step=None,
     )
 
 
@@ -118,12 +133,19 @@ def build_composed_message(
     return "\n\n".join(part for part in parts if part)
 
 
+def build_localized_response(event: DecisionRanked) -> str:
+    language = infer_language(event.user_text or "")
+    if language == "darija":
+        return build_darija_response(event)
+    return build_response_message(event.products)
+
+
 def build_outbound_response(event: DecisionRanked) -> OutboundResponse:
     return OutboundResponse(
         request_id=event.request_id,
         user_id=event.user_id,
         channel=event.channel,
-        message=build_response_message(event.products),
+        message=build_localized_response(event),
     )
 
 
@@ -190,7 +212,7 @@ class AgentGenerator:
                 validate_response(event, message)
             except ResponseValidationError as exc:
                 print(f"[generator] generated response failed validation, using template: {exc}")
-                message = response.message
+                message = build_localized_response(event)
             response = OutboundResponse(
                 request_id=event.request_id,
                 user_id=event.user_id,

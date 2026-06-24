@@ -6,6 +6,15 @@ import re
 
 REPETITION_PATTERN = re.compile(r"(.{2,24}?)\1{4,}", re.IGNORECASE)
 SENTENCE_END = re.compile(r"[.!?؟…]\s+")
+BIASED_LANGUAGE_PATTERN = re.compile(
+    r"\b("
+    r"best|recommend|recommended|top pick|first choice|start with|buy this|"
+    r"meilleur|commence|verifie|acheter|a7sen|ahsen|l-ahsen|l'ahsen|"
+    r"l-ula hiya|option 1|option #1|strong value|trusted source|good option|"
+    r"solid|bda b|qbel ma tchri|open the best|help you choose|mzyanin|mzyanat"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 def sanitize_llm_prose(text: str, *, max_length: int = 320) -> str:
@@ -43,3 +52,10 @@ def is_usable_prose(text: str, *, max_length: int = 320) -> bool:
         if max(counts.values()) / len(words) > 0.34:
             return False
     return True
+
+
+def is_neutral_prose(text: str) -> bool:
+    cleaned = re.sub(r"\s+", " ", (text or "").strip())
+    if not cleaned:
+        return False
+    return BIASED_LANGUAGE_PATTERN.search(cleaned) is None

@@ -20,7 +20,7 @@ def infer_language(text: str) -> str:
     normalized = text.lower()
     if _ARABIC_SCRIPT.search(text):
         return "ar"
-    if any(token in normalized for token in ("bghit", "kan9leb", "chi", "wach", "kayn", "3afak", "chno", "b7al")):
+    if any(token in normalized for token in ("bghit", "kan9leb", "chi", "wach", "kayn", "3afak", "chno", "b7al", "salam", "labas")):
         return "darija"
     if any(
         token in normalized
