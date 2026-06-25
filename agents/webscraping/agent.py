@@ -122,8 +122,12 @@ async def _scrape_provider(
     timeout_seconds: float,
 ) -> list[RawProduct]:
     try:
+        try:
+            scrape_call = provider.scrape(task, timeout=timeout_seconds)  # type: ignore[attr-defined]
+        except TypeError:
+            scrape_call = provider.scrape(task)  # type: ignore[attr-defined]
         provider_products = await asyncio.wait_for(
-            provider.scrape(task),  # type: ignore[attr-defined]
+            scrape_call,
             timeout=timeout_seconds,
         )
     except TimeoutError:
@@ -149,7 +153,7 @@ async def scrape_products(
     *,
     mock_only: bool = False,
     timeout_seconds: float = 20.0,
-    max_concurrency: int = 8,
+    max_concurrency: int = 14,
 ) -> list[RawProduct]:
     """Scrape providers concurrently, then fall back to mock products if needed."""
     if mock_only:
@@ -196,7 +200,7 @@ class MockScraperConfig:
     kafka_bootstrap_servers: str = DEFAULT_KAFKA_BOOTSTRAP_SERVERS
     mock_only: bool = False
     timeout_seconds: float = 20.0
-    max_concurrency: int = 8
+    max_concurrency: int = 14
 
     @classmethod
     def from_env(cls) -> "MockScraperConfig":
@@ -208,7 +212,7 @@ class MockScraperConfig:
             ),
             mock_only=mock_only,
             timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "20.0")),
-            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "8")),
+            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "14")),
         )
 
 

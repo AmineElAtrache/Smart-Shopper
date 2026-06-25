@@ -9,18 +9,13 @@ from __future__ import annotations
 import re
 from urllib.parse import urlencode
 
-import httpx
-
 from agents.webscraping.spiders.base import absolute_url, budget_allows, build_search_text, clean_text
+from agents.webscraping.tools.playwright_scraper import fetch_scrape_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
 MOTEUR_BASE_URL = "https://www.moteur.ma"
 MOTEUR_USED_CARS_URL = "https://www.moteur.ma/fr/voiture/achat-voiture-occasion/"
 MOTEUR_USED_CARS_SEARCH_URL = "https://www.moteur.ma/fr/voiture/achat-voiture-occasion/recherche/"
-BROWSER_USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-)
 PRICE_RE = re.compile(
     r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:mad|dh|dhs|درهم)",
     re.IGNORECASE,
@@ -37,14 +32,8 @@ def build_search_url(task: ScrapeTaskAssigned) -> str:
 
 async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[RawProduct]:
     url = build_search_url(task)
-    headers = {
-        "User-Agent": BROWSER_USER_AGENT,
-        "Accept-Language": "fr-MA,fr;q=0.9,en;q=0.8",
-    }
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-    return parse_products(response.text, task, page_url=str(response.url))
+    html, page_url = await fetch_scrape_html(url, timeout=timeout, locale="fr-MA")
+    return parse_products(html, task, page_url=page_url)
 
 
 def parse_products(html: str, task: ScrapeTaskAssigned, *, page_url: str | None = None) -> list[RawProduct]:

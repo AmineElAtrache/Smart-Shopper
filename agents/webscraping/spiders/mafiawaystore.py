@@ -13,6 +13,7 @@ from urllib.parse import quote_plus
 import httpx
 
 from agents.webscraping.spiders.base import absolute_url, budget_allows, build_search_text, clean_text
+from agents.webscraping.tools.playwright_scraper import fetch_scrape_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
 MAFIAWAY_BASE_URL = "https://mafiawaystore.com"
@@ -34,14 +35,13 @@ def build_search_url(task: ScrapeTaskAssigned) -> str:
 
 async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[RawProduct]:
     url = build_search_url(task)
+    html, _page_url = await fetch_scrape_html(url, timeout=timeout, locale="fr-MA")
+    handles = _extract_product_handles(html)
     headers = {
         "User-Agent": BROWSER_USER_AGENT,
         "Accept-Language": "fr-MA,fr;q=0.9,en;q=0.8",
     }
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-        handles = _extract_product_handles(response.text)
         products: list[RawProduct] = []
         for handle in handles[:20]:
             product = await _scrape_product_json(client, handle, task)

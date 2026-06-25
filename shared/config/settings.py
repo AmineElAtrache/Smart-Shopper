@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     governance_group_id: str = Field(default="governance-agent", alias="GOVERNANCE_GROUP_ID")
 
     scrape_timeout_seconds: float = Field(default=20.0, alias="SCRAPE_TIMEOUT_SECONDS")
-    scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
+    scrape_max_concurrency: int = Field(default=14, alias="SCRAPE_MAX_CONCURRENCY")
     scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
     user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")

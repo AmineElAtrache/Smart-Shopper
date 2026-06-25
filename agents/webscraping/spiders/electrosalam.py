@@ -1,7 +1,7 @@
 """ElectroSalam scraper provider.
 
 ElectroSalam is a Shopify-style Moroccan electronics store. Search pages are
-public HTML, so this provider starts with httpx and parses product cards/JSON-LD.
+fetched with Playwright and parsed from product cards/JSON-LD.
 """
 
 from __future__ import annotations
@@ -9,8 +9,6 @@ from __future__ import annotations
 import json
 import re
 from urllib.parse import quote_plus
-
-import httpx
 
 from agents.webscraping.spiders.base import (
     absolute_url,
@@ -21,14 +19,11 @@ from agents.webscraping.spiders.base import (
     matches_color,
     matches_product,
 )
+from agents.webscraping.tools.playwright_scraper import fetch_scrape_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
 ELECTROSALAM_BASE_URL = "https://electrosalam.ma"
 ELECTROSALAM_SEARCH_URL = "https://electrosalam.ma/search?q={query}"
-BROWSER_USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-)
 PRODUCT_LINK_RE = re.compile(r"/products/[^\"'?#\s]+", re.IGNORECASE)
 SCRIPT_JSON_RE = re.compile(
     r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(?P<json>.*?)</script>",
@@ -46,14 +41,8 @@ def build_search_url(task: ScrapeTaskAssigned) -> str:
 
 async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[RawProduct]:
     url = build_search_url(task)
-    headers = {
-        "User-Agent": BROWSER_USER_AGENT,
-        "Accept-Language": "fr-MA,fr;q=0.9,en;q=0.8",
-    }
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-    return parse_products(response.text, task, page_url=str(response.url))
+    html, page_url = await fetch_scrape_html(url, timeout=timeout, locale="fr-MA")
+    return parse_products(html, task, page_url=page_url)
 
 
 def parse_products(html: str, task: ScrapeTaskAssigned, *, page_url: str | None = None) -> list[RawProduct]:
