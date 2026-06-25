@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from shared.events.schemas import DecisionRanked
 
@@ -15,18 +16,92 @@ LANGUAGE_GUIDANCE = {
     "en": "English",
 }
 
+_DARIJA_TOKENS = re.compile(
+    r"\b("
+    r"slm|salam|labas|lbess|lbs|kidayer|kidayr|kifach|bghit|bghiti|kan9leb|kan9le|"
+    r"chno|chnahoma|chnahuma|wach|3afak|3lik|3likom|b7al|sbah|ahlan|n9leb|9leb|"
+    r"chi|kayn|afak|dyal|tilifun|mizaniya|taman|mdina|bghiti|kif dayr|"
+    r"kaydur|kaydir|kader|kadero|katdir|lboot|boot|hadi|had|goul|goli|"
+    r"kan3awen|n3awen|n9leb|lbas|cv"
+    r")\b",
+    re.IGNORECASE,
+)
+_FR_TOKENS = re.compile(
+    r"\b("
+    r"bonjour|salut|bonsoir|coucou|merci|svp|comment|commen|cherch|cherche|recherche|"
+    r"prix|budget|quoi|service|services|vous|chercher|une|des|du|acheter|telephone|"
+    r"portable|ordinateur|moins|maximum|bonne|journee|ca va|cava|est ce|quels|quel"
+    r")\b",
+    re.IGNORECASE,
+)
+_EN_TOKENS = re.compile(
+    r"\b("
+    r"hi|hello|hey|how|are|you|what|service|services|offer|offers|do|does|help|"
+    r"looking|thanks|please|want|need|your|the|and|for|can|who|phone|buy|budget|"
+    r"under|price|search|find|compare"
+    r")\b",
+    re.IGNORECASE,
+)
+_FR_PHRASES = re.compile(
+    r"(?:comment|commen)\s*(?:ca|cava|sa)\s*va?|\b(?:ca|cava|ça)\s+va\b",
+    re.IGNORECASE,
+)
+_EN_PHRASES = re.compile(
+    r"\bhow are you\b|\bwhat (?:do|can|it) you\b|\bwhat you do\b|"
+    r"\bwhat service\b|\bwhat services\b|\bwho are you\b",
+    re.IGNORECASE,
+)
+_DARIJA_PHRASES = re.compile(
+    r"\blabas 3lik\b|\bkidayer\b|\bkidayr\b|\bkifach dayr\b|\blbs 3lik\b|"
+    r"\bchno katdir\b|\bash katdir\b|\bslm kidayer\b|"
+    r"\bchnahoma\b|\bchnahuma\b|\bkaydur had\b|\bchno kaydur\b|\bli kader\b|"
+    r"\bles services li\b|\bhad lboot\b|\bhad l-boot\b",
+    re.IGNORECASE,
+)
+_STRONG_DARIJA = re.compile(
+    r"\b("
+    r"chno|chnahoma|chnahuma|bghit|bghiti|kan9leb|3lik|3likom|3afak|"
+    r"kaydur|kaydir|kader|kadero|katdir|lboot|slm|kidayer|kidayr|labas|"
+    r"n9leb|9leb|wach|mizaniya|chnah|lbas"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _strip_accents(text: str) -> str:
+    normalized = unicodedata.normalize("NFKD", text)
+    return "".join(char for char in normalized if not unicodedata.combining(char))
+
 
 def infer_language(text: str) -> str:
-    normalized = text.lower()
     if _ARABIC_SCRIPT.search(text):
         return "ar"
-    if any(token in normalized for token in ("bghit", "kan9leb", "chi", "wach", "kayn", "3afak", "chno", "b7al", "salam", "labas")):
+
+    normalized = _strip_accents((text or "").lower())
+
+    if _STRONG_DARIJA.search(normalized):
         return "darija"
-    if any(
-        token in normalized
-        for token in ("bonjour", "prix", "cherche", "moins cher", "salut", "merci", "svp", "telephone")
-    ):
+    if _DARIJA_PHRASES.search(normalized):
+        return "darija"
+    if _FR_PHRASES.search(normalized):
         return "fr"
+    if _EN_PHRASES.search(normalized):
+        return "en"
+
+    darija_hits = len(_DARIJA_TOKENS.findall(normalized))
+    fr_hits = len(_FR_TOKENS.findall(normalized))
+    en_hits = len(_EN_TOKENS.findall(normalized))
+
+    if darija_hits and (darija_hits >= fr_hits or darija_hits >= en_hits):
+        return "darija"
+    if fr_hits > en_hits:
+        return "fr"
+    if en_hits > fr_hits:
+        return "en"
+    if any(char in text for char in "éèêëàâùûçîïô"):
+        return "fr"
+    if darija_hits:
+        return "darija"
     return "en"
 
 

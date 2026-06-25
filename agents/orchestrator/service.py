@@ -8,6 +8,8 @@ from typing import Any
 from redis.asyncio import Redis
 
 from agents.orchestrator.agent import OrchestratorAgent
+from agents.orchestrator.tools.conversational_llm import ConversationalLlmClient
+from agents.orchestrator.tools.intent_gate import should_run_product_search
 from agents.orchestrator.tools.cache_lookup import ProductCache
 from agents.orchestrator.tools.ner_client import GrpcNerClient
 from shared.config import Settings, get_settings
@@ -34,11 +36,13 @@ class OrchestratorService:
         user_memory: UserMemory | None = None,
         consumer: Any | None = None,
         producer: Any | None = None,
+        conversational_llm: ConversationalLlmClient | None = None,
     ) -> None:
         self._settings = settings
         self._agent = agent or OrchestratorAgent(
             GrpcNerClient(settings.ner_grpc_host, settings.ner_grpc_port)
         )
+        self._conversational_llm = conversational_llm or ConversationalLlmClient(settings)
         self._consumer = consumer or KafkaEventConsumer(
             MSG_INBOUND,
             bootstrap_servers=settings.kafka_bootstrap_servers,
@@ -74,13 +78,29 @@ class OrchestratorService:
     async def handle_message(self, message: InboundMessage) -> None:
         print(f"[orchestrator] received msg.inbound request_id={message.request_id}")
         extracted, task = await self._agent.handle_inbound(message)
+
+        await self._producer.publish(NER_EXTRACTED, extracted, key=message.request_id)
+        print(f"[orchestrator] published ner.extracted request_id={message.request_id}")
+
+        if not should_run_product_search(message.text, task.query):
+            reply = await self._conversational_llm.generate_reply(message)
+            response = OutboundResponse(
+                request_id=message.request_id,
+                user_id=message.user_id,
+                channel=message.channel,
+                message=reply,
+            )
+            await self._producer.publish(RESPONSE_OUTBOUND, response, key=message.request_id)
+            print(
+                f"[orchestrator] conversational reply; skipped scrape "
+                f"request_id={message.request_id}"
+            )
+            return
+
         if self._user_memory is not None:
             task.query = await self._user_memory.apply_preferences(message.user_id, task.query)
             await self._user_memory.record_search(message, task.query)
         cached_response = await self._cache.get(task.query)
-
-        await self._producer.publish(NER_EXTRACTED, extracted, key=message.request_id)
-        print(f"[orchestrator] published ner.extracted request_id={message.request_id}")
 
         if cached_response:
             response = OutboundResponse(
