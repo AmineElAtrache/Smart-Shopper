@@ -1,4 +1,4 @@
-﻿"""Kafka runtime for the Orchestrator Agent."""
+"""Kafka runtime for the Orchestrator Agent."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.tools.conversational_llm import ConversationalLlmClient
 from agents.orchestrator.tools.intent_gate import should_run_product_search
 from agents.orchestrator.tools.cache_lookup import ProductCache
+from shared.scrape_quality import is_mock_response_text
 from agents.orchestrator.tools.ner_client import GrpcNerClient
 from shared.config import Settings, get_settings
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
@@ -40,7 +41,11 @@ class OrchestratorService:
     ) -> None:
         self._settings = settings
         self._agent = agent or OrchestratorAgent(
-            GrpcNerClient(settings.ner_grpc_host, settings.ner_grpc_port)
+            GrpcNerClient(
+                settings.ner_grpc_host,
+                settings.ner_grpc_port,
+                timeout=settings.ner_grpc_timeout_seconds,
+            )
         )
         self._conversational_llm = conversational_llm or ConversationalLlmClient(settings)
         self._consumer = consumer or KafkaEventConsumer(
@@ -77,6 +82,22 @@ class OrchestratorService:
 
     async def handle_message(self, message: InboundMessage) -> None:
         print(f"[orchestrator] received msg.inbound request_id={message.request_id}")
+        try:
+            await self._handle_message(message)
+        except Exception as exc:
+            print(f"[orchestrator] failed request_id={message.request_id}: {exc}")
+            response = OutboundResponse(
+                request_id=message.request_id,
+                user_id=message.user_id,
+                channel=message.channel,
+                message=(
+                    "Sorry, something went wrong while processing your request. "
+                    "Please try again in a moment."
+                ),
+            )
+            await self._producer.publish(RESPONSE_OUTBOUND, response, key=message.request_id)
+
+    async def _handle_message(self, message: InboundMessage) -> None:
         extracted, task = await self._agent.handle_inbound(message)
 
         await self._producer.publish(NER_EXTRACTED, extracted, key=message.request_id)
@@ -102,7 +123,7 @@ class OrchestratorService:
             await self._user_memory.record_search(message, task.query)
         cached_response = await self._cache.get(task.query)
 
-        if cached_response:
+        if cached_response and not is_mock_response_text(cached_response):
             response = OutboundResponse(
                 request_id=message.request_id,
                 user_id=message.user_id,
@@ -114,6 +135,11 @@ class OrchestratorService:
             if _has_watch_intent(extracted.entities):
                 await self._publish_watch(message, task)
             return
+        if cached_response and is_mock_response_text(cached_response):
+            print(
+                f"[orchestrator] ignored cached mock response; "
+                f"re-scraping request_id={message.request_id}"
+            )
 
         await self._producer.publish(SCRAPE_TASK_ASSIGNED, task, key=message.request_id)
         print(f"[orchestrator] published scrape.task.assigned request_id={message.request_id}")

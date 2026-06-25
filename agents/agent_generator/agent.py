@@ -27,6 +27,7 @@ from shared.events.topics import DECISION_RANKED, RESPONSE_OUTBOUND
 from shared.memory import BehavioralMemory, GlobalMemory
 from shared.memory.factory import create_behavioral_memory, create_global_memory
 from shared.runtime import HealthServer
+from shared.scrape_quality import is_mock_response_text
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 DEFAULT_PRODUCT_LABELS = {
@@ -202,7 +203,7 @@ class AgentGenerator:
         if self._behavioral_memory is not None:
             behavior_context = await self._behavioral_memory.build_generation_context(event.user_id)
         behavior_context = resolve_generation_context(event, behavior_context)
-        if self._llm_client is not None:
+        if self._llm_client is not None and event.products:
             llm_text = await self._llm_client.generate_recommendation(
                 event,
                 response.message,
@@ -220,8 +221,19 @@ class AgentGenerator:
                 channel=event.channel,
                 message=message,
             )
+        elif event.products:
+            print(f"[generator] template-only response request_id={event.request_id}")
+        else:
+            print(
+                f"[generator] no products; skipping LLM request_id={event.request_id}"
+            )
         await self._producer.publish(RESPONSE_OUTBOUND, response, key=event.request_id)
-        if self._global_memory is not None and event.query is not None:
+        if (
+            self._global_memory is not None
+            and event.query is not None
+            and event.products
+            and not is_mock_response_text(response.message)
+        ):
             await self._global_memory.set_cached_response(event.query, response.message)
         if self._behavioral_memory is not None:
             await self._behavioral_memory.record_generation(event, response)

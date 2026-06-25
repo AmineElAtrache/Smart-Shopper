@@ -98,11 +98,26 @@ def is_stale_darija_closing(text: str) -> bool:
     return bool(first and first in legacy_first)
 
 
+def build_darija_no_results_reply(event: DecisionRanked) -> str:
+    query = event.query
+    if query and (query.brand or query.product or query.budget is not None):
+        label = _search_label(query)
+        budget_part = ""
+        if query.budget is not None:
+            currency = query.currency or "MAD"
+            budget_part = f" f {query.budget:g} {currency}"
+        return (
+            f"Ma lqit 7ta khityar li y-match {label}{budget_part}. "
+            "Jarrab tzid l-mizaniya chwiya, badel l-model, wla 3tini mdina."
+        )
+    return build_darija_empty_reply()
+
+
 def build_darija_response(event: DecisionRanked) -> str:
     from agents.agent_generator.agent import build_composed_message
 
     if not event.products:
-        return build_darija_empty_reply()
+        return build_darija_no_results_reply(event)
 
     seed = seed_for_event(event)
     count = min(3, len(event.products))
@@ -181,6 +196,12 @@ def _first_sentence(text: str) -> str:
 
 def _normalize_phrase(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip().lower().rstrip(".!?؟…"))
+
+
+def _search_label(query) -> str:
+    parts = [query.brand, _darija_product_label(query.product) or query.product]
+    label = " ".join(part for part in parts if part).strip()
+    return label or "had talab"
 
 
 def _product_hint(event: DecisionRanked) -> str | None:

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 
 from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig
 from agents.agent_generator.tools.response_validator import (
@@ -168,6 +168,34 @@ def test_materialize_llm_response_supports_neutral_darija_sections() -> None:
     assert "Lien: https://example.com/jumia-a15" in message
     assert "l-ahsen" not in message.lower()
     assert "verify" not in message.lower()
+
+
+def test_materialize_rejects_raw_llm_hallucination_without_products() -> None:
+    from agents.agent_generator.tools.darija_copy import build_darija_no_results_reply
+
+    event = DecisionRanked(
+        request_id="req_empty",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        user_text="bghit Samsung phone b 4000 dh",
+        query=ProductQuery(product="phone", brand="Samsung", budget=4000),
+        products=[],
+    )
+    fallback = build_darija_no_results_reply(event)
+    message = materialize_llm_response(
+        event,
+        (
+            "Salam! Chno bghiti n9leb lik 3lih? 3tini chno bghiti, ch7al l-mizaniya dyalek. "
+            "JAWEB_1: Kayna: Jumia, Avito, Mafiawaystore Khityarat: Samsung Galaxy A13, "
+            "Samsung Galaxy A12, Samsung Galaxy M12"
+        ),
+        fallback_message=fallback,
+    )
+
+    assert "JAWEB" not in message
+    assert "Galaxy A13" not in message
+    assert "Ma lqit" in message
+    assert "4000" in message
 
 
 def test_materialize_llm_response_supports_general_reply_without_products() -> None:

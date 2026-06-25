@@ -77,9 +77,9 @@ foreach ($svc in $services) {
 
 if ($LaunchAll) {
     Write-Host ""
-    Write-Host "Launching service windows. Wait 30-60s for NER model load..." -ForegroundColor Cyan
+    Write-Host "Launching service windows. Wait 60-90s for NER model load..." -ForegroundColor Cyan
     Start-ServiceWindow -Service $services[0]
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 20
     for ($i = 1; $i -lt $services.Count; $i++) {
         Start-ServiceWindow -Service $services[$i]
         Start-Sleep -Seconds 1

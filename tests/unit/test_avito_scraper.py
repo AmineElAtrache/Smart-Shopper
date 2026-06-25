@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from agents.webscraping.agent import MockScraperAgent, MockScraperConfig, scrape_products
 from agents.webscraping.spiders.avito import build_search_url, parse_products
@@ -92,8 +92,7 @@ async def test_webscraping_agent_falls_back_when_avito_fails(monkeypatch) -> Non
 
     products = await scrape_products(_task())
 
-    assert len(products) == 3
-    assert any(product.metadata.get("mock") for product in products)
+    assert len(products) == 0
 
 
 class FakeProducer:

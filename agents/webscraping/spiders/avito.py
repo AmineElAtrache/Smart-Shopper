@@ -1,4 +1,4 @@
-﻿"""Avito scraper provider.
+"""Avito scraper provider.
 
 The parser is intentionally defensive because marketplace HTML changes often.
 It supports browser-rendered pages, JSON-LD data, and generic card-like HTML blocks.
@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from urllib.parse import quote, quote_plus
+
+import httpx
 
 from agents.webscraping.spiders.base import (
     absolute_url,
@@ -17,10 +20,13 @@ from agents.webscraping.spiders.base import (
     clean_text,
     parse_mad_price,
 )
-from agents.webscraping.tools.playwright_scraper import fetch_scrape_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
 AVITO_SEARCH_URL = "https://www.avito.ma/fr/{city}/{query}"
+BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+)
 AVITO_PRODUCT_TERMS = {
     "phone": "telephone",
     "smartphone": "telephone",
@@ -74,7 +80,71 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    return await fetch_scrape_html(url, timeout=timeout, locale="fr-MA")
+    try:
+        return await _fetch_html_with_httpx(url, timeout=timeout)
+    except Exception:
+        return await _fetch_html_with_playwright(url, timeout=timeout)
+
+
+async def _fetch_html_with_playwright(url: str, *, timeout: float) -> tuple[str, str]:
+    from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+    from playwright.async_api import async_playwright
+
+    async with async_playwright() as playwright:
+        browser = await _launch_browser(playwright)
+        try:
+            page = await browser.new_page(
+                user_agent=BROWSER_USER_AGENT,
+                locale="fr-MA",
+                viewport={"width": 1366, "height": 900},
+            )
+            await page.goto(url, wait_until="domcontentloaded", timeout=int(timeout * 1000))
+            try:
+                await page.wait_for_load_state("networkidle", timeout=5000)
+            except PlaywrightTimeoutError:
+                pass
+            try:
+                await page.wait_for_selector("a[href]", timeout=7000)
+            except PlaywrightTimeoutError:
+                pass
+            return await page.content(), page.url
+        finally:
+            await browser.close()
+
+
+async def _launch_browser(playwright):
+    try:
+        return await playwright.chromium.launch(headless=True)
+    except Exception as first_error:
+        for executable_path in _local_browser_paths():
+            try:
+                return await playwright.chromium.launch(
+                    headless=True,
+                    executable_path=str(executable_path),
+                )
+            except Exception:
+                continue
+        raise first_error
+
+
+def _local_browser_paths() -> list[Path]:
+    return [
+        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+    ]
+
+
+async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
+    headers = {
+        "User-Agent": BROWSER_USER_AGENT,
+        "Accept-Language": "fr-MA,fr;q=0.9,en;q=0.8",
+    }
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
+        response = await client.get(url)
+        response.raise_for_status()
+    return response.text, str(response.url)
 
 
 def parse_products(html: str, task: ScrapeTaskAssigned, *, page_url: str | None = None) -> list[RawProduct]:

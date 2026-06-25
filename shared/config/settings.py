@@ -1,4 +1,4 @@
-﻿"""Application settings loaded from environment variables."""
+"""Application settings loaded from environment variables."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     ner_grpc_host: str = Field(default="localhost", alias="NER_GRPC_HOST")
     ner_grpc_port: int = Field(default=50051, alias="NER_GRPC_PORT")
-    ner_grpc_timeout_seconds: float = Field(default=5.0, alias="NER_GRPC_TIMEOUT_SECONDS")
+    ner_grpc_timeout_seconds: float = Field(default=30.0, alias="NER_GRPC_TIMEOUT_SECONDS")
     ner_warmup_text: str = Field(default="Bghit Samsung phone b 3000 dh", alias="NER_WARMUP_TEXT")
 
     orchestrator_group_id: str = Field(
@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     ambient_group_id: str = Field(default="ambient-scheduler", alias="AMBIENT_GROUP_ID")
     governance_group_id: str = Field(default="governance-agent", alias="GOVERNANCE_GROUP_ID")
 
-    scrape_timeout_seconds: float = Field(default=20.0, alias="SCRAPE_TIMEOUT_SECONDS")
-    scrape_max_concurrency: int = Field(default=14, alias="SCRAPE_MAX_CONCURRENCY")
+    scrape_timeout_seconds: float = Field(default=30.0, alias="SCRAPE_TIMEOUT_SECONDS")
+    scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
     scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
     user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")

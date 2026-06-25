@@ -6,6 +6,8 @@ import json
 import re
 from urllib.parse import quote_plus
 
+import httpx
+
 from agents.webscraping.spiders.base import (
     absolute_url,
     budget_allows,
@@ -15,7 +17,7 @@ from agents.webscraping.spiders.base import (
     matches_color,
     matches_product,
 )
-from agents.webscraping.tools.playwright_scraper import fetch_scrape_html
+from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
 JUMIA_BASE_URL = "https://www.jumia.ma"
@@ -64,7 +66,18 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    return await fetch_scrape_html(url, timeout=timeout, locale="fr-MA")
+    try:
+        return await _fetch_html_with_httpx(url, timeout=timeout)
+    except Exception:
+        return await fetch_rendered_html(url, timeout=timeout, locale="fr-MA")
+
+
+async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
+    headers = {"User-Agent": BROWSER_USER_AGENT, "Accept-Language": "fr-MA,fr;q=0.9,en;q=0.8"}
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
+        response = await client.get(url)
+        response.raise_for_status()
+    return response.text, str(response.url)
 
 
 def parse_products(html: str, task: ScrapeTaskAssigned, *, page_url: str | None = None) -> list[RawProduct]:
