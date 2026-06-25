@@ -96,7 +96,7 @@ Write-Host ""
 Write-Host "=== Test on Telegram ===" -ForegroundColor DarkGray
 Write-Host "1. Open https://t.me/Dalil_Souqbot" -ForegroundColor DarkGray
 Write-Host "2. Send: Bghit Samsung phone b 3000 dh" -ForegroundColor DarkGray
-Write-Host "3. Immediate ack, then final list in 15-60s" -ForegroundColor DarkGray
+Write-Host "3. Final product list arrives in 15-60s" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "=== Quick check without Telegram ===" -ForegroundColor DarkGray
 Write-Host "  python -m scripts.smoke_kafka_flow" -ForegroundColor DarkGray

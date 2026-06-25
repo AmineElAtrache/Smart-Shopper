@@ -172,12 +172,9 @@ class TelegramGateway:
             del context
             if update.effective_chat is None or update.message is None or update.message.text is None:
                 return
-            event = await self.publish_telegram_text(
+            await self.publish_telegram_text(
                 chat_id=update.effective_chat.id,
                 text=update.message.text,
-            )
-            await update.message.reply_text(
-                f"Request received ({event.request_id}). I am looking for offers now."
             )
 
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
