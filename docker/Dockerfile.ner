@@ -1,0 +1,36 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/models/huggingface \
+    TOKENIZERS_PARALLELISM=false \
+    SMART_SHOPPER_NER_BACKEND=auto \
+    SMART_SHOPPER_NER_MODEL=ElAtrachAMINE/darija-ner-xlmroberta
+
+RUN useradd --create-home --shell /usr/sbin/nologin smartshopper \
+    && mkdir -p /models/huggingface \
+    && chown -R smartshopper:smartshopper /models
+
+COPY pyproject.toml README.md ./
+COPY generated ./generated
+COPY models ./models
+COPY proto ./proto
+COPY shared ./shared
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install --no-cache-dir -e .
+
+RUN python -c "from transformers import AutoModelForTokenClassification, AutoTokenizer; import os; model=os.environ['SMART_SHOPPER_NER_MODEL']; AutoTokenizer.from_pretrained(model); AutoModelForTokenClassification.from_pretrained(model)"
+
+RUN chown -R smartshopper:smartshopper /models
+
+USER smartshopper
+
+EXPOSE 50051 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import socket; socket.create_connection(('127.0.0.1', 50051), timeout=2).close()"
+
+CMD python -m models.ner.grpc_server

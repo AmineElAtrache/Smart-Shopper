@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-ner
+spec:
+  selector:
+    app: smart-shopper-ner
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-orchestrator
+spec:
+  selector:
+    app: smart-shopper-orchestrator
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-scraper
+spec:
+  selector:
+    app: smart-shopper-scraper
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-decision
+spec:
+  selector:
+    app: smart-shopper-decision
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-generator
+spec:
+  selector:
+    app: smart-shopper-generator
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-ambient
+spec:
+  selector:
+    app: smart-shopper-ambient
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-governance
+spec:
+  selector:
+    app: smart-shopper-governance
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-shopper-gateway
+spec:
+  selector:
+    app: smart-shopper-gateway
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics

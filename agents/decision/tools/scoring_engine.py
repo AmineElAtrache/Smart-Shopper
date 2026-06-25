@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import re
-
+from agents.decision.tools.dedup_engine import deduplicate_products
+from agents.decision.tools.fraud_detector import fraud_penalty
 from shared.events.schemas import (
     Availability,
     ProductQuery,
@@ -26,25 +26,10 @@ def rank_products(products: list[RawProduct], query: ProductQuery) -> list[Ranke
     ranked = [score_product(product, query) for product in unique_products]
     return sorted(ranked, key=lambda product: product.score, reverse=True)
 
-
-def deduplicate_products(products: list[RawProduct]) -> list[RawProduct]:
-    seen: set[str] = set()
-    unique: list[RawProduct] = []
-
-    for product in products:
-        key = _dedup_key(product)
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append(product)
-
-    return unique
-
-
 def score_product(product: RawProduct, query: ProductQuery) -> RankedProduct:
     breakdown = ScoreBreakdown(
         price=_price_score(product, query),
-        trust=_trust_score(product),
+        trust=_trust_score(product, query),
         quality=_quality_score(product, query),
         availability=_availability_score(product),
     )
@@ -73,14 +58,16 @@ def _price_score(product: RawProduct, query: ProductQuery) -> int:
     return max(0, round(25 - (over_budget_ratio * 50)))
 
 
-def _trust_score(product: RawProduct) -> int:
+def _trust_score(product: RawProduct, query: ProductQuery) -> int:
     source = product.source.lower()
     seller = (product.seller or "").lower()
 
+    base_score = 15
     for trusted_source, score in TRUSTED_SOURCES.items():
         if trusted_source in source or trusted_source in seller:
-            return score
-    return 15
+            base_score = score
+            break
+    return max(0, base_score - fraud_penalty(product, query))
 
 
 def _quality_score(product: RawProduct, query: ProductQuery) -> int:
@@ -104,7 +91,3 @@ def _availability_score(product: RawProduct) -> int:
         return 5
     return 0
 
-
-def _dedup_key(product: RawProduct) -> str:
-    normalized_title = re.sub(r"[^a-z0-9]+", "", product.title.lower())
-    return f"{product.source.lower()}:{normalized_title}:{round(product.price)}"

@@ -1,4 +1,4 @@
-"""Decision Agent: deduplicate, score, and rank raw scraped products."""
+﻿"""Decision Agent: deduplicate, score, and rank raw scraped products."""
 
 from __future__ import annotations
 
@@ -15,10 +15,15 @@ class DecisionAgent:
         channel: str,
         query: ProductQuery,
         products: list[RawProduct],
+        watch_id: str | None = None,
+        user_text: str | None = None,
     ) -> DecisionRanked:
         return DecisionRanked(
             request_id=request_id,
             user_id=user_id,
             channel=channel,
+            query=query,
+            user_text=user_text,
+            watch_id=watch_id,
             products=rank_products(products, query),
         )

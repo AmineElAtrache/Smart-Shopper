@@ -1,4 +1,4 @@
-"""Shared event schemas for the Kafka-based agent pipeline."""
+﻿"""Shared event schemas for the Kafka-based agent pipeline."""
 
 from __future__ import annotations
 
@@ -35,6 +35,28 @@ class Availability(StrEnum):
     OUT_OF_STOCK = "out_of_stock"
     UNKNOWN = "unknown"
 
+
+class WatchStatus(StrEnum):
+    CREATED = "created"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    EXPIRED = "expired"
+    FAILED = "failed"
+
+
+class GovernanceSeverity(StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class GovernanceAction(StrEnum):
+    AUDIT = "audit"
+    WARN = "warn"
+    THROTTLE = "throttle"
+    HALT = "halt"
+    QUARANTINE = "quarantine"
 
 class EntityType(StrEnum):
     TARGET = "target"
@@ -118,6 +140,8 @@ class ProductQuery(BaseModel):
 
 class ScrapeTaskAssigned(UserEvent):
     query: ProductQuery
+    user_text: str | None = None
+    watch_id: str | None = None
 
 
 class RawProduct(Event):
@@ -165,6 +189,8 @@ class RankedProduct(BaseModel):
 
 class DecisionRanked(UserEvent):
     query: ProductQuery | None = None
+    user_text: str | None = None
+    watch_id: str | None = None
     products: list[RankedProduct]
 
 
@@ -172,14 +198,41 @@ class OutboundResponse(UserEvent):
     message: str = Field(min_length=1)
 
 
+class CacheWriteRequest(UserEvent):
+    query: ProductQuery
+    payload: str = Field(min_length=1)
+    ttl_seconds: int | None = Field(default=None, ge=1)
+
+
 class AmbientWatch(UserEvent):
     query: ProductQuery
-    interval_minutes: int = Field(default=60, ge=15)
+    interval_minutes: int = Field(default=1440, ge=15)
     expires_at: datetime | None = None
+    status: WatchStatus = WatchStatus.CREATED
+    last_best_price: float | None = Field(default=None, ge=0)
+
+
+class PriceSnapshot(UserEvent):
+    query: ProductQuery
+    source: str
+    title: str
+    price: float = Field(ge=0)
+    currency: Currency = Currency.MAD
+    url: HttpUrl | str
+    observed_at: datetime = Field(default_factory=utc_now)
 
 
 class GovernanceEvent(Event):
     topic: str
-    severity: str = "info"
+    severity: GovernanceSeverity = GovernanceSeverity.INFO
     message: str
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ErrorEvent(Event):
+    source_service: str
+    topic: str | None = None
+    error_type: str
+    message: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+    retryable: bool = False

@@ -1,0 +1,146 @@
+﻿"""Test Agent Generator with a real LLM provider without running NER, Kafka, or scrapers.
+
+Use this for Groq/OpenAI/Gemini smoke tests. It builds a deterministic
+DecisionRanked event and sends it through the real AgentGenerator class.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import sys
+from pathlib import Path
+
+
+def _configure_console_output() -> None:
+    """Use UTF-8 on Windows so Arabic/French accents print correctly."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+
+def _save_response(message: str, *, user_text: str | None) -> Path | None:
+    """Write the response to a UTF-8 file when Arabic script is present."""
+    if not user_text or not any("\u0600" <= char <= "\u06ff" for char in user_text + message):
+        return None
+    output_path = Path("last_llm_response.txt")
+    output_path.write_text(message, encoding="utf-8")
+    return output_path
+
+from agents.agent_generator.agent import AgentGenerator, AgentGeneratorConfig, build_outbound_response
+from agents.agent_generator.tools.behavior_analyzer import resolve_generation_context
+from shared.config import get_settings
+from shared.events.schemas import (
+    Availability,
+    Channel,
+    DecisionRanked,
+    ProductQuery,
+    RankedProduct,
+    ScoreBreakdown,
+)
+from shared.events.topics import RESPONSE_OUTBOUND
+
+
+class PrintOnlyProducer:
+    def __init__(self) -> None:
+        self.published = []
+
+    async def publish(self, topic, event, key=None) -> None:
+        self.published.append((topic, event, key))
+
+
+class NoopGlobalMemory:
+    async def set_cached_response(self, query, message) -> None:
+        return None
+
+
+class ContextBehavioralMemory:
+    async def build_generation_context(self, user_id):
+        return {"user_id": user_id}
+
+    async def record_generation(self, event, response) -> None:
+        return None
+
+
+def build_sample_ranked(*, user_text: str | None = None) -> DecisionRanked:
+    message = user_text or "Bghit Samsung phone b 3000 dh"
+    return DecisionRanked(
+        request_id="req_llm_test",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        user_text=message,
+        query=ProductQuery(product="phone", brand="Samsung", budget=3000),
+        products=[
+            RankedProduct(
+                title="Samsung Galaxy A15 128GB",
+                price=2499,
+                source="jumia",
+                url="https://example.com/jumia-a15",
+                availability=Availability.IN_STOCK,
+                score=88,
+                score_breakdown=ScoreBreakdown(price=36, trust=27, quality=17, availability=8),
+            ),
+            RankedProduct(
+                title="Samsung Galaxy A05",
+                price=1890,
+                source="jumia",
+                url="https://example.com/jumia-a05",
+                availability=Availability.IN_STOCK,
+                score=84,
+                score_breakdown=ScoreBreakdown(price=38, trust=24, quality=14, availability=8),
+            ),
+            RankedProduct(
+                title="Samsung Galaxy A15 phone",
+                price=3300,
+                source="avito",
+                url="https://example.com/avito-a15",
+                availability=Availability.UNKNOWN,
+                score=64,
+                score_breakdown=ScoreBreakdown(price=25, trust=18, quality=15, availability=6),
+            ),
+        ],
+    )
+
+
+async def main() -> None:
+    _configure_console_output()
+    settings = get_settings()
+    user_text = " ".join(sys.argv[1:]).strip() or None
+    event = build_sample_ranked(user_text=user_text)
+    template = build_outbound_response(event).message
+    producer = PrintOnlyProducer()
+    generator = AgentGenerator(
+        config=AgentGeneratorConfig(kafka_bootstrap_servers=settings.kafka_bootstrap_servers),
+        settings=settings,
+        producer=producer,
+        global_memory=NoopGlobalMemory(),
+        behavioral_memory=ContextBehavioralMemory(),
+    )
+
+    response = await generator.handle_ranked(event)
+    if response is None:
+        raise RuntimeError("Agent Generator did not produce a response.")
+
+    context = resolve_generation_context(event, {"user_id": event.user_id})
+    print("=== LLM Generator Test ===")
+    print(f"provider={settings.llm_provider}")
+    print(f"model={settings.llm_model}")
+    print(f"user_text={event.user_text}")
+    print(f"detected_language={context.get('language')}")
+    print(f"published_topic={producer.published[0][0] if producer.published else None}")
+    print(f"used_llm={response.message != template}")
+    print("\n=== Final response ===")
+    print(response.message)
+    saved = _save_response(response.message, user_text=event.user_text)
+    if saved is not None:
+        print(f"\n(Arabic saved to {saved.resolve()} — open in VS Code/Notepad if the terminal shows broken text.)")
+
+    if producer.published and producer.published[0][0] != RESPONSE_OUTBOUND:
+        raise RuntimeError(f"Unexpected topic: {producer.published[0][0]}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

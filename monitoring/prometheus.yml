@@ -6,4 +6,15 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # Add per-agent /api/metrics targets after services expose Prometheus endpoints.
+  - job_name: smart-shopper-agents
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "orchestrator:8000"
+          - "scraper:8000"
+          - "decision:8000"
+          - "generator:8000"
+          - "ambient:8000"
+          - "governance:8000"
+          - "gateway:8000"
+          - "ner:8000"

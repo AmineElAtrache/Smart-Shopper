@@ -108,7 +108,7 @@ Preprocessing normalizes noisy text:
 samsng -> samsung
 phne -> phone
 casaa -> casablanca
-fès -> fes
+fes -> fes
 kehla / k7la -> black
 tomobil / tonobil -> voiture
 telaja / frigo / refrigerateur -> fridge
@@ -337,7 +337,16 @@ python -m agents.orchestrator.service
 python -m agents.webscraping.agent
 python -m agents.decision.service
 python -m agents.agent_generator.agent
+python -m agents.ambient_scheduler.scheduler
+python -m agents.governance.agent
 python -m gateway.telegram_proxy
+```
+
+Production-like local smoke:
+
+```powershell
+docker compose -f docker-compose.full.yml up --build
+python -m scripts.smoke_kafka_flow
 ```
 
 ## Docker / AWS Notes
@@ -364,16 +373,51 @@ TOKENIZERS_PARALLELISM=false
 
 Only the NER service should load the model. Other agents should not each load the 1GB+ model into memory.
 
+Deployment artifacts:
+
+```text
+docker/Dockerfile.service       reusable Python service image
+docker/Dockerfile.ner           NER image with model cache warmup
+docker-compose.full.yml         local production-like service graph
+deploy/k8s/base/                Kubernetes base manifests
+deploy/k8s/overlays/            dev, staging, and prod overlays
+docs/deployment.md              AWS/EKS deployment guide
+docs/runbook.md                 operations runbook
+```
+
 ## Run Tests
 
 ```powershell
 python -m pytest tests\unit -q
 ```
 
-Current expected result:
+The suite should pass after installing the project with the `dev` extra.
+
+## Three-Tier Memory
+
+Smart Shopper implements the memory architecture described in the PFA:
 
 ```text
-82 passed
+Tier 1 - Global shared memory
+  shared/memory/global_memory.py
+  Redis-backed product response cache, price history, site health, and robots snapshots.
+
+Tier 2 - Per-user shared memory
+  shared/memory/user_memory.py
+  MongoDB-backed user profiles, search/response history, preferences, and watches with Redis hot profile cache.
+
+Tier 3 - Private behavioral memory
+  shared/memory/behavioral_memory.py
+  Generator-private behavioral profile, tone/language context, preferred sources, and response interactions.
+```
+
+Main integrations:
+
+```text
+gateway/telegram_proxy.py                 records inbound/outbound user history
+agents/orchestrator/service.py            applies user preferences and records structured searches
+agents/ambient_scheduler/scheduler.py     stores user watch metadata
+agents/agent_generator/agent.py           uses private behavior context and writes global response cache
 ```
 
 ## Kafka Topics
@@ -386,8 +430,12 @@ scrape.raw
 decision.ranked
 response.outbound
 ambient.watch
+ambient.tick
+price.history
+cache.write
 gov.audit
 gov.violation
+error.dead_letter
 ```
 
 Shared schemas:

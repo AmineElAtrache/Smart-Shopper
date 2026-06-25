@@ -3,12 +3,34 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
+from datetime import UTC, datetime
 from typing import TypeVar
 
 from pydantic import BaseModel
 
+from shared.events.schemas import ErrorEvent
+from shared.events.topics import ERROR_DEAD_LETTER
+from shared.runtime.metrics import get_default_metrics
+from shared.runtime.retry import retry_async
+
 EventT = TypeVar("EventT", bound=BaseModel)
+
+KAFKA_START_RETRY_EXCEPTIONS = (Exception,)
+
+
+async def _start_with_retry(
+    start_callable: Callable[[], Awaitable[None]],
+    *,
+    attempts: int,
+    base_delay_seconds: float,
+) -> None:
+    await retry_async(
+        start_callable,
+        attempts=attempts,
+        base_delay_seconds=base_delay_seconds,
+        retry_exceptions=KAFKA_START_RETRY_EXCEPTIONS,
+    )
 
 
 def encode_event(event: BaseModel) -> bytes:
@@ -21,27 +43,69 @@ def decode_event(payload: bytes, schema: type[EventT]) -> EventT:
 
 
 class KafkaEventProducer:
-    def __init__(self, bootstrap_servers: str, client_id: str = "smart-shopper") -> None:
+    def __init__(
+        self,
+        bootstrap_servers: str,
+        client_id: str = "smart-shopper",
+        *,
+        publish_attempts: int = 3,
+        connect_attempts: int = 20,
+        connect_base_delay_seconds: float = 1.0,
+    ) -> None:
         from aiokafka import AIOKafkaProducer
 
+        self._publish_attempts = publish_attempts
+        self._connect_attempts = connect_attempts
+        self._connect_base_delay_seconds = connect_base_delay_seconds
         self._producer = AIOKafkaProducer(
             bootstrap_servers=bootstrap_servers,
             client_id=client_id,
             value_serializer=encode_event,
+            acks="all",
         )
 
     async def start(self) -> None:
-        await self._producer.start()
+        await _start_with_retry(
+            self._producer.start,
+            attempts=self._connect_attempts,
+            base_delay_seconds=self._connect_base_delay_seconds,
+        )
 
     async def stop(self) -> None:
         await self._producer.stop()
 
     async def publish(self, topic: str, event: BaseModel, key: str | None = None) -> None:
-        await self._producer.send_and_wait(
-            topic,
-            event,
-            key=key.encode("utf-8") if key else None,
+        await retry_async(
+            lambda: self._producer.send_and_wait(
+                topic,
+                event,
+                key=key.encode("utf-8") if key else None,
+            ),
+            attempts=self._publish_attempts,
         )
+        metric_topic = topic.replace(".", "_")
+        get_default_metrics().increment(f"smart_shopper_{metric_topic}_total")
+
+    async def publish_error(
+        self,
+        *,
+        source_service: str,
+        error: BaseException,
+        topic: str | None = None,
+        payload: dict | None = None,
+        retryable: bool = False,
+    ) -> None:
+        event = ErrorEvent(
+            source_service=source_service,
+            topic=topic,
+            error_type=type(error).__name__,
+            message=str(error),
+            payload=payload or {},
+            retryable=retryable,
+            timestamp=datetime.now(UTC),
+        )
+        get_default_metrics().increment("smart_shopper_errors_total")
+        await self.publish(ERROR_DEAD_LETTER, event, key=event.request_id)
 
 
 class KafkaEventConsumer:
@@ -51,18 +115,28 @@ class KafkaEventConsumer:
         bootstrap_servers: str,
         group_id: str,
         client_id: str = "smart-shopper",
+        auto_offset_reset: str = "earliest",
+        connect_attempts: int = 20,
+        connect_base_delay_seconds: float = 1.0,
     ) -> None:
         from aiokafka import AIOKafkaConsumer
 
+        self._connect_attempts = connect_attempts
+        self._connect_base_delay_seconds = connect_base_delay_seconds
         self._consumer = AIOKafkaConsumer(
             *topics,
             bootstrap_servers=bootstrap_servers,
             group_id=group_id,
             client_id=client_id,
+            auto_offset_reset=auto_offset_reset,
         )
 
     async def start(self) -> None:
-        await self._consumer.start()
+        await _start_with_retry(
+            self._consumer.start,
+            attempts=self._connect_attempts,
+            base_delay_seconds=self._connect_base_delay_seconds,
+        )
 
     async def stop(self) -> None:
         await self._consumer.stop()

@@ -16,6 +16,10 @@ from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Channel, InboundMessage, OutboundResponse
 from shared.events.topics import MSG_INBOUND, RESPONSE_OUTBOUND
 from shared.config.env import load_env_file
+from shared.config import get_settings
+from shared.memory import UserMemory
+from shared.memory.factory import create_user_memory
+from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 DEFAULT_MONGODB_URI = "mongodb://localhost:27017"
@@ -122,8 +126,8 @@ class TelegramGatewayConfig:
             kafka_bootstrap_servers=os.getenv(
                 "KAFKA_BOOTSTRAP_SERVERS", DEFAULT_KAFKA_BOOTSTRAP_SERVERS
             ),
-            mongodb_uri=os.getenv("MONGODB_URI", DEFAULT_MONGODB_URI),
-            mongodb_database=os.getenv("MONGODB_DATABASE", DEFAULT_MONGODB_DATABASE),
+            mongodb_uri=os.getenv("MONGO_URI", DEFAULT_MONGODB_URI),
+            mongodb_database=os.getenv("MONGO_DB", DEFAULT_MONGODB_DATABASE),
         )
 
 
@@ -134,6 +138,7 @@ class TelegramGateway:
         config: TelegramGatewayConfig,
         producer: KafkaEventProducer | None = None,
         history_store: MongoHistoryStore | None = None,
+        user_memory: UserMemory | None = None,
     ) -> None:
         self._config = config
         self._producer = producer or KafkaEventProducer(
@@ -144,11 +149,17 @@ class TelegramGateway:
             uri=config.mongodb_uri,
             database=config.mongodb_database,
         )
+        self._user_memory = user_memory
 
     async def publish_telegram_text(self, *, chat_id: int | str, text: str) -> InboundMessage:
         event = build_inbound_message(chat_id=chat_id, text=text)
         await self._producer.publish(MSG_INBOUND, event, key=event.request_id)
         self._history_store.record_inbound(event, chat_id=chat_id)
+        if self._user_memory is not None:
+            try:
+                await self._user_memory.record_search(event)
+            except Exception as exc:  # pragma: no cover - external memory availability
+                print(f"Could not record inbound user memory: {exc}")
         return event
 
     async def start(self) -> None:
@@ -212,13 +223,27 @@ class TelegramGateway:
                     continue
                 await bot.send_message(chat_id=chat_id, text=event.message)
                 self._history_store.record_outbound(event, chat_id=chat_id)
+                if self._user_memory is not None:
+                    try:
+                        await self._user_memory.record_response(event)
+                    except Exception as exc:  # pragma: no cover - external memory availability
+                        print(f"Could not record outbound user memory: {exc}")
         finally:
             await consumer.stop()
 
 
 async def main() -> None:
-    gateway = TelegramGateway(config=TelegramGatewayConfig.from_env())
-    await gateway.start()
+    settings = get_settings()
+    health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
+    await health.start()
+    gateway = TelegramGateway(
+        config=TelegramGatewayConfig.from_env(),
+        user_memory=create_user_memory(settings),
+    )
+    try:
+        await gateway.start()
+    finally:
+        await health.stop()
 
 
 if __name__ == "__main__":
