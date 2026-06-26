@@ -31,6 +31,9 @@ SCRIPT_JSON_RE = re.compile(
     r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(?P<json>.*?)</script>",
     re.IGNORECASE | re.DOTALL,
 )
+ELECTROPLANET_PRODUCT_ALIASES = {
+    "tv": {"tv", "television", "télévision", "televiseur", "téléviseur", "smart tv", "led", "qled", "oled", "qned"},
+}
 PRICE_RE = re.compile(
     r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…)",
     re.IGNORECASE,
@@ -202,7 +205,13 @@ def _raw_product(
 def _clean_product_url(url: str | None) -> str | None:
     if not url or "electroplanet.ma" not in url:
         return None
-    return url.split("?", 1)[0]
+    cleaned = url.split("?", 1)[0]
+    blocked_paths = ("/catalogsearch/", "/checkout/", "/cart", "/customer/", "/mon-compte/", "/privacy-policy")
+    if any(path in cleaned for path in blocked_paths):
+        return None
+    if not cleaned.endswith(".html"):
+        return None
+    return cleaned
 
 
 def _walk_json(value):
@@ -221,7 +230,7 @@ def _dedupe_and_filter(products: list[RawProduct], task: ScrapeTaskAssigned) -> 
     for product in products:
         if product.price <= 0 or not _matches_query(product, task) or not budget_allows(product.price, task.query):
             continue
-        key = f"{product.title.lower()}:{round(product.price)}:{product.url}"
+        key = f"{round(product.price)}:{product.url}"
         if key in seen:
             continue
         seen.add(key)
@@ -233,6 +242,6 @@ def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
     searchable_text = clean_text(f"{product.title} {product.url}").lower()
     return (
         matches_brand(searchable_text, task.query)
-        and matches_product(searchable_text, task.query)
+        and matches_product(searchable_text, task.query, ELECTROPLANET_PRODUCT_ALIASES)
         and matches_color(searchable_text, task.query)
     )

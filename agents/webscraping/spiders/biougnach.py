@@ -24,6 +24,7 @@ from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 BIOUGNACH_BASE_URL = "https://www.biougnach.ma"
 BIOUGNACH_SEARCH_URL = "https://www.biougnach.ma/recherche?controller=search&s={query}"
 BIOUGNACH_SAMSUNG_SMARTPHONE_URL = "https://www.biougnach.ma/shop/category/-50/4"
+BIOUGNACH_TV_CATEGORY_URL = "https://www.biougnach.ma/shop/category/21/3"
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -39,12 +40,15 @@ PRICE_RE = re.compile(
 
 
 def build_search_url(task: ScrapeTaskAssigned) -> str:
-    if (task.query.brand or "").lower() == "samsung" and (task.query.product or "").lower() in {
+    product = (task.query.product or "").lower()
+    if (task.query.brand or "").lower() == "samsung" and product in {
         "phone",
         "smartphone",
         "telephone",
     }:
         return BIOUGNACH_SAMSUNG_SMARTPHONE_URL
+    if product in {"tv", "television", "télévision", "televiseur", "téléviseur"}:
+        return BIOUGNACH_TV_CATEGORY_URL
     return BIOUGNACH_SEARCH_URL.format(query=quote_plus(build_search_text(task)))
 
 

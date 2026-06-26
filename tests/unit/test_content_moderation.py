@@ -102,3 +102,35 @@ async def test_policy_engine_allows_clean_response_outbound() -> None:
     )
 
     assert GovernanceAction.QUARANTINE not in evaluation.actions
+
+@pytest.mark.asyncio
+async def test_policy_engine_quarantines_fake_response_outbound_url() -> None:
+    engine = GovernancePolicyEngine(content_moderation_enabled=True)
+
+    evaluation = await engine.evaluate(
+        topic=RESPONSE_OUTBOUND,
+        payload={
+            "request_id": "req_001",
+            "user_id": "telegram_123",
+            "message": "Best option: Samsung A15 https://example.com/jumia-a15",
+        },
+    )
+
+    assert GovernanceAction.QUARANTINE in evaluation.actions
+    assert any(finding.reason == "fake_outbound_url" for finding in evaluation.findings)
+
+
+@pytest.mark.asyncio
+async def test_policy_engine_allows_real_response_outbound_url() -> None:
+    engine = GovernancePolicyEngine(content_moderation_enabled=True)
+
+    evaluation = await engine.evaluate(
+        topic=RESPONSE_OUTBOUND,
+        payload={
+            "request_id": "req_001",
+            "user_id": "telegram_123",
+            "message": "Best option: Samsung A15 https://www.jumia.ma/samsung-galaxy-a15.html",
+        },
+    )
+
+    assert not any(finding.reason == "fake_outbound_url" for finding in evaluation.findings)

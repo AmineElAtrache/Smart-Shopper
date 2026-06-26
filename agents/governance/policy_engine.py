@@ -1,10 +1,11 @@
-﻿"""Policy evaluation for the Governance Agent."""
+"""Policy evaluation for the Governance Agent."""
 
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 from typing import Any
+import re
 from urllib.parse import urlparse
 
 from agents.governance.rules.pii_scanner import find_pii, mask_pii
@@ -13,6 +14,24 @@ from agents.governance.rules.robots_checker import RobotsChecker
 from shared.content_moderation import moderate_outbound_text
 from shared.events.schemas import GovernanceAction, GovernanceSeverity
 from shared.events.topics import RESPONSE_OUTBOUND, SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+
+URL_RE = re.compile(r"(?P<url>https?://[^\s<>)\]\[\"']+|www\.[^\s<>)\]\[\"']+)", re.IGNORECASE)
+PLACEHOLDER_DOMAINS = {
+    "example.com",
+    "www.example.com",
+    "example.org",
+    "www.example.org",
+    "example.net",
+    "www.example.net",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "test.com",
+    "www.test.com",
+    "fake.com",
+    "www.fake.com",
+}
+PLACEHOLDER_URL_TOKENS = ("/placeholder", "/dummy", "/fake", "{", "}", "{{", "}}")
 
 
 @dataclass(frozen=True)
@@ -104,6 +123,7 @@ class GovernancePolicyEngine:
         await self._evaluate_domain_rate_limit(topic, payload, findings)
         await self._evaluate_robots(topic, payload, findings)
         self._evaluate_outbound_content(topic, payload, findings)
+        self._evaluate_outbound_urls(topic, payload, findings)
 
         return PolicyEvaluation(
             topic=topic,
@@ -166,6 +186,31 @@ class GovernancePolicyEngine:
                 )
             )
 
+
+    def _evaluate_outbound_urls(
+        self,
+        topic: str,
+        payload: dict[str, Any],
+        findings: list[PolicyFinding],
+    ) -> None:
+        if topic != RESPONSE_OUTBOUND:
+            return
+        message = str(payload.get("message") or "").strip()
+        if not message:
+            return
+
+        fake_urls = _find_fake_outbound_urls(message)
+        if not fake_urls:
+            return
+
+        findings.append(
+            PolicyFinding(
+                action=GovernanceAction.QUARANTINE,
+                severity=GovernanceSeverity.ERROR,
+                reason="fake_outbound_url",
+                metadata={"urls": fake_urls},
+            )
+        )
     async def _evaluate_robots(
         self,
         topic: str,
@@ -223,3 +268,29 @@ def _domain_from_payload(payload: dict[str, Any]) -> str | None:
         return domain or None
     source = str(payload.get("source") or "").strip().lower()
     return source or None
+
+def _extract_urls(text: str) -> list[str]:
+    urls: list[str] = []
+    for match in URL_RE.finditer(text):
+        url = match.group("url").rstrip(".,;:!?\"")
+        if url.startswith("www."):
+            url = f"https://{url}"
+        urls.append(url)
+    return urls
+
+
+def _find_fake_outbound_urls(text: str) -> list[str]:
+    fake_urls: list[str] = []
+    for url in _extract_urls(text):
+        parsed = urlparse(url)
+        domain = parsed.netloc.lower()
+        path = parsed.path.lower()
+        if domain in PLACEHOLDER_DOMAINS:
+            fake_urls.append(url)
+            continue
+        if any(token in url.lower() for token in PLACEHOLDER_URL_TOKENS):
+            fake_urls.append(url)
+            continue
+        if parsed.scheme not in {"http", "https"} or not domain:
+            fake_urls.append(url)
+    return fake_urls

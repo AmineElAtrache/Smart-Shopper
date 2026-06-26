@@ -36,14 +36,14 @@ PROVIDER_SMOKE_QUERIES: dict[str, ProductQuery] = {
     "electrosalam": ProductQuery(product="laptop", brand="HP", budget=8000),
     "mafiawaystore": ProductQuery(product="shirt", budget=300),
     "moteur": ProductQuery(product="car", brand="Renault", budget=150000),
-    "mymarket": ProductQuery(product="phone", brand="Samsung", budget=3000),
+    "mymarket": ProductQuery(product="milk", budget=100),
     "ultrapc": ProductQuery(product="laptop", brand="HP", budget=10000),
-    "electroplanet": ProductQuery(product="tv", budget=5000),
+    "electroplanet": ProductQuery(product="tv", budget=8000),
     "defacto": ProductQuery(product="shirt", budget=300),
     "biougnach": ProductQuery(product="tv", budget=5000),
     "marjane": ProductQuery(product="milk", budget=100),
     "decathlon": ProductQuery(product="shoes", budget=600),
-    "mubawab": ProductQuery(product="apartment", city="Casablanca", budget=500000),
+    "mubawab": ProductQuery(product="apartment", city="Casablanca", budget=2000000),
     "ikea": ProductQuery(product="chair", budget=600),
     "palmarosa": ProductQuery(product="perfume", budget=500),
     "bringo": ProductQuery(product="milk", budget=100),
@@ -290,7 +290,7 @@ async def async_main(argv: list[str]) -> int:
         mode = f"{mode}+smoke"
         query_text = "per-provider smoke queries"
 
-    print(f"Auditing {len(SCRAPE_PROVIDERS)} providers (httpx first, Playwright fallback)")
+    print(f"Auditing {len(SCRAPE_PROVIDERS)} providers (explicit Playwright providers, httpx for the rest)")
     print(f"timeout={timeout_seconds}s mode={mode}")
     if args.smoke:
         print("Tip: --smoke uses perfume/milk/shoes/etc. per site instead of one phone query for all.")

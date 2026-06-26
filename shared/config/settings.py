@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     scrape_timeout_seconds: float = Field(default=30.0, alias="SCRAPE_TIMEOUT_SECONDS")
     scrape_max_concurrency: int = Field(default=17, alias="SCRAPE_MAX_CONCURRENCY")
     scrape_playwright_providers: str = Field(
-        default="avito,palmarosa",
+        default="avito,biougnach,defacto,electroplanet,ikea,jumia,marjane,palmarosa",
         alias="SCRAPE_PLAYWRIGHT_PROVIDERS",
     )
     scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")

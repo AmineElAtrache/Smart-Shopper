@@ -25,7 +25,7 @@ COLOR_ALIASES = {
     "brown": {"brown", "marron", "kahverengi"},
 }
 
-DEFAULT_PLAYWRIGHT_PROVIDERS = {"avito"}
+DEFAULT_PLAYWRIGHT_PROVIDERS = {"avito", "biougnach", "defacto", "electroplanet", "ikea", "jumia", "marjane", "palmarosa"}
 
 
 def playwright_providers() -> set[str]:
@@ -43,11 +43,13 @@ PRODUCT_ALIASES = {
     "phone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
     "smartphone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
     "telephone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
-    "laptop": {"laptop", "pc", "ordinateur", "portable"},
+    "laptop": {"laptop", "pc", "ordinateur", "portable", "notebook", "elitebook", "omen", "victus"},
+    "tv": {"tv", "television", "télévision", "televiseur", "téléviseur", "smart tv", "led", "qled", "oled", "qned"},
     "shoes": {"shoes", "shoe", "chaussures", "baskets"},
     "shoe": {"shoes", "shoe", "chaussures", "baskets"},
     "chair": {"chair", "chaise"},
     "apartment": {"apartment", "appartement", "appartements"},
+    "milk": {"milk", "lait"},
 }
 
 
