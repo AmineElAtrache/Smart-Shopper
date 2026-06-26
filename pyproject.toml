@@ -48,6 +48,9 @@ dev = [
 where = ["."]
 include = ["shared*", "agents*", "gateway*", "models*", "generated*"]
 
+
+[tool.setuptools.package-data]
+"models.ner" = ["resources/*.csv"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"

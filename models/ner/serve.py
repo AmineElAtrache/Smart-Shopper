@@ -16,6 +16,11 @@ from functools import lru_cache
 from typing import Any
 
 from shared.events.schemas import EntityType, ExtractedEntity
+from models.ner.product_vocabulary import (
+    canonicalize_entity_value,
+    detect_entities as detect_vocabulary_entities,
+    normalize_text as normalize_vocabulary_text,
+)
 
 try:
     from rapidfuzz import fuzz, process
@@ -268,7 +273,8 @@ def extract_entities(text: str, locale_hint: str | None = None) -> list[Extracte
 
 def _preprocess_text(text: str) -> str:
     ascii_text = _strip_accents(text.lower())
-    tokens = TOKEN_PATTERN.findall(ascii_text)
+    vocabulary_text = normalize_vocabulary_text(ascii_text)
+    tokens = TOKEN_PATTERN.findall(vocabulary_text)
     normalized_tokens = [_normalize_token(token) for token in tokens]
     return " ".join(normalized_tokens)
 
@@ -282,6 +288,9 @@ def _strip_accents(text: str) -> str:
 
 
 def _normalize_token(token: str) -> str:
+    vocabulary_token = normalize_vocabulary_text(token)
+    if vocabulary_token and vocabulary_token != token:
+        return vocabulary_token
     if token in SPELLING_ALIASES:
         return SPELLING_ALIASES[token]
     if len(token) < 4 or token.isdigit():
@@ -399,6 +408,8 @@ def _derive_context_entities(
     if color:
         entities.append(ExtractedEntity(type=EntityType.COLOR, value=color, confidence=0.7))
 
+    entities.extend(detect_vocabulary_entities(normalized_text))
+
     budget = _detect_budget(normalized_text)
     if budget:
         amount, currency = budget
@@ -480,6 +491,9 @@ def _expand_price_entity(entity: ExtractedEntity) -> list[ExtractedEntity]:
 
 def _normalize_value(entity_type: EntityType, value: str) -> str:
     value = value.replace("##", "").strip(" ,.;:!?\"'").strip()
+    vocabulary_value = canonicalize_entity_value(entity_type, value)
+    if vocabulary_value:
+        return vocabulary_value
     compact = value.lower()
     if entity_type == EntityType.BRAND:
         return BRANDS.get(compact, value.title())
@@ -515,13 +529,21 @@ def _detect_brand(normalized: str) -> str | None:
     for alias, brand in BRANDS.items():
         if alias in tokens:
             return brand
+
+    for entity in detect_vocabulary_entities(normalized):
+        if entity.type == EntityType.BRAND:
+            return entity.value
     return None
 
 
 def _detect_product(normalized: str) -> str | None:
     for product, keywords in PRODUCT_KEYWORDS.items():
         if any(keyword in normalized for keyword in keywords):
-            return product
+            return canonicalize_entity_value(EntityType.PRODUCT, product) or product
+
+    for entity in detect_vocabulary_entities(normalized):
+        if entity.type == EntityType.PRODUCT:
+            return entity.value
     return None
 
 
@@ -538,13 +560,17 @@ def _detect_model_after_brand(normalized: str) -> str | None:
     for index, token in enumerate(tokens):
         if token not in BRANDS:
             continue
+        model_tokens: list[str] = []
         for candidate in tokens[index + 1 : index + 4]:
             if candidate in MODEL_STOP_TOKENS:
                 break
             if candidate in blocked or BUDGET_PATTERN.fullmatch(candidate):
                 continue
             if len(candidate) >= 2:
-                return candidate
+                model_tokens.append(candidate)
+        if model_tokens:
+            model = " ".join(model_tokens)
+            return canonicalize_entity_value(EntityType.PRODUCT, model) or model
     return None
 
 

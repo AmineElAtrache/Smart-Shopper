@@ -5,6 +5,7 @@ import pytest
 from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.tools.task_router import build_product_query
 from models.ner.serve import extract_entities
+from models.ner.product_vocabulary import load_vocabulary, normalize_text as normalize_vocabulary_text
 from shared.events.schemas import EntityType, ExtractedEntity, InboundMessage
 
 
@@ -145,3 +146,27 @@ def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
         "mubawab",
         "ikea",
     ]
+
+def test_product_vocabulary_resource_is_loaded() -> None:
+    assert len(load_vocabulary()) >= 700
+
+
+def test_product_vocabulary_normalizes_multilingual_typos() -> None:
+    normalized = normalize_vocabulary_text("bghit samsong galaxi a15 smarfone kehla")
+
+    assert "samsung" in normalized
+    assert "galaxy a15" in normalized
+    assert "phone" in normalized
+    assert "black" in normalized
+
+
+def test_ner_uses_vocabulary_without_model_predictions(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("models.ner.serve._extract_with_model", lambda text: [])
+
+    entities = extract_entities("bghit samsong galaxi a15 kehla b 1500dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["brand"].value == "Samsung"
+    assert by_type["product"].value in {"Galaxy A15", "galaxy a15"}
+    assert by_type["color"].value == "black"
+    assert by_type["budget"].value == "1500.0"
