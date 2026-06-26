@@ -20,6 +20,9 @@ PROVIDER_DOMAINS: dict[str, str] = {
     "decathlon": "www.decathlon.ma",
     "mubawab": "www.mubawab.ma",
     "ikea": "www.ikea.com",
+    "palmarosa": "www.palmarosashop.com",
+    "bringo": "www.bringo.ma",
+    "planetsport": "planetsport.ma",
 }
 
 

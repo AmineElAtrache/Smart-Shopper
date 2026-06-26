@@ -25,6 +25,9 @@ DEFAULT_SITES = [
     "decathlon",
     "mubawab",
     "ikea",
+    "palmarosa",
+    "bringo",
+    "planetsport",
 ]
 
 

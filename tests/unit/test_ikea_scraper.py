@@ -42,7 +42,7 @@ async def test_webscraping_agent_includes_ikea_products(monkeypatch) -> None:
         html = open("tests/fixtures/ikea_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.ikea.com/ma/fr/search/?q=chaise")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.ikea.scrape", fake_ikea_scrape)
 
@@ -69,7 +69,7 @@ async def test_agent_publishes_ikea_products(monkeypatch) -> None:
         html = open("tests/fixtures/ikea_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.ikea.com/ma/fr/search/?q=chaise")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.ikea.scrape", fake_ikea_scrape)
     producer = FakeProducer()

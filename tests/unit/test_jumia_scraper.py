@@ -42,7 +42,7 @@ async def test_webscraping_agent_includes_jumia_products(monkeypatch) -> None:
         html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.jumia.ma/catalog/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.jumia.scrape", fake_jumia_scrape)
 
@@ -69,7 +69,7 @@ async def test_agent_publishes_jumia_products(monkeypatch) -> None:
         html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.jumia.ma/catalog/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.jumia.scrape", fake_jumia_scrape)
     producer = FakeProducer()

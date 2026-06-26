@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from agents.webscraping.spiders import (
     avito,
     biougnach,
+    bringo,
     decathlon,
     defacto,
     electroplanet,
@@ -25,6 +26,8 @@ from agents.webscraping.spiders import (
     moteur,
     mubawab,
     mymarket,
+    palmarosa,
+    planetsport,
     ultrapc,
 )
 from shared.config.env import load_env_file
@@ -54,6 +57,9 @@ SCRAPE_PROVIDERS = (
     ("decathlon", decathlon),
     ("mubawab", mubawab),
     ("ikea", ikea),
+    ("palmarosa", palmarosa),
+    ("bringo", bringo),
+    ("planetsport", planetsport),
 )
 
 
