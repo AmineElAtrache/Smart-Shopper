@@ -21,6 +21,7 @@ from agents.agent_generator.tools.response_validator import (
 )
 from shared.config import Settings, get_settings
 from shared.config.env import load_env_file
+from shared.content_moderation import apply_outbound_moderation, blocked_outbound_message, moderate_outbound_text
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import DecisionRanked, OutboundResponse, RankedProduct
 from shared.events.topics import DECISION_RANKED, RESPONSE_OUTBOUND
@@ -227,17 +228,59 @@ class AgentGenerator:
             print(
                 f"[generator] no products; skipping LLM request_id={event.request_id}"
             )
+
+        response = self._apply_content_moderation(event, response)
         await self._producer.publish(RESPONSE_OUTBOUND, response, key=event.request_id)
         if (
             self._global_memory is not None
             and event.query is not None
             and event.products
             and not is_mock_response_text(response.message)
+            and moderate_outbound_text(
+                response.message,
+                enabled=self._content_moderation_enabled(),
+            ).allowed
         ):
             await self._global_memory.set_cached_response(event.query, response.message)
         if self._behavioral_memory is not None:
             await self._behavioral_memory.record_generation(event, response)
         return response
+
+    def _content_moderation_enabled(self) -> bool:
+        if self._settings is None:
+            return True
+        return self._settings.governance_content_moderation_enabled
+
+    def _apply_content_moderation(
+        self,
+        event: DecisionRanked,
+        response: OutboundResponse,
+    ) -> OutboundResponse:
+        reference_text = event.user_text or ""
+        fallback = (
+            build_localized_response(event)
+            if event.products
+            else blocked_outbound_message(reference_text=reference_text)
+        )
+        message, result = apply_outbound_moderation(
+            response.message,
+            fallback=fallback,
+            enabled=self._content_moderation_enabled(),
+            reference_text=reference_text,
+        )
+        if not result.allowed:
+            print(
+                f"[generator] content moderation blocked request_id={event.request_id}: "
+                f"{result.summary}"
+            )
+        if message == response.message:
+            return response
+        return OutboundResponse(
+            request_id=response.request_id,
+            user_id=response.user_id,
+            channel=response.channel,
+            message=message,
+        )
 
     async def run(self) -> None:
         consumer = KafkaEventConsumer(

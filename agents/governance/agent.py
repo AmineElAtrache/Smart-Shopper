@@ -129,6 +129,7 @@ class GovernanceAgent:
             robots_checker=RobotsChecker(redis_client),
             strict_robots=self._settings.governance_strict_robots,
             quarantine_pii=self._settings.governance_quarantine_pii,
+            content_moderation_enabled=self._settings.governance_content_moderation_enabled,
         )
 
 

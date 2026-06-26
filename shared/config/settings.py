@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")
     governance_strict_robots: bool = Field(default=False, alias="GOVERNANCE_STRICT_ROBOTS")
     governance_quarantine_pii: bool = Field(default=True, alias="GOVERNANCE_QUARANTINE_PII")
+    governance_content_moderation_enabled: bool = Field(
+        default=True,
+        alias="GOVERNANCE_CONTENT_MODERATION_ENABLED",
+    )
 
     llm_provider: str = Field(default="template", alias="LLM_PROVIDER")
     llm_http_base_url: str = Field(default="http://localhost:8081", alias="LLM_HTTP_BASE_URL")

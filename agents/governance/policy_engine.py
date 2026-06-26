@@ -10,8 +10,9 @@ from urllib.parse import urlparse
 from agents.governance.rules.pii_scanner import find_pii, mask_pii
 from agents.governance.rules.rate_limiter import RateLimitDecision, RateLimiter
 from agents.governance.rules.robots_checker import RobotsChecker
+from shared.content_moderation import moderate_outbound_text
 from shared.events.schemas import GovernanceAction, GovernanceSeverity
-from shared.events.topics import SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+from shared.events.topics import RESPONSE_OUTBOUND, SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
 
 
 @dataclass(frozen=True)
@@ -60,12 +61,14 @@ class GovernancePolicyEngine:
         robots_checker: RobotsChecker | None = None,
         strict_robots: bool = False,
         quarantine_pii: bool = True,
+        content_moderation_enabled: bool = True,
     ) -> None:
         self._user_rate_limiter = user_rate_limiter
         self._domain_rate_limiter = domain_rate_limiter
         self._robots_checker = robots_checker
         self._strict_robots = strict_robots
         self._quarantine_pii = quarantine_pii
+        self._content_moderation_enabled = content_moderation_enabled
 
     async def evaluate(self, *, topic: str, payload: dict[str, Any]) -> PolicyEvaluation:
         payload_text = json.dumps(payload, ensure_ascii=True, default=str)
@@ -100,6 +103,7 @@ class GovernancePolicyEngine:
         await self._evaluate_user_rate_limit(payload, findings)
         await self._evaluate_domain_rate_limit(topic, payload, findings)
         await self._evaluate_robots(topic, payload, findings)
+        self._evaluate_outbound_content(topic, payload, findings)
 
         return PolicyEvaluation(
             topic=topic,
@@ -133,6 +137,34 @@ class GovernancePolicyEngine:
             return
         decision = await self._domain_rate_limiter.check("domain", domain)
         self._append_rate_limit_finding(findings, decision, scope="domain")
+
+    def _evaluate_outbound_content(
+        self,
+        topic: str,
+        payload: dict[str, Any],
+        findings: list[PolicyFinding],
+    ) -> None:
+        if not self._content_moderation_enabled or topic != RESPONSE_OUTBOUND:
+            return
+        message = str(payload.get("message") or "").strip()
+        if not message:
+            return
+        result = moderate_outbound_text(message, enabled=True)
+        if result.allowed:
+            return
+        for finding in result.findings:
+            findings.append(
+                PolicyFinding(
+                    action=GovernanceAction.QUARANTINE,
+                    severity=GovernanceSeverity.ERROR,
+                    reason=f"content_{finding.category}",
+                    metadata={
+                        "category": finding.category,
+                        "policy_reason": finding.reason,
+                        "match": finding.match,
+                    },
+                )
+            )
 
     async def _evaluate_robots(
         self,
