@@ -15,6 +15,7 @@ from shared.config import Settings, get_settings
 from shared.events.kafka import KafkaEventProducer
 from shared.events.schemas import GovernanceEvent
 from shared.events.topics import ALL_TOPICS, GOV_AUDIT, GOV_VIOLATION
+from shared.memory.global_memory import GlobalMemory
 from shared.runtime import HealthServer
 
 
@@ -126,7 +127,13 @@ class GovernanceAgent:
                 limit=self._settings.domain_rate_limit_per_minute,
                 window_seconds=60,
             ),
-            robots_checker=RobotsChecker(redis_client),
+            robots_checker=RobotsChecker(
+                redis_client,
+                global_memory=GlobalMemory(
+                    redis_client,
+                    cache_ttl_seconds=self._settings.cache_ttl_seconds,
+                ),
+            ),
             strict_robots=self._settings.governance_strict_robots,
             quarantine_pii=self._settings.governance_quarantine_pii,
             content_moderation_enabled=self._settings.governance_content_moderation_enabled,

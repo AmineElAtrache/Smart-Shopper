@@ -9,6 +9,8 @@ from urllib.robotparser import RobotFileParser
 import httpx
 from redis.asyncio import Redis
 
+from shared.memory.global_memory import GlobalMemory
+
 
 @dataclass(frozen=True)
 class RobotsDecision:
@@ -19,9 +21,16 @@ class RobotsDecision:
 
 
 class RobotsChecker:
-    def __init__(self, redis: Redis, *, ttl_seconds: int = 6 * 60 * 60) -> None:
+    def __init__(
+        self,
+        redis: Redis,
+        *,
+        ttl_seconds: int = 6 * 60 * 60,
+        global_memory: GlobalMemory | None = None,
+    ) -> None:
         self._redis = redis
         self._ttl_seconds = ttl_seconds
+        self._global_memory = global_memory
 
     async def can_fetch(self, url: str, *, user_agent: str = "SmartShopperBot") -> RobotsDecision:
         parsed = urlparse(url)
@@ -41,17 +50,37 @@ class RobotsChecker:
         return RobotsDecision(allowed, domain, robots_url, "allowed" if allowed else "disallowed")
 
     async def _get_robots_txt(self, robots_url: str) -> str | None:
+        domain = urlparse(robots_url).netloc.lower()
+        if domain and self._global_memory is not None:
+            cached = await self._global_memory.get_robots_txt(domain)
+            if cached is not None:
+                return cached
+
         key = f"robots:{robots_url}"
         cached = await self._redis.get(key)
         if cached is not None:
-            return cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
+            robots_txt = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
+            if domain and self._global_memory is not None:
+                await self._global_memory.cache_robots_txt(
+                    domain,
+                    robots_txt,
+                    ttl_seconds=self._ttl_seconds,
+                )
+            return robots_txt
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(robots_url)
                 if response.status_code >= 400:
                     return None
-                await self._redis.set(key, response.text, ex=self._ttl_seconds)
-                return response.text
+                robots_txt = response.text
+                await self._redis.set(key, robots_txt, ex=self._ttl_seconds)
+                if domain and self._global_memory is not None:
+                    await self._global_memory.cache_robots_txt(
+                        domain,
+                        robots_txt,
+                        ttl_seconds=self._ttl_seconds,
+                    )
+                return robots_txt
         except httpx.HTTPError:
             return None

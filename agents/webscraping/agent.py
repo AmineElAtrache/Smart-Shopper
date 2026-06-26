@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from dataclasses import dataclass
 
 from agents.webscraping.spiders import (
@@ -28,9 +29,12 @@ from agents.webscraping.spiders import (
 )
 from shared.config.env import load_env_file
 from shared.config import get_settings
+from shared.memory.factory import create_global_memory
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import Availability, DecisionRanked, RawProduct, ScrapeTaskAssigned
 from shared.events.topics import DECISION_RANKED, SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+from shared.memory.global_memory import GlobalMemory
+from shared.memory.tier1_hooks import record_provider_health
 from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
@@ -120,7 +124,11 @@ async def _scrape_provider(
     task: ScrapeTaskAssigned,
     *,
     timeout_seconds: float,
+    global_memory: GlobalMemory | None = None,
 ) -> list[RawProduct]:
+    started = time.perf_counter()
+    error: str | None = None
+    provider_products: list[RawProduct] = []
     try:
         try:
             scrape_call = provider.scrape(task, timeout=timeout_seconds)  # type: ignore[attr-defined]
@@ -131,14 +139,24 @@ async def _scrape_provider(
             timeout=timeout_seconds,
         )
     except TimeoutError:
+        error = "timeout"
         print(
             f"[scraper] {provider_name} timed out after {timeout_seconds}s "
             f"for {task.request_id}"
         )
-        return []
     except Exception as exc:
+        error = type(exc).__name__
         print(f"[scraper] {provider_name} failed for {task.request_id}: {exc}")
-        return []
+    finally:
+        if global_memory is not None:
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            await record_provider_health(
+                global_memory,
+                provider_name,
+                product_count=len(provider_products),
+                elapsed_ms=elapsed_ms,
+                error=error,
+            )
 
     if provider_products:
         print(
@@ -154,6 +172,7 @@ async def scrape_products(
     mock_only: bool = False,
     timeout_seconds: float = 30.0,
     max_concurrency: int = 8,
+    global_memory: GlobalMemory | None = None,
 ) -> list[RawProduct]:
     """Scrape providers concurrently, then fall back to mock products if needed."""
     if mock_only:
@@ -170,6 +189,7 @@ async def scrape_products(
                 provider,
                 task,
                 timeout_seconds=timeout_seconds,
+                global_memory=global_memory,
             )
 
     pending = [
@@ -236,8 +256,10 @@ class MockScraperAgent:
         *,
         config: MockScraperConfig,
         producer: KafkaEventProducer | None = None,
+        global_memory: GlobalMemory | None = None,
     ) -> None:
         self._config = config
+        self._global_memory = global_memory
         self._producer = producer or KafkaEventProducer(
             config.kafka_bootstrap_servers,
             client_id="mock-scraper-agent",
@@ -249,6 +271,7 @@ class MockScraperAgent:
             mock_only=self._config.mock_only,
             timeout_seconds=self._config.timeout_seconds,
             max_concurrency=self._config.max_concurrency,
+            global_memory=self._global_memory,
         )
         if not products:
             await self._publish_empty_ranked(task)
@@ -307,7 +330,8 @@ async def main() -> None:
                 mock_only=settings.scrape_mock_only,
                 timeout_seconds=settings.scrape_timeout_seconds,
                 max_concurrency=settings.scrape_max_concurrency,
-            )
+            ),
+            global_memory=create_global_memory(settings),
         ).run()
     finally:
         await health.stop()
