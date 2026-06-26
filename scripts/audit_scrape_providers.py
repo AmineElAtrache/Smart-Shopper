@@ -4,6 +4,7 @@ Usage:
   python -m scripts.audit_scrape_providers
   python -m scripts.audit_scrape_providers "Bghit Samsung phone b 3000 dh"
   python -m scripts.audit_scrape_providers --parallel
+  python -m scripts.audit_scrape_providers --smoke --parallel
   python -m scripts.audit_scrape_providers --json reports/audit.json
 """
 
@@ -28,6 +29,27 @@ STATUS_BLOCKED = "BLOCKED"
 STATUS_RATE_LIMIT = "RATE_LIMIT"
 STATUS_ERROR = "ERROR"
 
+# Realistic smoke query per provider (one phone query is wrong for beauty/grocery/sports/etc.)
+PROVIDER_SMOKE_QUERIES: dict[str, ProductQuery] = {
+    "jumia": ProductQuery(product="phone", brand="Samsung", budget=3000),
+    "avito": ProductQuery(product="phone", brand="Samsung", budget=3000),
+    "electrosalam": ProductQuery(product="laptop", brand="HP", budget=8000),
+    "mafiawaystore": ProductQuery(product="shirt", budget=300),
+    "moteur": ProductQuery(product="car", brand="Renault", budget=150000),
+    "mymarket": ProductQuery(product="phone", brand="Samsung", budget=3000),
+    "ultrapc": ProductQuery(product="laptop", brand="HP", budget=10000),
+    "electroplanet": ProductQuery(product="tv", budget=5000),
+    "defacto": ProductQuery(product="shirt", budget=300),
+    "biougnach": ProductQuery(product="tv", budget=5000),
+    "marjane": ProductQuery(product="milk", budget=100),
+    "decathlon": ProductQuery(product="shoes", budget=600),
+    "mubawab": ProductQuery(product="apartment", city="Casablanca", budget=500000),
+    "ikea": ProductQuery(product="chair", budget=600),
+    "palmarosa": ProductQuery(product="perfume", budget=500),
+    "bringo": ProductQuery(product="milk", budget=100),
+    "planetsport": ProductQuery(product="shoes", budget=900),
+}
+
 
 @dataclass
 class ProviderAudit:
@@ -39,14 +61,24 @@ class ProviderAudit:
     detail: str
 
 
-def build_task(text: str) -> ScrapeTaskAssigned:
+def build_task(text: str, *, query: ProductQuery | None = None) -> ScrapeTaskAssigned:
     return ScrapeTaskAssigned(
         request_id="provider_audit",
         user_id="audit",
         channel=Channel.TELEGRAM,
         user_text=text,
-        query=ProductQuery(product="phone", brand="Samsung", budget=3000),
+        query=query or ProductQuery(product="phone", brand="Samsung", budget=3000),
     )
+
+
+def smoke_task(provider_name: str) -> ScrapeTaskAssigned:
+    query = PROVIDER_SMOKE_QUERIES.get(
+        provider_name,
+        ProductQuery(product="phone", brand="Samsung", budget=3000),
+    )
+    parts = [query.brand, query.product, query.city]
+    text = " ".join(str(part) for part in parts if part)
+    return build_task(text or f"audit {provider_name}", query=query)
 
 
 def classify_result(
@@ -122,6 +154,28 @@ def _short_detail(detail: str, *, max_len: int = 90) -> str:
     if len(cleaned) <= max_len:
         return cleaned
     return cleaned[: max_len - 3] + "..."
+
+
+async def audit_sequential_smoke(*, timeout_seconds: float) -> list[ProviderAudit]:
+    results: list[ProviderAudit] = []
+    for name, provider in SCRAPE_PROVIDERS:
+        task = smoke_task(name)
+        print(f"  -> {name} ({task.query.product}) ...", flush=True)
+        results.append(
+            await audit_one_provider(name, provider, task, timeout_seconds=timeout_seconds)
+        )
+    return results
+
+
+async def audit_parallel_smoke(*, timeout_seconds: float) -> list[ProviderAudit]:
+    print("  (each provider uses its own smoke query)", flush=True)
+
+    async def run_one(name: str, provider: object) -> ProviderAudit:
+        task = smoke_task(name)
+        return await audit_one_provider(name, provider, task, timeout_seconds=timeout_seconds)
+
+    pending = [run_one(name, provider) for name, provider in SCRAPE_PROVIDERS]
+    return list(await asyncio.gather(*pending))
 
 
 async def audit_sequential(task: ScrapeTaskAssigned, *, timeout_seconds: float) -> list[ProviderAudit]:
@@ -213,6 +267,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Run all providers at once (production-like). Default is one-by-one for clear timing.",
     )
     parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Use a realistic query per provider (recommended). Default uses one phone query for all.",
+    )
+    parser.add_argument(
         "--json",
         metavar="PATH",
         help="Save full report as JSON",
@@ -227,11 +286,21 @@ async def async_main(argv: list[str]) -> int:
     task = build_task(query_text)
     timeout_seconds = settings.scrape_timeout_seconds
     mode = "parallel" if args.parallel else "sequential"
+    if args.smoke:
+        mode = f"{mode}+smoke"
+        query_text = "per-provider smoke queries"
 
     print(f"Auditing {len(SCRAPE_PROVIDERS)} providers (httpx first, Playwright fallback)")
     print(f"timeout={timeout_seconds}s mode={mode}")
+    if args.smoke:
+        print("Tip: --smoke uses perfume/milk/shoes/etc. per site instead of one phone query for all.")
 
-    if args.parallel:
+    if args.smoke:
+        if args.parallel:
+            results = await audit_parallel_smoke(timeout_seconds=timeout_seconds)
+        else:
+            results = await audit_sequential_smoke(timeout_seconds=timeout_seconds)
+    elif args.parallel:
         results = await audit_parallel(task, timeout_seconds=timeout_seconds)
     else:
         results = await audit_sequential(task, timeout_seconds=timeout_seconds)

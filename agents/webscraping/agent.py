@@ -240,7 +240,7 @@ class MockScraperConfig:
     kafka_bootstrap_servers: str = DEFAULT_KAFKA_BOOTSTRAP_SERVERS
     mock_only: bool = False
     timeout_seconds: float = 30.0
-    max_concurrency: int = 8
+    max_concurrency: int = 17
 
     @classmethod
     def from_env(cls) -> "MockScraperConfig":
@@ -252,7 +252,7 @@ class MockScraperConfig:
             ),
             mock_only=mock_only,
             timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "30.0")),
-            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "8")),
+            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "17")),
         )
 
 
