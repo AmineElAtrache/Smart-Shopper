@@ -53,7 +53,10 @@ class FakeLlmClient:
         return self.message
 
 
-def make_ranked(*, watch_id: str | None = None) -> DecisionRanked:
+def make_ranked(*, watch_id: str | None = None, real_urls: bool = False) -> DecisionRanked:
+    first_url = 'https://www.jumia.ma/samsung-galaxy-a15' if real_urls else 'https://example.com/jumia-a15'
+    second_url = 'https://www.jumia.ma/samsung-galaxy-a05' if real_urls else 'https://example.com/jumia-a05'
+
     return DecisionRanked(
         request_id="req_001",
         user_id="telegram_123",
@@ -65,7 +68,7 @@ def make_ranked(*, watch_id: str | None = None) -> DecisionRanked:
                 title="Samsung Galaxy A15 128GB",
                 price=2499,
                 source="jumia",
-                url="https://example.com/jumia-a15",
+                url=first_url,
                 availability=Availability.IN_STOCK,
                 score=88,
                 score_breakdown=ScoreBreakdown(price=36, trust=27, quality=17, availability=8),
@@ -74,7 +77,7 @@ def make_ranked(*, watch_id: str | None = None) -> DecisionRanked:
                 title="Samsung Galaxy A05",
                 price=1890,
                 source="jumia",
-                url="https://example.com/jumia-a05",
+                url=second_url,
                 availability=Availability.IN_STOCK,
                 score=84,
                 score_breakdown=ScoreBreakdown(price=38, trust=24, quality=14, availability=8),
@@ -108,12 +111,12 @@ def test_agent_generator_publishes_neutral_template_response_and_records_memory(
         behavioral_memory=behavioral_memory,
     )
 
-    response = asyncio.run(generator.handle_ranked(make_ranked()))
+    response = asyncio.run(generator.handle_ranked(make_ranked(real_urls=True)))
 
     assert response is not None
     assert producer.published[0][0] == RESPONSE_OUTBOUND
     assert "Samsung Galaxy A15 128GB" in response.message
-    assert "https://example.com/jumia-a15" in response.message
+    assert 'https://www.jumia.ma/samsung-galaxy-a15' in response.message
     assert "without favoring" not in response.message.lower()
     assert "no recommendation" not in response.message.lower()
     assert "best choice" not in response.message.lower()
@@ -219,7 +222,7 @@ def test_materialize_llm_response_supports_general_reply_without_products() -> N
 
 def test_agent_generator_falls_back_when_llm_returns_unusable_unlabelled_text() -> None:
     producer = FakeProducer()
-    generator = make_generator(producer=producer, llm_client=FakeLlmClient("A nice Samsung option."))
+    generator = make_generator(producer=producer, llm_client=FakeLlmClient('A nice Samsung option.'))
 
     response = asyncio.run(generator.handle_ranked(make_ranked()))
 

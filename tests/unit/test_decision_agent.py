@@ -1,4 +1,4 @@
-from agents.decision.agent import DecisionAgent
+﻿from agents.decision.agent import DecisionAgent
 from shared.events.schemas import Availability, ProductQuery, RawProduct
 
 
@@ -39,3 +39,162 @@ def test_decision_agent_ranks_best_product_first() -> None:
     assert ranked.products[0].score > ranked.products[1].score
     assert ranked.products[0].score_breakdown.price <= 40
     assert ranked.products[0].score_breakdown.trust <= 30
+
+
+def test_decision_agent_filters_irrelevant_phone_results() -> None:
+    query = ProductQuery(product="phone", budget=1390)
+    products = [
+        RawProduct(
+            request_id="req_phone",
+            source="jumia",
+            title="MuscleTech Nitrotech 100% Whey Gold 2,28 kg",
+            price=890,
+            url="https://example.com/whey",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.8,
+        ),
+        RawProduct(
+            request_id="req_phone",
+            source="ultrapc",
+            title="SUPERLUX E205U USB MICROPHONE STUDIO USB",
+            price=690,
+            url="https://example.com/microphone",
+            availability=Availability.IN_STOCK,
+            rating=4.2,
+        ),
+        RawProduct(
+            request_id="req_phone",
+            source="jumia",
+            title="Itel A100C 6,6 - 2+4 RAM + 64 ROM - Gold",
+            price=879,
+            url="https://example.com/itel-a100c",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.1,
+        ),
+        RawProduct(
+            request_id="req_phone",
+            source="jumia",
+            title="XIAOMI Redmi A5 3GB 64GB Sandy Gold",
+            price=959,
+            url="https://example.com/redmi-a5",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.0,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_phone",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    titles = [product.title.lower() for product in ranked.products]
+    assert len(ranked.products) == 2
+    assert all("whey" not in title for title in titles)
+    assert all("microphone" not in title for title in titles)
+    assert ranked.products[0].title.startswith("Itel") or ranked.products[0].title.startswith("XIAOMI")
+
+
+def test_decision_agent_filters_laptop_accessories_and_noisy_pages() -> None:
+    query = ProductQuery(product="laptop")
+    products = [
+        RawProduct(
+            request_id="req_laptop",
+            source="ultrapc",
+            title="Razer Laptop Stand Support ergonomique pour ordinateur portable",
+            price=649,
+            url="https://example.com/laptop-stand",
+            availability=Availability.IN_STOCK,
+            rating=4.6,
+        ),
+        RawProduct(
+            request_id="req_laptop",
+            source="ultrapc",
+            title="Chers clients, NOTRE MAGASIN EST OUVERT ULTRAPC continue a livrer les commandes Accueil Contact Plan du site",
+            price=649,
+            url="https://www.ultrapc.ma/",
+            availability=Availability.IN_STOCK,
+        ),
+        RawProduct(
+            request_id="req_laptop",
+            source="avito",
+            title="HP OMEN 15 laptop i7 GTX 1660",
+            price=6200,
+            url="https://example.com/hp-omen",
+            availability=Availability.UNKNOWN,
+            rating=3.8,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_laptop",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert [product.title for product in ranked.products] == ["HP OMEN 15 laptop i7 GTX 1660"]
+
+
+
+def test_decision_agent_diversifies_top_three_sources_when_possible() -> None:
+    query = ProductQuery(product="phone", budget=3000)
+    products = [
+        RawProduct(
+            request_id="req_diverse",
+            source="jumia",
+            title="Samsung Galaxy A15 phone",
+            price=2499,
+            url="https://example.com/jumia-a15",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.5,
+        ),
+        RawProduct(
+            request_id="req_diverse",
+            source="jumia",
+            title="Xiaomi Redmi A5 phone",
+            price=959,
+            url="https://example.com/jumia-redmi",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.4,
+        ),
+        RawProduct(
+            request_id="req_diverse",
+            source="jumia",
+            title="Itel A100C phone",
+            price=879,
+            url="https://example.com/jumia-itel",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.3,
+        ),
+        RawProduct(
+            request_id="req_diverse",
+            source="avito",
+            title="Samsung Galaxy A15 phone",
+            price=2300,
+            url="https://example.com/avito-a15",
+            availability=Availability.UNKNOWN,
+            seller="Private seller",
+            rating=3.8,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_diverse",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert len([product for product in ranked.products[:3] if product.source == "jumia"]) <= 2
+    assert any(product.source == "avito" for product in ranked.products[:3])

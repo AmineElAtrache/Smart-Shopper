@@ -1,7 +1,8 @@
-﻿"""Shared helpers for website scrapers."""
+"""Shared helpers for website scrapers."""
 
 from __future__ import annotations
 
+import os
 import re
 from html import unescape
 from urllib.parse import urljoin
@@ -23,6 +24,21 @@ COLOR_ALIASES = {
     "silver": {"silver", "argent"},
     "brown": {"brown", "marron", "kahverengi"},
 }
+
+DEFAULT_PLAYWRIGHT_PROVIDERS = {"avito"}
+
+
+def playwright_providers() -> set[str]:
+    """Providers that should use browser rendering directly instead of httpx."""
+    raw_value = os.getenv("SCRAPE_PLAYWRIGHT_PROVIDERS")
+    if raw_value is None:
+        return set(DEFAULT_PLAYWRIGHT_PROVIDERS)
+    return {provider.strip().lower() for provider in raw_value.split(",") if provider.strip()}
+
+
+def use_playwright_provider(provider_name: str) -> bool:
+    return provider_name.lower() in playwright_providers()
+
 PRODUCT_ALIASES = {
     "phone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
     "smartphone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},

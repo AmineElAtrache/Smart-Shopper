@@ -36,7 +36,7 @@ class Settings(BaseSettings):
         alias="ORCHESTRATOR_GROUP_ID",
     )
     decision_group_id: str = Field(default="decision-agent", alias="DECISION_GROUP_ID")
-    decision_batch_wait_seconds: float = Field(default=2.0, alias="DECISION_BATCH_WAIT_SECONDS")
+    decision_batch_wait_seconds: float = Field(default=12.0, alias="DECISION_BATCH_WAIT_SECONDS")
     scraper_group_id: str = Field(default="webscraping-agent", alias="SCRAPER_GROUP_ID")
     generator_group_id: str = Field(default="agent-generator", alias="GENERATOR_GROUP_ID")
     gateway_group_id: str = Field(default="telegram-gateway", alias="GATEWAY_GROUP_ID")
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     governance_group_id: str = Field(default="governance-agent", alias="GOVERNANCE_GROUP_ID")
 
     scrape_timeout_seconds: float = Field(default=30.0, alias="SCRAPE_TIMEOUT_SECONDS")
-    scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
+    scrape_max_concurrency: int = Field(default=14, alias="SCRAPE_MAX_CONCURRENCY")
     scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
     user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")
