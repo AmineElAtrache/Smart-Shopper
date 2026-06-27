@@ -10,7 +10,8 @@ from shared.events.schemas import ProductQuery
 
 
 def cache_key_for_query(query: ProductQuery) -> str:
-    fingerprint = query.model_dump_json()
+    # Sites are routing metadata; the same shopping intent should share one cache entry.
+    fingerprint = query.model_dump_json(exclude={"sites"})
     digest = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()[:16]
     return f"products:query:{digest}"
 

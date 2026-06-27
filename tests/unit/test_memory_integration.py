@@ -9,7 +9,7 @@ import pytest
 from agents.ambient_scheduler.scheduler import AmbientScheduler
 from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.service import OrchestratorService
-from agents.orchestrator.tools.cache_lookup import ProductCache
+from agents.orchestrator.tools.cache_lookup import ProductCache, cache_key_for_query
 from shared.config import Settings
 from shared.events.schemas import (
     AmbientWatch,
@@ -79,6 +79,18 @@ async def test_tier_1_generator_cache_is_readable_by_orchestrator_product_cache(
     await global_memory.set_cached_response(query, "Shared tier-1 cached shopping reply")
 
     assert await orchestrator_cache.get(query) == "Shared tier-1 cached shopping reply"
+
+
+def test_cache_key_ignores_routed_sites() -> None:
+    base = ProductQuery(product="phone", brand="Samsung", budget=3000)
+    routed = ProductQuery(
+        product="phone",
+        brand="Samsung",
+        budget=3000,
+        sites=["jumia", "avito", "electrosalam"],
+    )
+
+    assert cache_key_for_query(base) == cache_key_for_query(routed)
 
 
 def test_tier_1_orchestrator_returns_cache_hit_without_scraping() -> None:
