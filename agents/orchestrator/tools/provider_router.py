@@ -156,6 +156,8 @@ PRODUCT_TO_CATEGORY: dict[str, str] = {
     "bed": "furniture",
 }
 
+ROUTING_CATEGORIES = tuple(CATEGORY_SITES.keys())
+
 
 def _category_alias_matches(alias: str, key: str) -> bool:
     if alias == key:
@@ -179,12 +181,17 @@ def classify_product(product: str | None) -> str:
     return "general"
 
 
-def route_sites(product: str | None, *, route_enabled: bool = True) -> list[str]:
+def route_sites(
+    product: str | None,
+    *,
+    category: str | None = None,
+    route_enabled: bool = True,
+) -> list[str]:
     """Return provider names to scrape for this product."""
     if not route_enabled:
         return list(DEFAULT_SITES)
 
-    category = classify_product(product)
-    sites = CATEGORY_SITES.get(category, CATEGORY_SITES["general"])
+    resolved_category = category if category in CATEGORY_SITES else classify_product(product)
+    sites = CATEGORY_SITES.get(resolved_category, CATEGORY_SITES["general"])
     registered = set(DEFAULT_SITES)
     return [name for name in sites if name in registered] or list(CATEGORY_SITES["general"])

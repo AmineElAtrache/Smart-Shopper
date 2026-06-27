@@ -50,6 +50,7 @@ class Settings(BaseSettings):
         alias="SCRAPE_COLLECTION_GRACE_SECONDS",
     )
     scrape_route_providers: bool = Field(default=True, alias="SCRAPE_ROUTE_PROVIDERS")
+    scrape_route_use_llm: bool = Field(default=False, alias="SCRAPE_ROUTE_USE_LLM")
     scrape_playwright_providers: str = Field(
         default="avito,biougnach,defacto,electroplanet,ikea,jumia,marjane,palmarosa",
         alias="SCRAPE_PLAYWRIGHT_PROVIDERS",

@@ -282,6 +282,7 @@ python -m scripts.smoke_kafka_flow
 | `SCRAPE_MAX_CONCURRENCY` | `8` | Parallel site scrapes |
 | `SCRAPE_TIMEOUT_SECONDS` | `40` | Per-site timeout |
 | `SCRAPE_ROUTE_PROVIDERS` | `true` | Route queries to relevant marketplaces only |
+| `SCRAPE_ROUTE_USE_LLM` | `false` | Use `LLM_PROVIDER` to classify product category for routing |
 | `SCRAPE_COLLECTION_GRACE_SECONDS` | `10` | Batch grace after per-site timeout |
 | `SCRAPE_PLAYWRIGHT_PROVIDERS` | `avito` | Comma-separated Playwright sites |
 | `DECISION_BATCH_WAIT_SECONDS` | `8` | Wait for slow scrapers before ranking |

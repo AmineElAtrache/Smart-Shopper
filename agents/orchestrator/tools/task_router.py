@@ -17,7 +17,11 @@ def _provider_routing_enabled() -> bool:
     return os.getenv("SCRAPE_ROUTE_PROVIDERS", "true").lower() in {"1", "true", "yes"}
 
 
-def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
+def build_product_query(
+    entities: list[ExtractedEntity],
+    *,
+    category: str | None = None,
+) -> ProductQuery:
     product: str | None = None
     brand: str | None = None
     budget: float | None = None
@@ -43,7 +47,7 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
         elif entity.type == EntityType.QUALITY:
             quality = entity.value
 
-    sites = route_sites(product, route_enabled=_provider_routing_enabled())
+    sites = route_sites(product, category=category, route_enabled=_provider_routing_enabled())
 
     return ProductQuery(
         product=product,
@@ -57,11 +61,16 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
     )
 
 
-def build_scrape_task(message: InboundMessage, entities: list[ExtractedEntity]) -> ScrapeTaskAssigned:
+def build_scrape_task(
+    message: InboundMessage,
+    entities: list[ExtractedEntity],
+    *,
+    category: str | None = None,
+) -> ScrapeTaskAssigned:
     return ScrapeTaskAssigned(
         request_id=message.request_id,
         user_id=message.user_id,
         channel=message.channel,
-        query=build_product_query(entities),
+        query=build_product_query(entities, category=category),
         user_text=message.text.strip(),
     )

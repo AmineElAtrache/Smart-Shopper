@@ -139,20 +139,9 @@ def test_orchestrator_builds_scrape_task_from_inbound_message() -> None:
         "jumia",
         "avito",
         "electrosalam",
-        "mafiawaystore",
-        "moteur",
-        "mymarket",
         "ultrapc",
         "electroplanet",
-        "defacto",
         "biougnach",
-        "marjane",
-        "decathlon",
-        "mubawab",
-        "ikea",
-        "palmarosa",
-        "bringo",
-        "planetsport",
     ]
 
 def test_product_vocabulary_resource_is_loaded() -> None:

@@ -46,7 +46,8 @@ class OrchestratorService:
                 settings.ner_grpc_host,
                 settings.ner_grpc_port,
                 timeout=settings.ner_grpc_timeout_seconds,
-            )
+            ),
+            settings=settings,
         )
         self._conversational_llm = conversational_llm or ConversationalLlmClient(settings)
         self._consumer = consumer or KafkaEventConsumer(
