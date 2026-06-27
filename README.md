@@ -108,6 +108,20 @@ Output: brand=Samsung, product=Galaxy A15, color=black, budget=1500 MAD
 
 Main files: `models/ner/serve.py`, `models/ner/product_vocabulary.py`, `models/ner/grpc_server.py`
 
+**External vocabulary:** Open Food Facts, Open Beauty Facts, and Open Products Facts exports can be converted into `models/ner/resources/external_vocabulary.csv`:
+
+```powershell
+python -m scripts.import_open_facts_vocabulary `
+  --input https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz `
+  --input https://static.openbeautyfacts.org/data/en.openbeautyfacts.org.products.csv.gz `
+  --input https://static.openproductsfacts.org/data/en.openproductsfacts.org.products.csv.gz `
+  --country morocco --country maroc --country france `
+  --max-rows 200000 `
+  --output models/ner/resources/external_vocabulary.csv
+```
+
+Run this on a machine with good network/storage. The script streams remote gzip exports and writes only the compact generated CSV loaded by the NER service. Raw Open Facts files are not committed.
+
 ---
 
 ## Decision Scoring
@@ -277,6 +291,7 @@ python -m scripts.smoke_kafka_flow
 | `NER_GRPC_HOST` / `PORT` | `localhost:50051` | NER gRPC service |
 | `SMART_SHOPPER_NER_MODEL` | `ElAtrachAMINE/darija-ner-xlmroberta` | NER model |
 | `SMART_SHOPPER_VOCAB_PATH` | `models/ner/resources/product_vocabulary.csv` | Product vocabulary |
+| `SMART_SHOPPER_EXTERNAL_VOCAB_PATHS` | `models/ner/resources/external_vocabulary.csv` | Generated Open Facts vocabulary files |
 | `LLM_PROVIDER` | `template` | `groq`, `openai`, `gemini`, or `template` |
 | `LLM_API_KEY` | — | API key for LLM provider |
 | `SCRAPE_MAX_CONCURRENCY` | `8` | Parallel site scrapes |

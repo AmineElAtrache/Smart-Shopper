@@ -24,7 +24,9 @@ except ImportError:  # pragma: no cover - rapidfuzz is declared in project deps.
     process = None
 
 DEFAULT_VOCAB_PATH = Path(__file__).resolve().parent / "resources" / "product_vocabulary.csv"
+DEFAULT_EXTERNAL_VOCAB_PATH = Path(__file__).resolve().parent / "resources" / "external_vocabulary.csv"
 VOCAB_PATH_ENV = "SMART_SHOPPER_VOCAB_PATH"
+EXTERNAL_VOCAB_PATHS_ENV = "SMART_SHOPPER_EXTERNAL_VOCAB_PATHS"
 TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
 SPACE_RE = re.compile(r"\s+")
 PRE_NER_TYPES = {"brand", "product", "category", "city", "color", "condition", "intent"}
@@ -118,11 +120,25 @@ def normalize_key(value: str | None) -> str:
     return SPACE_RE.sub(" ", text).strip()
 
 
-@lru_cache(maxsize=1)
-def load_vocabulary() -> tuple[VocabularyEntry, ...]:
-    path = Path(os.getenv(VOCAB_PATH_ENV, str(DEFAULT_VOCAB_PATH)))
+def _split_vocab_paths(raw_value: str | None) -> list[Path]:
+    if raw_value is None:
+        return []
+    return [Path(value.strip()) for value in re.split(r"[;,]", raw_value) if value.strip()]
+
+
+def _configured_vocabulary_paths() -> list[Path]:
+    paths = [Path(os.getenv(VOCAB_PATH_ENV, str(DEFAULT_VOCAB_PATH)))]
+    external_raw = os.getenv(EXTERNAL_VOCAB_PATHS_ENV)
+    external_paths = _split_vocab_paths(external_raw)
+    if external_raw is None:
+        external_paths = [DEFAULT_EXTERNAL_VOCAB_PATH]
+    paths.extend(external_paths)
+    return paths
+
+
+def _read_vocabulary_file(path: Path) -> list[VocabularyEntry]:
     if not path.exists():
-        return ()
+        return []
 
     entries: list[VocabularyEntry] = []
     with path.open("r", encoding="utf-8-sig", newline="") as csv_file:
@@ -147,6 +163,14 @@ def load_vocabulary() -> tuple[VocabularyEntry, ...]:
                     notes=(row.get("notes") or "").strip(),
                 )
             )
+    return entries
+
+
+@lru_cache(maxsize=1)
+def load_vocabulary() -> tuple[VocabularyEntry, ...]:
+    entries: list[VocabularyEntry] = []
+    for path in _configured_vocabulary_paths():
+        entries.extend(_read_vocabulary_file(path))
 
     entries.extend(
         VocabularyEntry(

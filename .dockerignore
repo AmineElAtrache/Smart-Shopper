@@ -1,3 +1,9 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
 .venv/
 venv/
 __pycache__/
@@ -5,19 +11,22 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.env
 *.egg-info/
 dist/
 build/
 .idea/
 .vscode/
 *.log
-models/ner/model/*
-!models/ner/model/.gitkeep
+
 .cache/
-# Large raw external datasets; keep only generated compact vocabulary CSVs.
+reports/
+last_llm_response.txt
+
+# Keep compact generated vocabulary files, but never send raw Open Facts dumps.
 data/open-facts/
 data/openfacts/
 data/*.openfoodfacts.org.products.csv*
 data/*.openbeautyfacts.org.products.csv*
 data/*.openproductsfacts.org.products.csv*
+
+models/ner/model/*
