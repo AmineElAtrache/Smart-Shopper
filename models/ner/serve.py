@@ -18,6 +18,7 @@ from typing import Any
 from shared.events.schemas import EntityType, ExtractedEntity
 from models.ner.product_vocabulary import (
     canonicalize_entity_value,
+    city_aliases,
     detect_entities as detect_vocabulary_entities,
     normalize_text as normalize_vocabulary_text,
 )
@@ -94,23 +95,7 @@ QUALITY_ALIASES = {
 KNOWN_BRAND_VALUES = {brand.lower() for brand in BRANDS.values()} | set(BRANDS)
 UNKNOWN_BRAND_MIN_CONFIDENCE = 0.8
 
-CITY_ALIASES = {
-    "casablanca": "casablanca",
-    "casa": "casablanca",
-    "rabat": "rabat",
-    "marrakech": "marrakech",
-    "marrakesh": "marrakech",
-    "tanger": "tanger",
-    "tangier": "tanger",
-    "fes": "fes",
-    "fez": "fes",
-    "agadir": "agadir",
-    "meknes": "meknes",
-    "oujda": "oujda",
-    "kenitra": "kenitra",
-    "tetouan": "tetouan",
-    "sale": "sale",
-}
+CITY_ALIASES = city_aliases()
 
 COLOR_ALIASES = {
     "black": "black",

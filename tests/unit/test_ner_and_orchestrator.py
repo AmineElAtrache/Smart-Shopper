@@ -5,7 +5,11 @@ import pytest
 from agents.orchestrator.agent import OrchestratorAgent
 from agents.orchestrator.tools.task_router import build_product_query
 from models.ner.serve import extract_entities
-from models.ner.product_vocabulary import load_vocabulary, normalize_text as normalize_vocabulary_text
+from models.ner.product_vocabulary import (
+    city_aliases,
+    load_vocabulary,
+    normalize_text as normalize_vocabulary_text,
+)
 from shared.events.schemas import EntityType, ExtractedEntity, InboundMessage
 
 
@@ -161,6 +165,34 @@ def test_product_vocabulary_normalizes_multilingual_typos() -> None:
     assert "galaxy a15" in normalized
     assert "phone" in normalized
     assert "black" in normalized
+
+
+def test_city_aliases_are_loaded_from_vocabulary() -> None:
+    aliases = city_aliases()
+
+    assert len(aliases) >= 50
+    assert aliases["casa"] == "casablanca"
+    assert aliases["mohammedia"] == "mohammedia"
+    assert aliases["tanja"] == "tanger"
+    assert aliases["el_jadida"] == "el_jadida"
+
+
+def test_ner_detects_vocabulary_synced_cities() -> None:
+    entities = extract_entities("bghit appartement f mohammedia b 400000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["city"].value == "mohammedia"
+    assert by_type["budget"].value == "400000.0"
+
+
+def test_product_vocabulary_covers_provider_expansion() -> None:
+    normalized = normalize_vocabulary_text("bghit cream loreal f dar el beida w chaussures running nike")
+
+    assert "cream" in normalized
+    assert "loreal" in normalized
+    assert "casablanca" in normalized
+    assert "running_shoes" in normalized
+    assert "Nike".lower() in normalized
 
 
 def test_ner_uses_vocabulary_without_model_predictions(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -27,11 +27,12 @@ DEFAULT_VOCAB_PATH = Path(__file__).resolve().parent / "resources" / "product_vo
 VOCAB_PATH_ENV = "SMART_SHOPPER_VOCAB_PATH"
 TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
 SPACE_RE = re.compile(r"\s+")
-PRE_NER_TYPES = {"brand", "product", "category", "color", "condition", "intent"}
+PRE_NER_TYPES = {"brand", "product", "category", "city", "color", "condition", "intent"}
 ENTITY_TYPE_BY_VOCAB_TYPE = {
     "brand": EntityType.BRAND,
     "product": EntityType.PRODUCT,
     "category": EntityType.PRODUCT,
+    "city": EntityType.CITY,
     "color": EntityType.COLOR,
     "condition": EntityType.QUALITY,
     "intent": EntityType.INTENT,
@@ -174,6 +175,30 @@ def _aliases_by_type() -> dict[EntityType, dict[str, VocabularyEntry]]:
 @lru_cache(maxsize=1)
 def _fuzzy_choices_by_type() -> dict[EntityType, list[str]]:
     return {entity_type: sorted(aliases) for entity_type, aliases in _aliases_by_type().items()}
+
+
+@lru_cache(maxsize=1)
+def city_aliases() -> dict[str, str]:
+    """Build alias -> canonical city map from vocabulary CSV (single source of truth)."""
+    aliases: dict[str, str] = {}
+    confidence_by_key: dict[str, float] = {}
+
+    for entry in load_vocabulary():
+        if entry.type != "city":
+            continue
+        canonical = entry.canonical_key
+        if not canonical:
+            continue
+
+        for alias_key in {entry.alias_key, canonical}:
+            if not alias_key:
+                continue
+            current_confidence = confidence_by_key.get(alias_key, -1.0)
+            if alias_key not in aliases or entry.confidence > current_confidence:
+                aliases[alias_key] = canonical
+                confidence_by_key[alias_key] = entry.confidence
+
+    return aliases
 
 
 def _is_pre_ner_safe(entry: VocabularyEntry) -> bool:
