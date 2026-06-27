@@ -47,6 +47,14 @@ INTERNAL_CANONICAL_OVERRIDES = {
     ("product", "pc"): "laptop",
     ("product", "refrigerator"): "fridge",
 }
+
+
+def is_actionable_product_value(value: str | None) -> bool:
+    """Reject Darija prepositions and other single-letter junk mis-tagged as products."""
+    if not value:
+        return False
+    normalized = normalize_key(value)
+    return len(normalized) > 1
 EXTRA_ENTRIES = (
     ("brand", "Samsung", "samsong", "typo", "phone", 0.95, "project alias"),
     ("brand", "Samsung", "samsng", "typo", "phone", 0.95, "project alias"),
@@ -55,6 +63,8 @@ EXTRA_ENTRIES = (
     ("product", "phone", "smarfone", "typo", "phone", 0.9, "project alias"),
     ("product", "laptop", "pc", "darija_latin", "laptop", 0.9, "project alias"),
     ("product", "fridge", "telaja", "darija_latin", "home_appliance", 0.9, "project alias"),
+    ("product", "tv", "tele", "fr", "home_appliance", 0.94, "colloquial french for TV"),
+    ("product", "washing_machine", "washing_machine", "en", "home_appliance", 0.93, "underscore token"),
     ("color", "black", "kehla", "darija_latin", "general", 0.9, "project alias"),
     ("color", "black", "k7la", "darija_latin", "general", 0.9, "project alias"),
 )
@@ -203,6 +213,12 @@ def city_aliases() -> dict[str, str]:
 
 def _is_pre_ner_safe(entry: VocabularyEntry) -> bool:
     return entry.type in PRE_NER_TYPES and entry.language != "brand_model"
+
+
+def is_exact_vocabulary_alias(value: str) -> bool:
+    """Return True when the token is a known vocabulary alias (exact match)."""
+    key = normalize_key(value)
+    return bool(key) and key in _exact_aliases()
 
 
 def normalize_text(text: str) -> str:

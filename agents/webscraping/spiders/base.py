@@ -48,6 +48,8 @@ PRODUCT_ALIASES = {
     "shoes": {"shoes", "shoe", "chaussures", "baskets"},
     "shoe": {"shoes", "shoe", "chaussures", "baskets"},
     "chair": {"chair", "chaise"},
+    "table": {"table", "tables", "table basse", "tabla"},
+    "tablet": {"tablet", "tablette", "tablettes", "ipad"},
     "apartment": {"apartment", "appartement", "appartements"},
     "milk": {"milk", "lait"},
 }

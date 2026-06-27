@@ -120,7 +120,7 @@ Products are ranked with a **100-point system**:
 - Availability and seller rating
 - Fraud penalty for suspicious listings
 
-The engine filters accessories/noise, deduplicates similar listings, and **diversifies the top 3** (max 2 from the same source). The Decision agent waits up to `DECISION_BATCH_WAIT_SECONDS` (default 12s) for slow scrapers before ranking.
+The engine filters accessories/noise, deduplicates similar listings, and **diversifies the top 3** (max 2 from the same source). The Decision agent waits up to `DECISION_BATCH_WAIT_SECONDS` (default 8s) for slow scrapers before ranking.
 
 ---
 
@@ -279,10 +279,12 @@ python -m scripts.smoke_kafka_flow
 | `SMART_SHOPPER_VOCAB_PATH` | `models/ner/resources/product_vocabulary.csv` | Product vocabulary |
 | `LLM_PROVIDER` | `template` | `groq`, `openai`, `gemini`, or `template` |
 | `LLM_API_KEY` | — | API key for LLM provider |
-| `SCRAPE_MAX_CONCURRENCY` | `14` | Parallel site scrapes |
-| `SCRAPE_TIMEOUT_SECONDS` | `30.0` | Per-site timeout |
+| `SCRAPE_MAX_CONCURRENCY` | `8` | Parallel site scrapes |
+| `SCRAPE_TIMEOUT_SECONDS` | `40` | Per-site timeout |
+| `SCRAPE_ROUTE_PROVIDERS` | `true` | Route queries to relevant marketplaces only |
+| `SCRAPE_COLLECTION_GRACE_SECONDS` | `10` | Batch grace after per-site timeout |
 | `SCRAPE_PLAYWRIGHT_PROVIDERS` | `avito` | Comma-separated Playwright sites |
-| `DECISION_BATCH_WAIT_SECONDS` | `12.0` | Wait for slow scrapers before ranking |
+| `DECISION_BATCH_WAIT_SECONDS` | `8` | Wait for slow scrapers before ranking |
 | `CACHE_TTL_SECONDS` | `1800` | Response cache TTL (30 min) |
 
 See `.env.example` for the full list. **Never commit `.env` or real API tokens.**

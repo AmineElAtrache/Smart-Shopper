@@ -3,8 +3,9 @@ import asyncio
 import pytest
 
 from agents.orchestrator.agent import OrchestratorAgent
+from agents.orchestrator.tools.provider_router import classify_product, route_sites
 from agents.orchestrator.tools.task_router import build_product_query
-from models.ner.serve import extract_entities
+from models.ner.serve import _preprocess_text, extract_entities
 from models.ner.product_vocabulary import (
     city_aliases,
     load_vocabulary,
@@ -177,6 +178,14 @@ def test_city_aliases_are_loaded_from_vocabulary() -> None:
     assert aliases["el_jadida"] == "el_jadida"
 
 
+def test_ner_extracts_fridge_instead_of_darija_preposition_f() -> None:
+    entities = extract_entities("I want to buy a fridge for 8000 DH")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["product"].value in {"fridge", "refrigerator"}
+    assert by_type["budget"].value == "8000.0"
+
+
 def test_ner_detects_vocabulary_synced_cities() -> None:
     entities = extract_entities("bghit appartement f mohammedia b 400000dh")
     by_type = {entity.type: entity for entity in entities}
@@ -193,6 +202,28 @@ def test_product_vocabulary_covers_provider_expansion() -> None:
     assert "casablanca" in normalized
     assert "running_shoes" in normalized
     assert "Nike".lower() in normalized
+
+
+def test_ner_keeps_furniture_table_distinct_from_tablet() -> None:
+    assert "table" in _preprocess_text("bghit table f rabat b 400dh")
+    assert "tablet" not in _preprocess_text("bghit table f rabat b 400dh")
+
+    entities = extract_entities("bghit table f rabat b 400dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["product"].value == "table"
+    assert by_type["city"].value == "rabat"
+    assert by_type["budget"].value == "400.0"
+    assert classify_product(by_type["product"].value) == "furniture"
+    assert "ikea" in route_sites(by_type["product"].value)
+
+
+def test_ner_extracts_tablet_for_explicit_tablet_query() -> None:
+    entities = extract_entities("bghit tablet f rabat b 4000dh")
+    by_type = {entity.type: entity for entity in entities}
+
+    assert by_type["product"].value == "tablet"
+    assert classify_product(by_type["product"].value) == "laptop"
 
 
 def test_ner_uses_vocabulary_without_model_predictions(monkeypatch: pytest.MonkeyPatch) -> None:

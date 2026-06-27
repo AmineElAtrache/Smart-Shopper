@@ -32,12 +32,12 @@ def test_tier1_provider_domains_include_new_sites() -> None:
     assert PROVIDER_DOMAINS["planetsport"] == "planetsport.ma"
 
 
-def test_settings_default_scrape_concurrency_matches_provider_count(monkeypatch) -> None:
+def test_settings_default_scrape_concurrency_is_capped(monkeypatch) -> None:
     monkeypatch.delenv("SCRAPE_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("SCRAPE_PLAYWRIGHT_PROVIDERS", raising=False)
 
     from shared.config.settings import Settings
 
     settings = Settings()
-    assert settings.scrape_max_concurrency == 17
-    assert settings.scrape_playwright_providers == "avito,palmarosa"
+    assert settings.scrape_max_concurrency == 8
+    assert len(SCRAPE_PROVIDERS) == 17

@@ -1,4 +1,4 @@
-﻿from agents.decision.agent import DecisionAgent
+from agents.decision.agent import DecisionAgent
 from shared.events.schemas import Availability, ProductQuery, RawProduct
 
 
@@ -141,6 +141,29 @@ def test_decision_agent_filters_laptop_accessories_and_noisy_pages() -> None:
 
     assert [product.title for product in ranked.products] == ["HP OMEN 15 laptop i7 GTX 1660"]
 
+
+def test_decision_rejects_junk_single_letter_product_queries() -> None:
+    query = ProductQuery(product="f", budget=8000.0)
+    products = [
+        RawProduct(
+            request_id="req_f",
+            source="palmarosa",
+            title="CHERRY F HAIR FOOD",
+            price=120,
+            url="https://example.com/cherry-f",
+            availability=Availability.IN_STOCK,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_f",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert ranked.products == []
 
 
 def test_decision_agent_diversifies_top_three_sources_when_possible() -> None:

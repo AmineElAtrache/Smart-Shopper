@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+
+from agents.orchestrator.tools.provider_router import DEFAULT_SITES, route_sites
 from shared.events.schemas import (
     EntityType,
     ExtractedEntity,
@@ -10,25 +13,8 @@ from shared.events.schemas import (
     ScrapeTaskAssigned,
 )
 
-DEFAULT_SITES = [
-    "jumia",
-    "avito",
-    "electrosalam",
-    "mafiawaystore",
-    "moteur",
-    "mymarket",
-    "ultrapc",
-    "electroplanet",
-    "defacto",
-    "biougnach",
-    "marjane",
-    "decathlon",
-    "mubawab",
-    "ikea",
-    "palmarosa",
-    "bringo",
-    "planetsport",
-]
+def _provider_routing_enabled() -> bool:
+    return os.getenv("SCRAPE_ROUTE_PROVIDERS", "true").lower() in {"1", "true", "yes"}
 
 
 def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
@@ -39,7 +25,6 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
     city: str | None = None
     color: str | None = None
     quality: str | None = None
-    sites = list(DEFAULT_SITES)
 
     for entity in entities:
         if entity.type == EntityType.PRODUCT:
@@ -57,6 +42,8 @@ def build_product_query(entities: list[ExtractedEntity]) -> ProductQuery:
             color = entity.value
         elif entity.type == EntityType.QUALITY:
             quality = entity.value
+
+    sites = route_sites(product, route_enabled=_provider_routing_enabled())
 
     return ProductQuery(
         product=product,

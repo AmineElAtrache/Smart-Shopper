@@ -6,6 +6,7 @@ import re
 
 from agents.decision.tools.dedup_engine import deduplicate_products
 from agents.decision.tools.fraud_detector import fraud_penalty
+from models.ner.product_vocabulary import is_actionable_product_value
 from shared.events.schemas import (
     Availability,
     ProductQuery,
@@ -40,6 +41,13 @@ PRODUCT_ALIASES = {
     "car": {"car", "voiture", "tomobile", "automobile", "golf", "clio", "dacia", "renault", "volkswagen", "bmw"},
     "fridge": {"fridge", "refrigerator", "refrigerateur", "telaja"},
     "tv": {"tv", "television", "televiseur", "smart tv"},
+    "table": {
+        "table", "tables", "table basse", "table a manger", "table a manger", "table de salon",
+        "table de chevet", "tabla", "طاولة", "الطابلة",
+    },
+    "tablet": {
+        "tablet", "tablets", "tablette", "tablettes", "ipad", "tabla", "تابلت", "طابلات",
+    },
 }
 
 PRODUCT_SYNONYMS = {
@@ -57,6 +65,9 @@ PRODUCT_SYNONYMS = {
     "telaja": "fridge",
     "refrigerator": "fridge",
     "refrigerateur": "fridge",
+    "tablette": "tablet",
+    "tablettes": "tablet",
+    "tables": "table",
 }
 
 NEGATIVE_TERMS = {
@@ -70,6 +81,13 @@ NEGATIVE_TERMS = {
         "adapter", "dock", "cooler", "cooling", "clavier", "keyboard", "mouse", "souris",
     },
     "pc": {"keyboard", "mouse", "souris", "clavier", "screen", "monitor", "stand", "support"},
+    "table": {
+        "tablet", "tablette", "tablettes", "ipad", "tabla", "تابلت", "طابلات", "wacom", "pen tablet",
+    },
+    "tablet": {
+        "table basse", "table a manger", "table de salon", "table de chevet", "chaise", "canape",
+        "sofa", "meuble", "furniture",
+    },
 }
 
 NOISY_TITLE_TERMS = {
@@ -87,6 +105,8 @@ def rank_products(products: list[RawProduct], query: ProductQuery) -> list[Ranke
 
 def filter_relevant_products(products: list[RawProduct], query: ProductQuery) -> list[RawProduct]:
     """Keep products that match the requested item, dropping accessories and scraped page noise."""
+    if not is_actionable_product_value(query.product):
+        return []
     requested = _canonical_product(query.product)
     if not requested:
         return [product for product in products if not _is_noisy_listing(product)]
@@ -227,6 +247,8 @@ def _contains_any(text: str, terms: set[str]) -> bool:
 
 def _has_term(text: str, term: str) -> bool:
     normalized_term = _normalize(term)
+    if len(normalized_term) <= 1:
+        return False
     if " " in normalized_term:
         return normalized_term in text
     return re.search(rf"(?<![a-z0-9]){re.escape(normalized_term)}(?![a-z0-9])", text) is not None

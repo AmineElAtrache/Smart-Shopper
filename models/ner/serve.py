@@ -20,6 +20,9 @@ from models.ner.product_vocabulary import (
     canonicalize_entity_value,
     city_aliases,
     detect_entities as detect_vocabulary_entities,
+    is_actionable_product_value,
+    is_exact_vocabulary_alias,
+    normalize_key,
     normalize_text as normalize_vocabulary_text,
 )
 
@@ -157,6 +160,7 @@ SPELLING_ALIASES = {
     "phne": "phone",
     "fone": "phone",
     "telephon": "telephone",
+    "tele": "tv",
     "labtop": "laptop",
     "laptope": "laptop",
 }
@@ -253,7 +257,7 @@ def extract_entities(text: str, locale_hint: str | None = None) -> list[Extracte
         normalized_text=normalized_text,
         locale_hint=locale_hint,
     )
-    return _merge_entities(model_entities, context_entities)
+    return _merge_entities(model_entities, context_entities, normalized_text=normalized_text)
 
 
 def _preprocess_text(text: str) -> str:
@@ -276,6 +280,8 @@ def _normalize_token(token: str) -> str:
     vocabulary_token = normalize_vocabulary_text(token)
     if vocabulary_token and vocabulary_token != token:
         return vocabulary_token
+    if is_exact_vocabulary_alias(vocabulary_token or token):
+        return vocabulary_token or token
     if token in SPELLING_ALIASES:
         return SPELLING_ALIASES[token]
     if len(token) < 4 or token.isdigit():
@@ -347,6 +353,8 @@ def _prediction_to_entity(prediction: dict[str, Any]) -> ExtractedEntity | None:
     value = _normalize_value(entity_type, str(prediction.get("word") or ""))
     if not value:
         return None
+    if entity_type == EntityType.PRODUCT and not is_actionable_product_value(value):
+        return None
 
     confidence = float(prediction.get("score") or 0.75)
     if entity_type == EntityType.BRAND and _is_low_confidence_unknown_brand(value, confidence):
@@ -378,7 +386,7 @@ def _derive_context_entities(
         entities.append(ExtractedEntity(type=EntityType.BRAND, value=brand, confidence=0.7))
 
     product = _detect_product(normalized_text) or _detect_model_after_brand(normalized_text)
-    if product:
+    if product and is_actionable_product_value(product):
         entities.append(ExtractedEntity(type=EntityType.PRODUCT, value=product, confidence=0.7))
 
     city = _detect_alias(normalized_text, CITY_ALIASES)
@@ -436,18 +444,123 @@ def _derive_context_entities(
 
 
 def _merge_entities(
-    primary: list[ExtractedEntity], context: list[ExtractedEntity]
+    primary: list[ExtractedEntity],
+    context: list[ExtractedEntity],
+    *,
+    normalized_text: str = "",
 ) -> list[ExtractedEntity]:
     merged: list[ExtractedEntity] = []
     seen: set[EntityType] = set()
 
+    product_entity = _select_product_entity(
+        [entity for entity in primary if entity.type == EntityType.PRODUCT],
+        [entity for entity in context if entity.type == EntityType.PRODUCT],
+        normalized_text=normalized_text,
+    )
+    if product_entity is not None:
+        merged.append(product_entity)
+        seen.add(EntityType.PRODUCT)
+
+    city_entity = _select_city_entity(
+        [entity for entity in primary if entity.type == EntityType.CITY],
+        [entity for entity in context if entity.type == EntityType.CITY],
+    )
+    if city_entity is not None:
+        merged.append(city_entity)
+        seen.add(EntityType.CITY)
+
     for entity in [*primary, *context]:
         if entity.type in seen:
+            continue
+        if entity.type == EntityType.PRODUCT and not is_actionable_product_value(entity.value):
             continue
         merged.append(entity)
         seen.add(entity.type)
 
     return merged
+
+
+def _pick_best_product(
+    candidates: list[ExtractedEntity], *, normalized_text: str
+) -> ExtractedEntity:
+    text = normalized_text.replace("_", " ")
+    filtered = [entity for entity in candidates if is_actionable_product_value(entity.value)]
+
+    if any(len(normalize_key(entity.value)) > 2 for entity in filtered):
+        filtered = [entity for entity in filtered if len(normalize_key(entity.value)) > 2]
+
+    def is_dominated(entity: ExtractedEntity) -> bool:
+        key = normalize_key(entity.value)
+        return any(
+            key != normalize_key(other.value) and key in normalize_key(other.value)
+            for other in filtered
+        )
+
+    filtered = [entity for entity in filtered if not is_dominated(entity)] or filtered
+
+    def score(entity: ExtractedEntity) -> tuple[bool, bool, int, float]:
+        key = normalize_key(entity.value).replace("_", " ")
+        in_text = key in text or normalize_key(entity.value) in normalized_text
+        is_vocab = entity.attributes.get("source") == "product_vocabulary"
+        return (in_text, is_vocab, len(normalize_key(entity.value)), entity.confidence)
+
+    return max(filtered, key=score)
+
+
+def _select_city_entity(
+    primary_cities: list[ExtractedEntity],
+    context_cities: list[ExtractedEntity],
+) -> ExtractedEntity | None:
+    candidates = [*primary_cities, *context_cities]
+    if not candidates:
+        return None
+
+    known_cities = set(CITY_ALIASES.values()) | set(CITY_ALIASES.keys())
+    if any(len(normalize_key(entity.value)) >= 5 for entity in candidates):
+        candidates = [
+            entity for entity in candidates if len(normalize_key(entity.value)) > 3
+        ] or candidates
+
+    def score(entity: ExtractedEntity) -> tuple[bool, bool, int, float]:
+        key = normalize_key(entity.value)
+        return (
+            key in known_cities,
+            entity.attributes.get("source") == "product_vocabulary",
+            len(key),
+            entity.confidence,
+        )
+
+    return max(candidates, key=score)
+
+
+def _select_product_entity(
+    primary_products: list[ExtractedEntity],
+    context_products: list[ExtractedEntity],
+    *,
+    normalized_text: str = "",
+) -> ExtractedEntity | None:
+    actionable_primary = [
+        entity for entity in primary_products if is_actionable_product_value(entity.value)
+    ]
+    actionable_context = [
+        entity for entity in context_products if is_actionable_product_value(entity.value)
+    ]
+
+    if actionable_primary:
+        return _pick_best_product(actionable_primary, normalized_text=normalized_text)
+
+    if not actionable_context:
+        return None
+
+    vocabulary_candidates = [
+        entity
+        for entity in actionable_context
+        if entity.attributes.get("source") == "product_vocabulary"
+    ]
+    if vocabulary_candidates:
+        return _pick_best_product(vocabulary_candidates, normalized_text=normalized_text)
+
+    return _pick_best_product(actionable_context, normalized_text=normalized_text)
 
 
 def _expand_price_entity(entity: ExtractedEntity) -> list[ExtractedEntity]:

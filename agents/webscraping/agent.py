@@ -178,6 +178,7 @@ async def scrape_products(
     mock_only: bool = False,
     timeout_seconds: float = 30.0,
     max_concurrency: int = 8,
+    collection_grace_seconds: float = 8.0,
     global_memory: GlobalMemory | None = None,
 ) -> list[RawProduct]:
     """Scrape providers concurrently, then fall back to mock products if needed."""
@@ -185,6 +186,13 @@ async def scrape_products(
         fallback = build_mock_products(task)
         print(f"[scraper] mock-only mode; returning {len(fallback)} products for {task.request_id}")
         return fallback
+
+    providers = _providers_for_task(task)
+    if task.query.sites:
+        print(
+            f"[scraper] routed to {len(providers)} provider(s) for {task.request_id}: "
+            f"{', '.join(name for name, _ in providers)}"
+        )
 
     semaphore = asyncio.Semaphore(max_concurrency)
 
@@ -200,10 +208,10 @@ async def scrape_products(
 
     pending = [
         asyncio.create_task(bounded(provider_name, provider))
-        for provider_name, provider in SCRAPE_PROVIDERS
+        for provider_name, provider in providers
     ]
     # Allow slow providers to finish even when others are still running.
-    collection_timeout = timeout_seconds + 15.0
+    collection_timeout = timeout_seconds + collection_grace_seconds
     done, still_running = await asyncio.wait(pending, timeout=collection_timeout)
 
     products: list[RawProduct] = []
@@ -235,12 +243,21 @@ async def scrape_products(
     )
     return []
 
+
+def _providers_for_task(task: ScrapeTaskAssigned) -> list[tuple[str, object]]:
+    allowed = {site.lower() for site in (task.query.sites or [])}
+    if not allowed:
+        return list(SCRAPE_PROVIDERS)
+    return [(name, provider) for name, provider in SCRAPE_PROVIDERS if name.lower() in allowed]
+
+
 @dataclass(frozen=True)
 class MockScraperConfig:
     kafka_bootstrap_servers: str = DEFAULT_KAFKA_BOOTSTRAP_SERVERS
     mock_only: bool = False
-    timeout_seconds: float = 30.0
-    max_concurrency: int = 17
+    timeout_seconds: float = 40.0
+    max_concurrency: int = 8
+    collection_grace_seconds: float = 10.0
 
     @classmethod
     def from_env(cls) -> "MockScraperConfig":
@@ -251,8 +268,9 @@ class MockScraperConfig:
                 "KAFKA_BOOTSTRAP_SERVERS", DEFAULT_KAFKA_BOOTSTRAP_SERVERS
             ),
             mock_only=mock_only,
-            timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "30.0")),
-            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "17")),
+            timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "40.0")),
+            max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "8")),
+            collection_grace_seconds=float(os.getenv("SCRAPE_COLLECTION_GRACE_SECONDS", "10.0")),
         )
 
 
@@ -277,6 +295,7 @@ class MockScraperAgent:
             mock_only=self._config.mock_only,
             timeout_seconds=self._config.timeout_seconds,
             max_concurrency=self._config.max_concurrency,
+            collection_grace_seconds=self._config.collection_grace_seconds,
             global_memory=self._global_memory,
         )
         if not products:
@@ -336,6 +355,7 @@ async def main() -> None:
                 mock_only=settings.scrape_mock_only,
                 timeout_seconds=settings.scrape_timeout_seconds,
                 max_concurrency=settings.scrape_max_concurrency,
+                collection_grace_seconds=settings.scrape_collection_grace_seconds,
             ),
             global_memory=create_global_memory(settings),
         ).run()
