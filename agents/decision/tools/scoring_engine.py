@@ -1,4 +1,4 @@
-﻿"""Decision scoring based on the architecture report's 100-point system."""
+"""Decision scoring based on the architecture report's 100-point system."""
 
 from __future__ import annotations
 
@@ -41,6 +41,7 @@ PRODUCT_ALIASES = {
     "car": {"car", "voiture", "tomobile", "automobile", "golf", "clio", "dacia", "renault", "volkswagen", "bmw"},
     "fridge": {"fridge", "refrigerator", "refrigerateur", "telaja"},
     "tv": {"tv", "television", "televiseur", "smart tv"},
+    "air fryer": {"air fryer", "airfryer", "friteuse", "friteuse sans huile", "fryer", "air fry"},
     "table": {
         "table", "tables", "table basse", "table a manger", "table a manger", "table de salon",
         "table de chevet", "tabla", "طاولة", "الطابلة",
@@ -65,6 +66,11 @@ PRODUCT_SYNONYMS = {
     "telaja": "fridge",
     "refrigerator": "fridge",
     "refrigerateur": "fridge",
+    "airfryer": "air fryer",
+    "air fryer": "air fryer",
+    "air_fryer": "air fryer",
+    "friteuse": "air fryer",
+    "friteuse sans huile": "air fryer",
     "tablette": "tablet",
     "tablettes": "tablet",
     "tables": "table",
@@ -83,6 +89,11 @@ NEGATIVE_TERMS = {
     "pc": {"keyboard", "mouse", "souris", "clavier", "screen", "monitor", "stand", "support"},
     "table": {
         "tablet", "tablette", "tablettes", "ipad", "tabla", "تابلت", "طابلات", "wacom", "pen tablet",
+    },
+    "air fryer": {
+        "macbook", "macbook air", "laptop", "ordinateur", "pc", "climatiseur", "clim",
+        "air cooler", "air coolers", "cooler", "conditioner", "ventilateur", "airpods", "air pods",
+        "air max", "nike air", "refroidisseur",
     },
     "tablet": {
         "table basse", "table a manger", "table de salon", "table de chevet", "chaise", "canape",
@@ -255,5 +266,5 @@ def _has_term(text: str, term: str) -> bool:
 
 
 def _normalize(value: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"[^\w]+", " ", value.lower())).strip()
+    return re.sub(r"\s+", " ", re.sub(r"[_\W]+", " ", value.lower())).strip()
 
