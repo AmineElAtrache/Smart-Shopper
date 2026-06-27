@@ -209,3 +209,8 @@ def test_scraper_filters_providers_by_explicit_task_sites() -> None:
     providers = _providers_for_task(task)
 
     assert [name for name, _ in providers] == ["jumia", "avito", "electroplanet"]
+
+def test_routes_air_fryer_as_appliance() -> None:
+    assert classify_product("air fryer") == "appliance"
+    assert classify_product("airfryer") == "appliance"
+    assert route_sites("air fryer") == ["electroplanet", "biougnach", "jumia", "avito", "electrosalam"]

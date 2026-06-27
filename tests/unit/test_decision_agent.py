@@ -221,3 +221,77 @@ def test_decision_agent_diversifies_top_three_sources_when_possible() -> None:
 
     assert len([product for product in ranked.products[:3] if product.source == "jumia"]) <= 2
     assert any(product.source == "avito" for product in ranked.products[:3])
+
+def test_decision_agent_filters_air_fryer_false_positives() -> None:
+    query = ProductQuery(product="air fryer", budget=2000)
+    products = [
+        RawProduct(
+            request_id="req_airfryer",
+            source="jumia",
+            title="Taurus Air Fryer Digital Grill 12L",
+            price=949,
+            url="https://example.com/taurus-air-fryer",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.5,
+        ),
+        RawProduct(
+            request_id="req_airfryer",
+            source="jumia",
+            title="Taurus Climatiseur mobile AIR COOLERS R403 3 mode de fonctionnement",
+            price=929,
+            url="https://example.com/air-cooler",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.4,
+        ),
+        RawProduct(
+            request_id="req_airfryer",
+            source="avito",
+            title="MacBook Air fin disque SSD batterie 4h",
+            price=800,
+            url="https://example.com/macbook-air",
+            availability=Availability.UNKNOWN,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_airfryer",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert [product.title for product in ranked.products] == ["Taurus Air Fryer Digital Grill 12L"]
+
+def test_decision_agent_filters_air_fryer_when_query_uses_underscore() -> None:
+    query = ProductQuery(product="air_fryer", budget=2000)
+    products = [
+        RawProduct(
+            request_id="req_airfryer_underscore",
+            source="jumia",
+            title="Friteuse sans huile Air Fryer 6L",
+            price=799,
+            url="https://example.com/friteuse-sans-huile",
+            availability=Availability.IN_STOCK,
+        ),
+        RawProduct(
+            request_id="req_airfryer_underscore",
+            source="avito",
+            title="MacBook Air 2017",
+            price=1800,
+            url="https://example.com/macbook-air",
+            availability=Availability.UNKNOWN,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_airfryer_underscore",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert [product.title for product in ranked.products] == ["Friteuse sans huile Air Fryer 6L"]

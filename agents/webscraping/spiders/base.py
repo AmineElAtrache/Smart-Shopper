@@ -57,7 +57,8 @@ PRODUCT_ALIASES = {
 
 def build_search_text(task: ScrapeTaskAssigned) -> str:
     query = task.query
-    parts = [query.brand, query.product, query.color]
+    product = query.product.replace("_", " ") if query.product else None
+    parts = [query.brand, product, query.color]
     return " ".join(part for part in parts if part).strip() or "phone"
 
 
