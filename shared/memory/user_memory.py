@@ -93,11 +93,24 @@ class UserMemory:
         await self._set_hot_profile(updated)
         return updated
 
-    async def apply_preferences(self, user_id: str, query: ProductQuery) -> ProductQuery:
+    async def apply_preferences(
+        self,
+        user_id: str,
+        query: ProductQuery,
+        *,
+        explicit_city: bool = False,
+    ) -> ProductQuery:
         profile = await self.get_profile(user_id)
+        city = query.city
+        if city is None and profile.preferred_city and not explicit_city:
+            from agents.orchestrator.tools.provider_capabilities import sites_support_city_filter
+
+            if sites_support_city_filter(query.sites):
+                city = profile.preferred_city
+
         return query.model_copy(
             update={
-                "city": query.city or profile.preferred_city,
+                "city": city,
                 "budget": query.budget if query.budget is not None else profile.preferred_budget,
                 "currency": query.currency or profile.preferred_currency,
                 "sites": query.sites or profile.preferred_sites,

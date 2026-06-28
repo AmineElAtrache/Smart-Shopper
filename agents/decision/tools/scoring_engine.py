@@ -6,6 +6,7 @@ import re
 
 from agents.decision.tools.dedup_engine import deduplicate_products
 from agents.decision.tools.fraud_detector import fraud_penalty
+from agents.orchestrator.tools.provider_capabilities import capabilities_for
 from models.ner.product_vocabulary import is_actionable_product_value
 from shared.config import get_settings
 from shared.events.schemas import (
@@ -16,8 +17,8 @@ from shared.events.schemas import (
     ScoreBreakdown,
 )
 from shared.query_matching import (
-    matches_city_and_color,
     matches_city_in_text,
+    matches_color_in_text,
     product_searchable_text,
 )
 
@@ -55,6 +56,12 @@ PRODUCT_ALIASES = {
     "tablet": {
         "tablet", "tablets", "tablette", "tablettes", "ipad", "tabla", "تابلت", "طابلات",
     },
+    "apartment": {
+        "apartment", "apartments", "appartement", "appartements", "appart", "flat", "flats",
+        "studio", "studios", "duplex", "penthouse", "شقة",
+    },
+    "house": {"house", "houses", "villa", "villas", "maison", "maisons", "riad", "riads"},
+    "land": {"land", "terrain", "terrains", "plot", "lot"},
 }
 
 PRODUCT_SYNONYMS = {
@@ -80,6 +87,12 @@ PRODUCT_SYNONYMS = {
     "tablette": "tablet",
     "tablettes": "tablet",
     "tables": "table",
+    "appartement": "apartment",
+    "appartements": "apartment",
+    "appart": "apartment",
+    "villa": "house",
+    "maison": "house",
+    "studio": "apartment",
 }
 
 NEGATIVE_TERMS = {
@@ -105,6 +118,7 @@ NEGATIVE_TERMS = {
         "table basse", "table a manger", "table de salon", "table de chevet", "chaise", "canape",
         "sofa", "meuble", "furniture",
     },
+    "apartment": {"villa", "maison", "terrain", "local commercial", "bureau", "entrepot"},
 }
 
 NOISY_TITLE_TERMS = {
@@ -140,21 +154,46 @@ def _apply_location_and_color_filters(
     if not query.city and not query.color:
         return products
 
-    strict = [product for product in products if matches_city_and_color(product, query)]
+    strict = [product for product in products if _product_matches_location_and_color(product, query)]
     if strict:
         return strict
 
     settings = get_settings()
     if query.color and settings.scrape_soft_color_fallback:
+        relaxed = [
+            product
+            for product in products
+            if _product_matches_location_and_color(
+                product,
+                query.model_copy(update={"color": None}),
+            )
+        ]
+        if relaxed:
+            return relaxed
+
+    if query.city and settings.scrape_soft_city_fallback:
         city_relaxed = [
             product
             for product in products
-            if matches_city_in_text(product_searchable_text(product), query)
+            if _product_matches_location_and_color(
+                product,
+                query.model_copy(update={"city": None}),
+            )
         ]
         if city_relaxed:
             return city_relaxed
 
     return products
+
+
+def _product_matches_location_and_color(product: RawProduct, query: ProductQuery) -> bool:
+    searchable = product_searchable_text(product)
+    caps = capabilities_for(product.source)
+    if query.color and not matches_color_in_text(searchable, query):
+        return False
+    if query.city and caps.supports_city and not matches_city_in_text(searchable, query):
+        return False
+    return True
 
 
 

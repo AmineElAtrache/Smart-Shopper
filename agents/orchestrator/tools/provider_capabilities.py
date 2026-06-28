@@ -76,6 +76,10 @@ def color_filter_relevant(category: str | None, color: str | None) -> bool:
     return bool(color) and (not category or category in COLOR_RELEVANT_CATEGORIES)
 
 
+def sites_support_city_filter(sites: list[str]) -> bool:
+    return any(capabilities_for(site).supports_city for site in sites)
+
+
 def prioritize_sites_for_query(
     sites: list[str],
     *,

@@ -6,6 +6,7 @@ import hashlib
 import re
 
 from shared.events.schemas import DecisionRanked
+from agents.orchestrator.tools.provider_capabilities import sites_support_city_filter
 
 DARIJA_LABELS = {
     "price": "Taman",
@@ -107,7 +108,7 @@ def build_darija_no_results_reply(event: DecisionRanked) -> str:
                 f"Ma lqit 7ta khityar {label}. "
                 "Jarrab lon okhor, badel l-model, wla 7yed lon mn talab dyalek."
             )
-        if query.city:
+        if query.city and sites_support_city_filter(query.sites or []):
             return (
                 f"Ma lqit 7ta khityar {label}. "
                 "Jarrab mdina okhra, badel l-model, wla 3tini mdina okhra."

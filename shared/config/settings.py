@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     scrape_route_use_llm: bool = Field(default=False, alias="SCRAPE_ROUTE_USE_LLM")
     scrape_enrich_entities_llm: bool = Field(default=False, alias="SCRAPE_ENRICH_ENTITIES_LLM")
     scrape_soft_color_fallback: bool = Field(default=True, alias="SCRAPE_SOFT_COLOR_FALLBACK")
+    scrape_soft_city_fallback: bool = Field(default=True, alias="SCRAPE_SOFT_CITY_FALLBACK")
     scrape_user_sites_enabled: bool = Field(default=True, alias="SCRAPE_USER_SITES_ENABLED")
     scrape_user_sites_strict: bool = Field(default=True, alias="SCRAPE_USER_SITES_STRICT")
     scrape_user_sites_llm: bool = Field(default=False, alias="SCRAPE_USER_SITES_LLM")

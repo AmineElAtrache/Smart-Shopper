@@ -168,6 +168,12 @@ async def test_tier_2_orchestrator_applies_saved_user_preferences() -> None:
     assert enriched.city == "fes"
     assert enriched.budget == 2500
 
+    jumia_only = await user_memory.apply_preferences(
+        "telegram_456",
+        ProductQuery(product="phone", sites=["jumia"]),
+    )
+    assert jumia_only.city is None
+
 
 @pytest.mark.asyncio
 async def test_tier_2_ambient_scheduler_persists_watch_in_user_memory() -> None:

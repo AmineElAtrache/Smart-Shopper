@@ -48,13 +48,27 @@ def color_terms(color: str | None) -> set[str]:
     return {term.lower() for term in COLOR_ALIASES.get(key, {key})}
 
 
+def resolve_city_key(city: str | None) -> str | None:
+    if not city:
+        return None
+    key = normalize_token(city).replace(" ", "_")
+    if key in CITY_ALIASES:
+        return key
+    for canonical, aliases in CITY_ALIASES.items():
+        alias_keys = {normalize_token(alias).replace(" ", "_") for alias in aliases}
+        if key in alias_keys:
+            return canonical
+    return key
+
+
 def city_terms(city: str | None) -> set[str]:
     if not city:
         return set()
-    key = normalize_token(city).replace(" ", "_")
-    aliases = CITY_ALIASES.get(key, {key.replace("_", " ")})
+    canonical = resolve_city_key(city) or normalize_token(city)
+    canonical_key = canonical.replace(" ", "_")
+    aliases = CITY_ALIASES.get(canonical_key, {canonical.replace("_", " ")})
     terms = {normalize_token(term) for term in aliases}
-    terms.add(normalize_token(city))
+    terms.add(normalize_token(canonical))
     return {term for term in terms if term}
 
 

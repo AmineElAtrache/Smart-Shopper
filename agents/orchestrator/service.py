@@ -122,7 +122,12 @@ class OrchestratorService:
             return
 
         if self._user_memory is not None:
-            task.query = await self._user_memory.apply_preferences(message.user_id, task.query)
+            explicit_city = any(entity.type == EntityType.CITY for entity in extracted.entities)
+            task.query = await self._user_memory.apply_preferences(
+                message.user_id,
+                task.query,
+                explicit_city=explicit_city,
+            )
             await self._user_memory.record_search(message, task.query)
         cached_response = await self._cache.get(task.query)
 
