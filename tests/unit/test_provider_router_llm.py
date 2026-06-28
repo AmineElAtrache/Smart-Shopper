@@ -130,7 +130,7 @@ async def test_orchestrator_uses_llm_category_for_routing(monkeypatch: pytest.Mo
     ):
         _extracted, task = await agent.handle_inbound(message)
 
-    assert task.query.sites == ["ikea", "avito", "jumia"]
+    assert task.query.sites == ["avito", "ikea", "jumia"]
 
 
 def test_entity_hints_collects_budget_currency() -> None:

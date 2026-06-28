@@ -8,6 +8,7 @@ from html import unescape
 from urllib.parse import urljoin
 
 from shared.events.schemas import ProductQuery, ScrapeTaskAssigned
+from shared.query_matching import city_terms, normalize_token
 
 MAD_PRICE_RE = re.compile(r"(?P<amount>\d[\d\s.,]*)\s*(?:MAD|DH|DHS|درهم)?", re.IGNORECASE)
 TAG_RE = re.compile(r"<[^>]+>")
@@ -121,4 +122,7 @@ def matches_color(searchable_text: str, query: ProductQuery, aliases: dict[str, 
 
 
 def matches_city(searchable_text: str, query: ProductQuery) -> bool:
-    return not query.city or query.city.lower() in searchable_text.lower()
+    if not query.city:
+        return True
+    lowered = normalize_token(searchable_text)
+    return any(term in lowered for term in city_terms(query.city))

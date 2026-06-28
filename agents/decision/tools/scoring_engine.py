@@ -7,12 +7,18 @@ import re
 from agents.decision.tools.dedup_engine import deduplicate_products
 from agents.decision.tools.fraud_detector import fraud_penalty
 from models.ner.product_vocabulary import is_actionable_product_value
+from shared.config import get_settings
 from shared.events.schemas import (
     Availability,
     ProductQuery,
     RankedProduct,
     RawProduct,
     ScoreBreakdown,
+)
+from shared.query_matching import (
+    matches_city_and_color,
+    matches_city_in_text,
+    product_searchable_text,
 )
 
 TRUSTED_SOURCES = {
@@ -121,7 +127,34 @@ def filter_relevant_products(products: list[RawProduct], query: ProductQuery) ->
     requested = _canonical_product(query.product)
     if not requested:
         return [product for product in products if not _is_noisy_listing(product)]
-    return [product for product in products if _matches_query_product(product, query, requested)]
+    product_matched = [
+        product for product in products if _matches_query_product(product, query, requested)
+    ]
+    return _apply_location_and_color_filters(product_matched, query)
+
+
+def _apply_location_and_color_filters(
+    products: list[RawProduct],
+    query: ProductQuery,
+) -> list[RawProduct]:
+    if not query.city and not query.color:
+        return products
+
+    strict = [product for product in products if matches_city_and_color(product, query)]
+    if strict:
+        return strict
+
+    settings = get_settings()
+    if query.color and settings.scrape_soft_color_fallback:
+        city_relaxed = [
+            product
+            for product in products
+            if matches_city_in_text(product_searchable_text(product), query)
+        ]
+        if city_relaxed:
+            return city_relaxed
+
+    return products
 
 
 

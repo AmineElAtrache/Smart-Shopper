@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 
 import httpx
 
+from agents.orchestrator.tools.provider_capabilities import capabilities_for
 from agents.webscraping.spiders.base import (
     absolute_url,
     budget_allows,
@@ -287,6 +288,9 @@ def _build_jumia_search_text(task: ScrapeTaskAssigned) -> str:
     if query.brand and query.brand.lower() == "samsung" and product == "smartphone":
         product = "Galaxy"
     parts = [query.brand, product, query.color]
+    caps = capabilities_for("jumia")
+    if caps.city_in_search_text and query.city:
+        parts.append(query.city.replace("_", " "))
     return " ".join(part for part in parts if part).strip() or build_search_text(task)
 
 

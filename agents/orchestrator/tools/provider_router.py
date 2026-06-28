@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from agents.orchestrator.tools.provider_capabilities import prioritize_sites_for_query
+
 SPACE_RE = re.compile(r"\s+")
 UNDERSCORE_RE = re.compile(r"_+")
 
@@ -188,6 +190,8 @@ def route_sites(
     product: str | None,
     *,
     category: str | None = None,
+    city: str | None = None,
+    color: str | None = None,
     route_enabled: bool = True,
 ) -> list[str]:
     """Return provider names to scrape for this product."""
@@ -197,4 +201,10 @@ def route_sites(
     resolved_category = category if category in CATEGORY_SITES else classify_product(product)
     sites = CATEGORY_SITES.get(resolved_category, CATEGORY_SITES["general"])
     registered = set(DEFAULT_SITES)
-    return [name for name in sites if name in registered] or list(CATEGORY_SITES["general"])
+    routed = [name for name in sites if name in registered] or list(CATEGORY_SITES["general"])
+    return prioritize_sites_for_query(
+        routed,
+        city=city,
+        color=color,
+        category=resolved_category,
+    )

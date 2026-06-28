@@ -18,6 +18,7 @@ from agents.webscraping.spiders.base import (
     budget_allows,
     build_search_text,
     clean_text,
+    matches_color,
     parse_mad_price,
     use_playwright_provider,
 )
@@ -347,7 +348,7 @@ def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
         terms = PRODUCT_RELEVANCE_TERMS.get(query.product.lower(), {query.product.lower()})
         if not any(term in searchable_text for term in terms):
             return False
-    return True
+    return matches_color(searchable_text, query)
 
 
 def _city_path_segment(task: ScrapeTaskAssigned) -> str:

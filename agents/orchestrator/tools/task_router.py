@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from agents.orchestrator.tools.provider_router import DEFAULT_SITES, route_sites
+from agents.orchestrator.tools.provider_router import CATEGORY_SITES, classify_product, route_sites
 from shared.events.schemas import (
     EntityType,
     ExtractedEntity,
@@ -47,7 +47,14 @@ def build_product_query(
         elif entity.type == EntityType.QUALITY:
             quality = entity.value
 
-    sites = route_sites(product, category=category, route_enabled=_provider_routing_enabled())
+    resolved_category = category if category in CATEGORY_SITES else classify_product(product)
+    sites = route_sites(
+        product,
+        category=resolved_category,
+        city=city,
+        color=color,
+        route_enabled=_provider_routing_enabled(),
+    )
 
     return ProductQuery(
         product=product,

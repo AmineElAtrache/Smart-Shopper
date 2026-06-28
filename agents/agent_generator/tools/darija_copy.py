@@ -100,15 +100,27 @@ def is_stale_darija_closing(text: str) -> bool:
 
 def build_darija_no_results_reply(event: DecisionRanked) -> str:
     query = event.query
-    if query and (query.brand or query.product or query.budget is not None):
+    if query and (query.brand or query.product or query.budget is not None or query.city or query.color):
         label = _search_label(query)
-        budget_part = ""
+        if query.color:
+            return (
+                f"Ma lqit 7ta khityar {label}. "
+                "Jarrab lon okhor, badel l-model, wla 7yed lon mn talab dyalek."
+            )
+        if query.city:
+            return (
+                f"Ma lqit 7ta khityar {label}. "
+                "Jarrab mdina okhra, badel l-model, wla 3tini mdina okhra."
+            )
         if query.budget is not None:
             currency = query.currency or "MAD"
-            budget_part = f" f {query.budget:g} {currency}"
+            return (
+                f"Ma lqit 7ta khityar li y-match {label} f {query.budget:g} {currency}. "
+                "Jarrab tzid l-mizaniya chwiya, badel l-model, wla 3tini mdina."
+            )
         return (
-            f"Ma lqit 7ta khityar li y-match {label}{budget_part}. "
-            "Jarrab tzid l-mizaniya chwiya, badel l-model, wla 3tini mdina."
+            f"Ma lqit 7ta khityar li y-match {label}. "
+            "Jarrab badel l-model wla 3tini tafasil okhra."
         )
     return build_darija_empty_reply()
 
@@ -200,6 +212,10 @@ def _normalize_phrase(text: str) -> str:
 
 def _search_label(query) -> str:
     parts = [query.brand, _darija_product_label(query.product) or query.product]
+    if query.color:
+        parts.append(query.color)
+    if query.city:
+        parts.append(f"f {query.city.replace('_', ' ')}")
     label = " ".join(part for part in parts if part).strip()
     return label or "had talab"
 

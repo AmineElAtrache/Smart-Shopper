@@ -18,6 +18,19 @@ def test_jumia_build_search_url_uses_product_query() -> None:
     assert build_search_url(_task()) == "https://www.jumia.ma/catalog/?q=Samsung+Galaxy"
 
 
+def test_jumia_build_search_url_includes_city_in_query() -> None:
+    task = ScrapeTaskAssigned(
+        request_id="req_jumia_city",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        query=ProductQuery(product="phone", brand="Samsung", budget=3000, city="rabat"),
+    )
+
+    url = build_search_url(task)
+
+    assert "rabat" in url.lower()
+
+
 def test_jumia_parse_products_from_fixture() -> None:
     html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
 
