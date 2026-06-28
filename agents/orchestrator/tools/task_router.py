@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from agents.orchestrator.tools.provider_router import CATEGORY_SITES, classify_product, route_sites
+from agents.orchestrator.tools.provider_router import CATEGORY_SITES, classify_product
 from shared.events.schemas import (
     EntityType,
     ExtractedEntity,
@@ -21,6 +21,7 @@ def build_product_query(
     entities: list[ExtractedEntity],
     *,
     category: str | None = None,
+    sites: list[str] | None = None,
 ) -> ProductQuery:
     product: str | None = None
     brand: str | None = None
@@ -47,14 +48,17 @@ def build_product_query(
         elif entity.type == EntityType.QUALITY:
             quality = entity.value
 
-    resolved_category = category if category in CATEGORY_SITES else classify_product(product)
-    sites = route_sites(
-        product,
-        category=resolved_category,
-        city=city,
-        color=color,
-        route_enabled=_provider_routing_enabled(),
-    )
+    if sites is None:
+        from agents.orchestrator.tools.provider_router import route_sites
+
+        resolved_category = category if category in CATEGORY_SITES else classify_product(product)
+        sites = route_sites(
+            product,
+            category=resolved_category,
+            city=city,
+            color=color,
+            route_enabled=_provider_routing_enabled(),
+        )
 
     return ProductQuery(
         product=product,
@@ -73,11 +77,12 @@ def build_scrape_task(
     entities: list[ExtractedEntity],
     *,
     category: str | None = None,
+    sites: list[str] | None = None,
 ) -> ScrapeTaskAssigned:
     return ScrapeTaskAssigned(
         request_id=message.request_id,
         user_id=message.user_id,
         channel=message.channel,
-        query=build_product_query(entities, category=category),
+        query=build_product_query(entities, category=category, sites=sites),
         user_text=message.text.strip(),
     )

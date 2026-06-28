@@ -29,7 +29,7 @@ VOCAB_PATH_ENV = "SMART_SHOPPER_VOCAB_PATH"
 EXTERNAL_VOCAB_PATHS_ENV = "SMART_SHOPPER_EXTERNAL_VOCAB_PATHS"
 TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
 SPACE_RE = re.compile(r"\s+")
-PRE_NER_TYPES = {"brand", "product", "category", "city", "color", "condition", "intent"}
+PRE_NER_TYPES = {"brand", "product", "category", "city", "color", "condition", "intent", "site"}
 ENTITY_TYPE_BY_VOCAB_TYPE = {
     "brand": EntityType.BRAND,
     "product": EntityType.PRODUCT,
@@ -38,6 +38,7 @@ ENTITY_TYPE_BY_VOCAB_TYPE = {
     "color": EntityType.COLOR,
     "condition": EntityType.QUALITY,
     "intent": EntityType.INTENT,
+    "site": EntityType.SITE,
 }
 FUZZY_MIN_TOKEN_LENGTH = 4
 PRE_NER_FUZZY_THRESHOLD = 92
@@ -341,6 +342,42 @@ def detect_entities(text: str, *, min_confidence: float = 0.78) -> list[Extracte
                 )
             )
             seen.add(entity_type)
+    return entities
+
+
+def detect_site_entities(text: str, *, min_confidence: float = 0.82) -> list[ExtractedEntity]:
+    """Detect multiple marketplace site mentions from vocabulary aliases."""
+    normalized = normalize_key(text)
+    if not normalized:
+        return []
+
+    entities: list[ExtractedEntity] = []
+    seen_sites: set[str] = set()
+    for alias, entry in sorted(_exact_aliases().items(), key=lambda item: len(item[0]), reverse=True):
+        if entry.confidence < min_confidence:
+            continue
+        is_site = entry.category == "site" or entry.canonical_key.startswith("site_")
+        if not is_site:
+            continue
+        if not re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", normalized):
+            continue
+        site_value = (
+            entry.canonical_key[5:]
+            if entry.canonical_key.startswith("site_")
+            else entry.normalized_canonical_key
+        )
+        if site_value in seen_sites:
+            continue
+        seen_sites.add(site_value)
+        attributes = {"source": "product_vocabulary", "category": "site"}
+        entities.append(
+            ExtractedEntity(
+                type=EntityType.SITE,
+                value=site_value,
+                confidence=entry.confidence,
+                attributes=attributes,
+            )
+        )
     return entities
 
 

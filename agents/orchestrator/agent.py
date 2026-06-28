@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import os
+
 from agents.orchestrator.tools.entity_enrichment_llm import (
     EntityEnrichmentLlmClient,
     merge_enriched_entities,
 )
 from agents.orchestrator.tools.ner_client import NerClient
+from agents.orchestrator.tools.provider_router import CATEGORY_SITES, classify_product
 from agents.orchestrator.tools.provider_router_llm import ProviderRouterLlmClient
+from agents.orchestrator.tools.site_router import SiteRouter
 from agents.orchestrator.tools.task_router import build_scrape_task
 from shared.config import Settings, get_settings
 from shared.events.schemas import EntityType, ExtractedEntity, InboundMessage, NerExtracted, ScrapeTaskAssigned
@@ -19,12 +23,14 @@ class OrchestratorAgent:
         ner_client: NerClient | None = None,
         router_llm: ProviderRouterLlmClient | None = None,
         enrichment_llm: EntityEnrichmentLlmClient | None = None,
+        site_router: SiteRouter | None = None,
         settings: Settings | None = None,
     ) -> None:
         self._settings = settings or get_settings()
         self._ner_client = ner_client or NerClient()
         self._router_llm = router_llm or ProviderRouterLlmClient(self._settings)
         self._enrichment_llm = enrichment_llm or EntityEnrichmentLlmClient(self._settings)
+        self._site_router = site_router or SiteRouter(self._settings)
 
     async def handle_inbound(self, message: InboundMessage) -> tuple[NerExtracted, ScrapeTaskAssigned]:
         entities = await self._ner_client.extract(message.text, locale_hint=message.locale_hint)
@@ -51,7 +57,24 @@ class OrchestratorAgent:
             entities=entities,
         )
         category = await self._resolve_routing_category(message.text, entities, message.request_id)
-        task = build_scrape_task(message, entities, category=category)
+        hints = _entity_hints(entities)
+        product = _hint_str(hints.get("product"))
+        resolved_category = category if category in CATEGORY_SITES else classify_product(product)
+        sites = await self._site_router.resolve_sites(
+            message.text,
+            entities,
+            product=product,
+            category=resolved_category,
+            city=_hint_str(hints.get("city")),
+            color=_hint_str(hints.get("color")),
+            route_enabled=os.getenv("SCRAPE_ROUTE_PROVIDERS", "true").lower() in {"1", "true", "yes"},
+        )
+        if len(sites) <= 8:
+            print(
+                f"[orchestrator] resolved sites request_id={message.request_id}: "
+                f"{', '.join(sites)}"
+            )
+        task = build_scrape_task(message, entities, category=category, sites=sites)
         return extracted, task
 
     async def _resolve_routing_category(
