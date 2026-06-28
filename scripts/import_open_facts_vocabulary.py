@@ -104,6 +104,19 @@ STOP_BRANDS = {
     "unknown", "sans marque", "no brand", "generic", "marque inconnue", "aucune", "n/a", "na"
 }
 
+# Open Facts rows can contain very large JSON/image fields; default csv limit is 128 KiB.
+CSV_FIELD_SIZE_LIMIT = 10 * 1024 * 1024
+
+
+def configure_csv_field_limit() -> None:
+    try:
+        csv.field_size_limit(CSV_FIELD_SIZE_LIMIT)
+    except OverflowError:
+        csv.field_size_limit(max(CSV_FIELD_SIZE_LIMIT, csv.field_size_limit()))
+
+
+configure_csv_field_limit()
+
 
 @dataclass(frozen=True)
 class Candidate:
@@ -182,11 +195,42 @@ def open_text(input_ref: str | Path) -> TextIO:
     return path.open("r", encoding="utf-8", errors="replace", newline="")
 
 
-def detect_delimiter(handle: TextIO) -> str:
-    sample = handle.read(8192)
-    handle.seek(0)
+def detect_delimiter_from_sample(sample: str) -> str:
     first_line = sample.splitlines()[0] if sample else ""
     return "\t" if "\t" in first_line else ","
+
+
+def _split_peek(peek: str) -> tuple[str, str]:
+    if not peek:
+        return "", ""
+    last_newline = peek.rfind("\n")
+    if last_newline == -1:
+        return "", peek
+    return peek[: last_newline + 1], peek[last_newline + 1 :]
+
+
+def _iter_csv_lines(handle: TextIO, *, peek_size: int = 8192) -> tuple[str, Iterable[str]]:
+    """Detect delimiter from an initial peek and yield full CSV lines without seeking."""
+    peek = handle.read(peek_size)
+    complete_lines, remainder = _split_peek(peek)
+    delimiter = detect_delimiter_from_sample(complete_lines or peek)
+
+    def line_iterator() -> Iterable[str]:
+        nonlocal remainder
+        if complete_lines:
+            yield from complete_lines.splitlines(keepends=True)
+        while True:
+            line = handle.readline()
+            if not line:
+                if remainder:
+                    yield remainder
+                break
+            if remainder:
+                line = remainder + line
+                remainder = ""
+            yield line
+
+    return delimiter, line_iterator()
 
 
 def row_text(row: dict[str, str], fields: Iterable[str]) -> str:
@@ -270,7 +314,8 @@ def detect_brand_candidates(row: dict[str, str], *, source: str, category: str) 
 
 def iter_open_facts_rows(input_ref: str | Path, *, max_rows: int | None = None) -> Iterable[dict[str, str]]:
     with open_text(input_ref) as handle:
-        reader = csv.DictReader(handle, delimiter=detect_delimiter(handle))
+        delimiter, lines = _iter_csv_lines(handle)
+        reader = csv.DictReader(lines, delimiter=delimiter)
         for index, row in enumerate(reader, start=1):
             if max_rows is not None and index > max_rows:
                 break

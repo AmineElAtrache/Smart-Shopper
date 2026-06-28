@@ -4,7 +4,11 @@ import io
 
 from models.ner import product_vocabulary as vocabulary
 from scripts import import_open_facts_vocabulary as importer
-from scripts.import_open_facts_vocabulary import convert_open_facts_exports, write_vocabulary
+from scripts.import_open_facts_vocabulary import (
+    configure_csv_field_limit,
+    convert_open_facts_exports,
+    write_vocabulary,
+)
 from shared.events.schemas import EntityType
 
 
@@ -48,10 +52,23 @@ def test_open_facts_importer_streams_remote_gzip_url(monkeypatch) -> None:
         "1\tSavon doux\tDove\tSoaps,Beauty\tMorocco\n"
     ).encode("utf-8")
 
+    class NonSeekableResponse(io.RawIOBase):
+        def __init__(self, data: bytes) -> None:
+            self._buffer = io.BytesIO(data)
+
+        def read(self, size: int = -1) -> bytes:
+            return self._buffer.read(size)
+
+        def readable(self) -> bool:
+            return True
+
+        def seekable(self) -> bool:
+            return False
+
     def fake_urlopen(request, timeout):
         assert timeout == 60
         assert "openfoodfacts" in request.full_url
-        return io.BytesIO(gzip.compress(payload))
+        return NonSeekableResponse(gzip.compress(payload))
 
     monkeypatch.setattr(importer, "urlopen", fake_urlopen)
 
@@ -65,6 +82,28 @@ def test_open_facts_importer_streams_remote_gzip_url(monkeypatch) -> None:
     assert ("product", "soap", "savon") in triples
     assert ("product", "soap", "soap") in triples
     assert ("brand", "Dove", "Dove") in triples
+
+
+def test_iter_csv_lines_works_without_seek() -> None:
+    payload = "code\tproduct_name\tcountries\n2\tLait\tMorocco\n"
+    handle = io.StringIO(payload)
+    delimiter, lines = importer._iter_csv_lines(handle)
+    rows = list(csv.DictReader(lines, delimiter=delimiter))
+
+    assert delimiter == "\t"
+    assert rows[0]["product_name"] == "Lait"
+
+
+def test_iter_csv_lines_parses_oversized_fields() -> None:
+    configure_csv_field_limit()
+    huge_value = "x" * 200_000
+    payload = f"code\tproduct_name\tcountries\n3\t{huge_value}\tMorocco\n"
+    handle = io.StringIO(payload)
+    delimiter, lines = importer._iter_csv_lines(handle)
+    rows = list(csv.DictReader(lines, delimiter=delimiter))
+
+    assert delimiter == "\t"
+    assert rows[0]["product_name"] == huge_value
 
 
 def test_external_vocabulary_file_is_loaded_by_ner_vocabulary(tmp_path, monkeypatch) -> None:
