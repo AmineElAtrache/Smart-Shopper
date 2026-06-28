@@ -16,6 +16,7 @@ from shared.events.schemas import (
     RawProduct,
     ScoreBreakdown,
 )
+from shared.product_matching import is_implausible_accessory_price, matches_category_product
 from shared.query_matching import (
     matches_city_in_text,
     matches_color_in_text,
@@ -292,20 +293,31 @@ def _availability_score(product: RawProduct) -> int:
 
 
 def _matches_query_product(product: RawProduct, query: ProductQuery, requested: str) -> bool:
-    title = _normalize(product.title)
     if _is_noisy_listing(product):
         return False
-    if _contains_any(title, NEGATIVE_TERMS.get(requested, set())):
+
+    searchable = _normalize(f"{product.title} {product.url}")
+    aliases = PRODUCT_ALIASES.get(requested, {requested})
+    if not matches_category_product(
+        searchable,
+        requested,
+        brand=query.brand,
+        loose_aliases=aliases,
+    ):
         return False
 
-    aliases = PRODUCT_ALIASES.get(requested, {requested})
-    if _contains_any(title, aliases):
-        return True
+    if is_implausible_accessory_price(
+        title=product.title,
+        url=product.url,
+        price=product.price,
+        category=requested,
+        budget=query.budget,
+        brand=query.brand,
+        loose_aliases=aliases,
+    ):
+        return False
 
-    if query.brand and _normalize(query.brand) in title:
-        return True
-
-    return False
+    return True
 
 
 def _is_noisy_listing(product: RawProduct) -> bool:

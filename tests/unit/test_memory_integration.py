@@ -161,12 +161,19 @@ async def test_tier_2_orchestrator_applies_saved_user_preferences() -> None:
     assert profile.preferred_city == "fes"
     assert profile.preferred_budget == 2500
 
-    enriched = await user_memory.apply_preferences(
+    same_product = await user_memory.apply_preferences(
+        "telegram_456",
+        ProductQuery(product="phone"),
+    )
+    assert same_product.city == "fes"
+    assert same_product.budget == 2500
+
+    different_product = await user_memory.apply_preferences(
         "telegram_456",
         ProductQuery(product="laptop"),
     )
-    assert enriched.city == "fes"
-    assert enriched.budget == 2500
+    assert different_product.city == "fes"
+    assert different_product.budget is None
 
     jumia_only = await user_memory.apply_preferences(
         "telegram_456",

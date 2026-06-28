@@ -114,6 +114,30 @@ async def test_tier_2_user_memory_records_search_and_applies_preferences() -> No
 
 
 @pytest.mark.asyncio
+async def test_tier_2_user_memory_does_not_apply_budget_across_products() -> None:
+    db = FakeDatabase()
+    memory = UserMemory(mongo_database=db, redis=FakeRedis())
+    message = InboundMessage(
+        request_id="req_laptop",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        text="bghit hp omen b 7000dh",
+    )
+    await memory.record_search(
+        message,
+        ProductQuery(product="omen", brand="HP", budget=7000),
+    )
+
+    enriched = await memory.apply_preferences(
+        "telegram_123",
+        ProductQuery(product="fridge"),
+    )
+
+    assert enriched.product == "fridge"
+    assert enriched.budget is None
+
+
+@pytest.mark.asyncio
 async def test_tier_3_behavioral_memory_records_private_generator_profile() -> None:
     db = FakeDatabase()
     memory = BehavioralMemory(mongo_database=db)

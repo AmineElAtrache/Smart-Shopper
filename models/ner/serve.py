@@ -80,6 +80,7 @@ PRODUCT_VALUE_ALIASES = {
     "telaja": "fridge",
     "thalaja": "fridge",
     "frigo": "fridge",
+    "refrigera": "fridge",
     "refrigerateur": "fridge",
     "refrigerator": "fridge",
 }
@@ -212,6 +213,23 @@ MODEL_STOP_TOKENS = {
     "ta7t",
     "avec",
     "with",
+    "ykone",
+    "ykon",
+    "yakun",
+    "tkone",
+    "tkon",
+    "mafayetch",
+    "mayfotch",
+    "mayfotech",
+    "mayfoutch",
+    "mafo9ch",
+    "fayetch",
+}
+PRODUCT_VALUE_STOP_TOKENS = MODEL_STOP_TOKENS | {
+    "moins",
+    "maximum",
+    "max",
+    "budget",
 }
 MODEL_IGNORED_TOKENS = {
     "bghit",
@@ -596,7 +614,7 @@ def _normalize_value(entity_type: EntityType, value: str) -> str:
     if entity_type == EntityType.BRAND:
         return BRANDS.get(compact, value.title())
     if entity_type == EntityType.PRODUCT:
-        return PRODUCT_VALUE_ALIASES.get(compact, compact)
+        return PRODUCT_VALUE_ALIASES.get(compact, _clean_product_value(compact))
     if entity_type == EntityType.CITY:
         return CITY_ALIASES.get(compact, compact)
     if entity_type == EntityType.COLOR:
@@ -606,6 +624,17 @@ def _normalize_value(entity_type: EntityType, value: str) -> str:
     if entity_type == EntityType.INTENT:
         return "watch" if compact in {"watch", "monitor", "notify", "hbet"} else "search"
     return compact if entity_type in {EntityType.QUALITY, EntityType.SITE} else value
+
+
+def _clean_product_value(value: str) -> str:
+    tokens = TOKEN_PATTERN.findall(value)
+    cleaned: list[str] = []
+    for token in tokens:
+        if token in PRODUCT_VALUE_STOP_TOKENS or BUDGET_PATTERN.fullmatch(token):
+            break
+        cleaned.append(token)
+    candidate = " ".join(cleaned).strip() or value
+    return PRODUCT_VALUE_ALIASES.get(candidate, candidate)
 
 
 def _is_low_confidence_unknown_brand(value: str, confidence: float) -> bool:

@@ -295,3 +295,99 @@ def test_decision_agent_filters_air_fryer_when_query_uses_underscore() -> None:
     )
 
     assert [product.title for product in ranked.products] == ["Friteuse sans huile Air Fryer 6L"]
+
+
+def test_decision_agent_rejects_phone_accessories_and_smarttag() -> None:
+    query = ProductQuery(product="phone", color="blanc", budget=3000)
+    products = [
+        RawProduct(
+            request_id="req_smarttag",
+            source="electroplanet",
+            title="SAMSUNG GALAXY SMARTTAG2 WHITE",
+            price=249,
+            url="https://www.electroplanet.ma/galaxy-smarttag2-white-samsung.html",
+            availability=Availability.IN_STOCK,
+            rating=4.0,
+        ),
+        RawProduct(
+            request_id="req_smarttag",
+            source="jumia",
+            title="Samsung Galaxy Buds2 Pro White",
+            price=899,
+            url="https://example.com/galaxy-buds",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.5,
+        ),
+        RawProduct(
+            request_id="req_smarttag",
+            source="avito",
+            title="Samsung Galaxy A15 128GB Blanc",
+            price=2800,
+            url="https://example.com/galaxy-a15",
+            availability=Availability.UNKNOWN,
+            seller="Private seller",
+            rating=3.8,
+        ),
+        RawProduct(
+            request_id="req_smarttag",
+            source="jumia",
+            title="Coque Samsung Galaxy A15 transparente",
+            price=49,
+            url="https://example.com/coque-a15",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.2,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_smarttag",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    titles = [product.title.lower() for product in ranked.products]
+    assert len(ranked.products) == 1
+    assert "galaxy a15" in titles[0]
+    assert all("smarttag" not in title for title in titles)
+    assert all("buds" not in title for title in titles)
+    assert all("coque" not in title for title in titles)
+
+
+def test_decision_agent_keeps_budget_phone_without_primary_word_in_title() -> None:
+    query = ProductQuery(product="phone", budget=3000)
+    products = [
+        RawProduct(
+            request_id="req_model",
+            source="jumia",
+            title="Itel A100C 6,6 - 2+4 RAM + 64 ROM - Gold",
+            price=879,
+            url="https://example.com/itel-a100c",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.1,
+        ),
+        RawProduct(
+            request_id="req_model",
+            source="jumia",
+            title="XIAOMI Redmi A5 3GB 64GB Sandy Gold",
+            price=959,
+            url="https://example.com/redmi-a5",
+            availability=Availability.IN_STOCK,
+            seller="Jumia official",
+            rating=4.0,
+        ),
+    ]
+
+    ranked = DecisionAgent().rank(
+        request_id="req_model",
+        user_id="telegram_123",
+        channel="telegram",
+        query=query,
+        products=products,
+    )
+
+    assert len(ranked.products) == 2

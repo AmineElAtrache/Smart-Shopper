@@ -228,3 +228,21 @@ def test_ner_uses_vocabulary_without_model_predictions(monkeypatch: pytest.Monke
     assert by_type["product"].value in {"Galaxy A15", "galaxy a15"}
     assert by_type["color"].value == "black"
     assert by_type["budget"].value == "1500.0"
+
+
+def test_ner_treats_chi_as_darija_filler_not_brand_for_fridge_query() -> None:
+    entities = extract_entities("chi telaja")
+    query = build_product_query(entities)
+
+    assert query.product == "fridge"
+    assert query.brand is None
+    assert query.budget is None
+
+
+def test_ner_cleans_darija_budget_constraint_from_hp_omen_model() -> None:
+    entities = extract_entities("bghit chi hp omen ykone mafayetch 7000dh")
+    query = build_product_query(entities)
+
+    assert query.brand == "HP"
+    assert query.product == "omen"
+    assert query.budget == 7000

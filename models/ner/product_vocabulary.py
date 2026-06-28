@@ -49,6 +49,11 @@ INTERNAL_CANONICAL_OVERRIDES = {
     ("product", "smartphone"): "phone",
     ("product", "pc"): "laptop",
     ("product", "refrigerator"): "fridge",
+    ("category", "refrigerator"): "fridge",
+}
+BLOCKED_BRAND_ALIASES = {
+    # "chi" is common Darija filler ("some/a") and appears in many shopping requests.
+    "chi",
 }
 
 
@@ -194,6 +199,8 @@ def _exact_aliases() -> dict[str, VocabularyEntry]:
     for entry in load_vocabulary():
         key = entry.alias_key
         if not key:
+            continue
+        if entry.type == "brand" and key in BLOCKED_BRAND_ALIASES:
             continue
         current = aliases.get(key)
         if current is None or entry.confidence > current.confidence:
