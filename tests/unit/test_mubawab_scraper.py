@@ -41,7 +41,7 @@ async def test_webscraping_agent_includes_mubawab_products(monkeypatch) -> None:
         html = open("tests/fixtures/mubawab_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.mubawab.ma/fr/sc/casablanca/appartements-a-vendre")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.mubawab.scrape", fake_mubawab_scrape)
 
@@ -68,7 +68,7 @@ async def test_agent_publishes_mubawab_products(monkeypatch) -> None:
         html = open("tests/fixtures/mubawab_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.mubawab.ma/fr/sc/casablanca/appartements-a-vendre")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "jumia", "defacto", "biougnach", "marjane", "decathlon", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.mubawab.scrape", fake_mubawab_scrape)
     producer = FakeProducer()

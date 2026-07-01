@@ -18,6 +18,19 @@ def test_jumia_build_search_url_uses_product_query() -> None:
     assert build_search_url(_task()) == "https://www.jumia.ma/catalog/?q=Samsung+Galaxy"
 
 
+def test_jumia_build_search_url_includes_city_in_query() -> None:
+    task = ScrapeTaskAssigned(
+        request_id="req_jumia_city",
+        user_id="telegram_123",
+        channel=Channel.TELEGRAM,
+        query=ProductQuery(product="phone", brand="Samsung", budget=3000, city="rabat"),
+    )
+
+    url = build_search_url(task)
+
+    assert "rabat" in url.lower()
+
+
 def test_jumia_parse_products_from_fixture() -> None:
     html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
 
@@ -42,7 +55,7 @@ async def test_webscraping_agent_includes_jumia_products(monkeypatch) -> None:
         html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.jumia.ma/catalog/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.jumia.scrape", fake_jumia_scrape)
 
@@ -69,7 +82,7 @@ async def test_agent_publishes_jumia_products(monkeypatch) -> None:
         html = open("tests/fixtures/jumia_search.html", encoding="utf-8").read()
         return parse_products(html, task, page_url="https://www.jumia.ma/catalog/?q=Samsung+phone")
 
-    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea"):
+    for provider in ("avito", "electrosalam", "mafiawaystore", "moteur", "mymarket", "ultrapc", "electroplanet", "defacto", "biougnach", "marjane", "decathlon", "mubawab", "ikea", "palmarosa", "bringo", "planetsport"):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.jumia.scrape", fake_jumia_scrape)
     producer = FakeProducer()

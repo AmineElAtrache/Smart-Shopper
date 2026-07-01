@@ -10,7 +10,10 @@ from agents.decision.agent import DecisionAgent
 from shared.config import Settings, get_settings
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
 from shared.events.schemas import ProductQuery, RawProduct
-from shared.events.topics import DECISION_RANKED, SCRAPE_RAW
+from shared.events.topics import DECISION_RANKED, PRICE_HISTORY, SCRAPE_RAW
+from shared.memory.factory import create_global_memory
+from shared.memory.global_memory import GlobalMemory
+from shared.memory.tier1_hooks import record_ranked_prices
 from shared.runtime import HealthServer
 
 
@@ -21,9 +24,11 @@ class DecisionService:
         agent: DecisionAgent | None = None,
         consumer: Any | None = None,
         producer: Any | None = None,
+        global_memory: GlobalMemory | None = None,
     ) -> None:
         self._settings = settings
         self._agent = agent or DecisionAgent()
+        self._global_memory = global_memory
         self._consumer = consumer or KafkaEventConsumer(
             SCRAPE_RAW,
             bootstrap_servers=settings.kafka_bootstrap_servers,
@@ -85,6 +90,10 @@ class DecisionService:
             user_text=user_text,
         )
         await self._producer.publish(DECISION_RANKED, ranked, key=request_id)
+        if self._global_memory is not None:
+            snapshots = await record_ranked_prices(self._global_memory, ranked)
+            for snapshot in snapshots:
+                await self._producer.publish(PRICE_HISTORY, snapshot, key=request_id)
         print(f"[decision] published decision.ranked request_id={request_id} products={len(products)}")
 
 
@@ -93,7 +102,7 @@ async def main() -> None:
     health = HealthServer(host=settings.metrics_host, port=settings.metrics_port)
     await health.start()
     try:
-        service = DecisionService(settings)
+        service = DecisionService(settings, global_memory=create_global_memory(settings))
         await service.run_forever()
     finally:
         await health.stop()

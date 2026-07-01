@@ -1,4 +1,4 @@
-﻿"""Application settings loaded from environment variables."""
+"""Application settings loaded from environment variables."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     ner_grpc_host: str = Field(default="localhost", alias="NER_GRPC_HOST")
     ner_grpc_port: int = Field(default=50051, alias="NER_GRPC_PORT")
-    ner_grpc_timeout_seconds: float = Field(default=5.0, alias="NER_GRPC_TIMEOUT_SECONDS")
+    ner_grpc_timeout_seconds: float = Field(default=30.0, alias="NER_GRPC_TIMEOUT_SECONDS")
     ner_warmup_text: str = Field(default="Bghit Samsung phone b 3000 dh", alias="NER_WARMUP_TEXT")
 
     orchestrator_group_id: str = Field(
@@ -36,20 +36,40 @@ class Settings(BaseSettings):
         alias="ORCHESTRATOR_GROUP_ID",
     )
     decision_group_id: str = Field(default="decision-agent", alias="DECISION_GROUP_ID")
-    decision_batch_wait_seconds: float = Field(default=2.0, alias="DECISION_BATCH_WAIT_SECONDS")
+    decision_batch_wait_seconds: float = Field(default=8.0, alias="DECISION_BATCH_WAIT_SECONDS")
     scraper_group_id: str = Field(default="webscraping-agent", alias="SCRAPER_GROUP_ID")
     generator_group_id: str = Field(default="agent-generator", alias="GENERATOR_GROUP_ID")
     gateway_group_id: str = Field(default="telegram-gateway", alias="GATEWAY_GROUP_ID")
     ambient_group_id: str = Field(default="ambient-scheduler", alias="AMBIENT_GROUP_ID")
     governance_group_id: str = Field(default="governance-agent", alias="GOVERNANCE_GROUP_ID")
 
-    scrape_timeout_seconds: float = Field(default=20.0, alias="SCRAPE_TIMEOUT_SECONDS")
+    scrape_timeout_seconds: float = Field(default=40.0, alias="SCRAPE_TIMEOUT_SECONDS")
     scrape_max_concurrency: int = Field(default=8, alias="SCRAPE_MAX_CONCURRENCY")
+    scrape_collection_grace_seconds: float = Field(
+        default=10.0,
+        alias="SCRAPE_COLLECTION_GRACE_SECONDS",
+    )
+    scrape_route_providers: bool = Field(default=True, alias="SCRAPE_ROUTE_PROVIDERS")
+    scrape_route_use_llm: bool = Field(default=False, alias="SCRAPE_ROUTE_USE_LLM")
+    scrape_enrich_entities_llm: bool = Field(default=False, alias="SCRAPE_ENRICH_ENTITIES_LLM")
+    scrape_soft_color_fallback: bool = Field(default=True, alias="SCRAPE_SOFT_COLOR_FALLBACK")
+    scrape_soft_city_fallback: bool = Field(default=True, alias="SCRAPE_SOFT_CITY_FALLBACK")
+    scrape_user_sites_enabled: bool = Field(default=True, alias="SCRAPE_USER_SITES_ENABLED")
+    scrape_user_sites_strict: bool = Field(default=True, alias="SCRAPE_USER_SITES_STRICT")
+    scrape_user_sites_llm: bool = Field(default=False, alias="SCRAPE_USER_SITES_LLM")
+    scrape_playwright_providers: str = Field(
+        default="avito,biougnach,defacto,electroplanet,ikea,jumia,marjane,palmarosa",
+        alias="SCRAPE_PLAYWRIGHT_PROVIDERS",
+    )
     scrape_mock_only: bool = Field(default=False, alias="SCRAPE_MOCK_ONLY")
     domain_rate_limit_per_minute: int = Field(default=30, alias="DOMAIN_RATE_LIMIT_PER_MINUTE")
     user_rate_limit_per_minute: int = Field(default=20, alias="USER_RATE_LIMIT_PER_MINUTE")
     governance_strict_robots: bool = Field(default=False, alias="GOVERNANCE_STRICT_ROBOTS")
     governance_quarantine_pii: bool = Field(default=True, alias="GOVERNANCE_QUARANTINE_PII")
+    governance_content_moderation_enabled: bool = Field(
+        default=True,
+        alias="GOVERNANCE_CONTENT_MODERATION_ENABLED",
+    )
 
     llm_provider: str = Field(default="template", alias="LLM_PROVIDER")
     llm_http_base_url: str = Field(default="http://localhost:8081", alias="LLM_HTTP_BASE_URL")

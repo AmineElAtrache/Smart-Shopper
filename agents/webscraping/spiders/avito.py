@@ -1,4 +1,4 @@
-﻿"""Avito scraper provider.
+"""Avito scraper provider.
 
 The parser is intentionally defensive because marketplace HTML changes often.
 It supports browser-rendered pages, JSON-LD data, and generic card-like HTML blocks.
@@ -18,7 +18,9 @@ from agents.webscraping.spiders.base import (
     budget_allows,
     build_search_text,
     clean_text,
+    matches_color,
     parse_mad_price,
+    use_playwright_provider,
 )
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
@@ -47,12 +49,12 @@ AVITO_COLOR_TERMS = {
     "silver": "argent",
 }
 PRODUCT_RELEVANCE_TERMS = {
-    "phone": {"phone", "telephone", "telephones", "téléphone", "téléphones", "smartphone", "galaxy"},
-    "smartphone": {"phone", "telephone", "telephones", "téléphone", "téléphones", "smartphone", "galaxy"},
-    "telephone": {"phone", "telephone", "telephones", "téléphone", "téléphones", "smartphone", "galaxy"},
+    "phone": {"phone", "telephone", "telephones", "tÃ©lÃ©phone", "tÃ©lÃ©phones", "smartphone", "galaxy"},
+    "smartphone": {"phone", "telephone", "telephones", "tÃ©lÃ©phone", "tÃ©lÃ©phones", "smartphone", "galaxy"},
+    "telephone": {"phone", "telephone", "telephones", "tÃ©lÃ©phone", "tÃ©lÃ©phones", "smartphone", "galaxy"},
     "laptop": {"laptop", "pc", "ordinateur", "portable"},
     "tablet": {"tablet", "tablette", "ipad"},
-    "headphones": {"headphones", "casque", "ecouteurs", "écouteurs"},
+    "headphones": {"headphones", "casque", "ecouteurs", "Ã©couteurs"},
 }
 CARD_RE = re.compile(
     r"<(?P<tag>article|div|li)\b(?P<attrs>[^>]*)>(?P<body>.*?)</(?P=tag)>",
@@ -60,7 +62,7 @@ CARD_RE = re.compile(
 )
 HREF_RE = re.compile(r"href=[\"'](?P<href>[^\"']+)[\"']", re.IGNORECASE)
 TITLE_ATTR_RE = re.compile(r"(?:aria-label|title)=[\"'](?P<title>[^\"']+)[\"']", re.IGNORECASE)
-CARD_PRICE_RE = re.compile(r"(?P<amount>\d[\d\s.,]*)\s*(?:MAD|DH|DHS|درهم)", re.IGNORECASE)
+CARD_PRICE_RE = re.compile(r"(?P<amount>\d[\d\s.,]*)\s*(?:MAD|DH|DHS|Ø¯Ø±Ù‡Ù…)", re.IGNORECASE)
 SCRIPT_JSON_RE = re.compile(
     r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(?P<json>.*?)</script>",
     re.IGNORECASE | re.DOTALL,
@@ -80,10 +82,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("avito"):
         return await _fetch_html_with_playwright(url, timeout=timeout)
-    except ImportError:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_playwright(url: str, *, timeout: float) -> tuple[str, str]:
@@ -347,7 +348,7 @@ def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
         terms = PRODUCT_RELEVANCE_TERMS.get(query.product.lower(), {query.product.lower()})
         if not any(term in searchable_text for term in terms):
             return False
-    return True
+    return matches_color(searchable_text, query)
 
 
 def _city_path_segment(task: ScrapeTaskAssigned) -> str:

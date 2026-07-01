@@ -53,6 +53,9 @@ def _patch_other_providers_empty(monkeypatch) -> None:
         "decathlon",
         "mubawab",
         "ikea",
+        "palmarosa",
+        "bringo",
+        "planetsport",
     ):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
 

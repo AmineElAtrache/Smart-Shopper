@@ -1,0 +1,1751 @@
+type,canonical,alias,language,category,confidence,notes
+category,phone,phone,en,phone,0.95,
+category,phone,telephone,fr,phone,0.93,
+category,phone,téléphone,fr,phone,0.95,
+category,phone,telephone,typo,phone,0.85,missing accent
+category,phone,smartphone,en,phone,0.96,
+category,phone,smart phone,typo,phone,0.85,split word
+category,phone,portable,fr,phone,0.85,colloquial FR for mobile phone
+category,phone,هاتف,ar,phone,0.93,
+category,phone,جوال,ar,phone,0.88,
+category,phone,هاتف ذكي,ar,phone,0.92,
+category,phone,hatif,darija_latin,phone,0.80,transliteration
+category,phone,portabl,darija_latin,phone,0.88,darija for phone
+category,phone,le portable,fr,phone,0.84,
+category,phone,nat fone,typo,phone,0.70,phonetic typo
+category,phone,smarfone,typo,phone,0.75,misspelling
+category,phone,telefon,typo,phone,0.78,misspelling
+category,phone,hatifi,darija_latin,phone,0.72,"my phone, inflected"
+category,smartphone,smartphone,en,phone,0.96,
+category,smartphone,smart phone,typo,phone,0.85,
+category,smartphone,téléphone intelligent,fr,phone,0.80,formal FR term
+category,smartphone,haouatif dki,darija_latin,phone,0.70,rare transliteration
+category,smartphone,جوال ذكي,ar,phone,0.85,
+category,tablet,tablet,en,tablet,0.95,
+category,tablet,tablette,fr,tablet,0.95,
+category,tablet,tablete,typo,tablet,0.85,missing accent
+category,tablet,tablett,typo,tablet,0.78,double t typo
+category,tablet,لوحة,ar,tablet,0.85,
+category,tablet,ipad,brand_model,tablet,0.93,generic use of brand as category term
+category,tablet,tabla,darija_latin,tablet,0.78,colloquial
+category,laptop,laptop,en,laptop,0.96,
+category,laptop,ordinateur portable,fr,laptop,0.95,
+category,laptop,pc portable,fr,laptop,0.94,
+category,laptop,ordinateur,fr,laptop,0.85,generic computer term
+category,laptop,labtop,typo,laptop,0.85,common misspelling
+category,laptop,laptob,typo,laptop,0.75,misspelling
+category,laptop,lap top,typo,laptop,0.80,split word
+category,laptop,حاسوب محمول,ar,laptop,0.90,
+category,laptop,لابتوب,ar,laptop,0.92,arabic transliteration
+category,laptop,labtob,darija_latin,laptop,0.82,darija transliteration
+category,laptop,ordi,fr,laptop,0.80,colloquial FR
+category,laptop,ordi portable,fr,laptop,0.85,
+category,pc,pc,en,pc,0.93,
+category,pc,desktop,en,pc,0.92,
+category,pc,ordinateur de bureau,fr,pc,0.93,
+category,pc,ordinateur fixe,fr,pc,0.88,
+category,pc,حاسوب مكتبي,ar,pc,0.88,
+category,pc,pc bureau,typo,pc,0.80,abbreviated
+category,pc,disktop,typo,pc,0.72,misspelling
+category,gaming_pc,gaming pc,en,gaming,0.95,
+category,gaming_pc,pc gamer,fr,gaming,0.95,
+category,gaming_pc,pc gaming,fr,gaming,0.90,
+category,gaming_pc,setup gamer,fr,gaming,0.82,colloquial
+category,gaming_pc,pc de jeu,fr,gaming,0.80,
+category,gaming_pc,gemin pc,typo,gaming,0.70,misspelling
+category,gaming_pc,pc lel gaming,darija_latin,gaming,0.75,
+category,monitor,monitor,en,monitor,0.94,
+category,monitor,écran,fr,monitor,0.95,
+category,monitor,ecran,fr,monitor,0.93,missing accent
+category,monitor,écran pc,fr,monitor,0.88,
+category,monitor,شاشة,ar,monitor,0.92,
+category,monitor,chacha,darija_latin,monitor,0.78,darija for screen
+category,monitor,ecran dial pc,darija_latin,monitor,0.75,
+category,monitor,monitr,typo,monitor,0.72,misspelling
+category,keyboard,keyboard,en,keyboard,0.94,
+category,keyboard,clavier,fr,keyboard,0.95,
+category,keyboard,claviée,typo,keyboard,0.70,misspelling
+category,keyboard,لوحة مفاتيح,ar,keyboard,0.88,
+category,keyboard,klavie,darija_latin,keyboard,0.78,darija transliteration
+category,keyboard,keybord,typo,keyboard,0.78,misspelling
+category,mouse,mouse,en,mouse,0.93,
+category,mouse,souris,fr,mouse,0.95,
+category,mouse,souri,typo,mouse,0.80,missing s
+category,mouse,فأرة,ar,mouse,0.86,
+category,mouse,mouss,darija_latin,mouse,0.75,darija transliteration
+category,mouse,maouss,darija_latin,mouse,0.72,
+category,headphones,headphones,en,headphones,0.93,
+category,headphones,headphone,en,headphones,0.90,
+category,headphones,casque,fr,headphones,0.95,
+category,headphones,casque audio,fr,headphones,0.93,
+category,headphones,سماعات,ar,headphones,0.90,
+category,headphones,sm3at,darija_latin,headphones,0.80,darija transliteration
+category,headphones,sma3at,darija_latin,headphones,0.82,darija transliteration
+category,headphones,hedfon,typo,headphones,0.72,misspelling
+category,headphones,casq,typo,headphones,0.75,abbreviated typo
+category,earbuds,earbuds,en,earbuds,0.93,
+category,earbuds,écouteurs,fr,earbuds,0.95,
+category,earbuds,ecouteurs,fr,earbuds,0.92,missing accent
+category,earbuds,ecouteur,fr,earbuds,0.88,singular
+category,earbuds,سماعات أذن,ar,earbuds,0.88,
+category,earbuds,airpods,brand_model,earbuds,0.90,generic use of brand as category
+category,earbuds,sma3at lwln,darija_latin,earbuds,0.72,
+category,earbuds,ecoutör,typo,earbuds,0.70,misspelling
+category,smartwatch,smartwatch,en,smartwatch,0.93,
+category,smartwatch,montre intelligente,fr,smartwatch,0.92,
+category,smartwatch,montre connectée,fr,smartwatch,0.93,
+category,smartwatch,montre connectee,fr,smartwatch,0.88,missing accent
+category,smartwatch,ساعة ذكية,ar,smartwatch,0.90,
+category,smartwatch,smart watch,typo,smartwatch,0.85,split word
+category,smartwatch,magana dakia,darija_latin,smartwatch,0.72,darija transliteration
+category,camera,camera,en,camera,0.93,
+category,camera,appareil photo,fr,camera,0.95,
+category,camera,appareil photo numérique,fr,camera,0.88,
+category,camera,كاميرا,ar,camera,0.92,
+category,camera,kamira,darija_latin,camera,0.80,transliteration
+category,camera,camera photo,typo,camera,0.78,redundant
+category,printer,printer,en,printer,0.93,
+category,printer,imprimante,fr,printer,0.95,
+category,printer,imprimente,typo,printer,0.78,misspelling
+category,printer,طابعة,ar,printer,0.90,
+category,printer,emprimante,typo,printer,0.72,misspelling
+brand,Samsung,Samsung,en,phone,0.97,
+brand,Samsung,samsung,en,phone,0.95,lowercase
+brand,Samsung,samsoung,typo,phone,0.78,misspelling
+brand,Samsung,samsung galaxy,brand_model,phone,0.90,brand + line
+brand,Samsung,سامسونج,ar,phone,0.93,
+brand,Samsung,samsonge,typo,phone,0.70,misspelling
+brand,Apple,Apple,en,phone,0.97,
+brand,Apple,apple,en,phone,0.95,lowercase
+brand,Apple,ابل,ar,phone,0.90,
+brand,Apple,أبل,ar,phone,0.88,
+brand,Apple,aple,typo,phone,0.75,misspelling
+brand,Apple,appl,typo,phone,0.78,misspelling
+brand,iPhone,iPhone,brand_model,phone,0.97,
+brand,iPhone,iphone,brand_model,phone,0.96,lowercase
+brand,iPhone,ايفون,ar,phone,0.93,
+brand,iPhone,آيفون,ar,phone,0.90,
+brand,iPhone,aifone,darija_latin,phone,0.85,darija transliteration
+brand,iPhone,ifone,typo,phone,0.82,misspelling
+brand,iPhone,iphon,typo,phone,0.80,missing e
+brand,iPhone,i phone,typo,phone,0.80,split word
+brand,iPhone,iphone 13,brand_model,phone,0.93,specific model
+brand,iPhone,iphone 14,brand_model,phone,0.93,specific model
+brand,iPhone,iphone 15,brand_model,phone,0.93,specific model
+brand,iPhone,iphone 11,brand_model,phone,0.92,specific model
+brand,iPhone,iphone se,brand_model,phone,0.88,specific model
+brand,Xiaomi,Xiaomi,en,phone,0.95,
+brand,Xiaomi,xiaomi,en,phone,0.93,lowercase
+brand,Xiaomi,chaomi,typo,phone,0.75,phonetic misspelling
+brand,Xiaomi,شاومي,ar,phone,0.90,
+brand,Xiaomi,xaomi,typo,phone,0.78,misspelling
+brand,Xiaomi,ksyaomi,typo,phone,0.70,misspelling
+brand,Redmi,Redmi,brand_model,phone,0.95,
+brand,Redmi,redmi,brand_model,phone,0.93,lowercase
+brand,Redmi,ريدمي,ar,phone,0.88,
+brand,Redmi,ridmi,darija_latin,phone,0.78,transliteration
+brand,Redmi,redmi note,brand_model,phone,0.92,product line
+brand,Redmi,redmi note 12,brand_model,phone,0.90,specific model
+brand,Oppo,Oppo,en,phone,0.95,
+brand,Oppo,oppo,en,phone,0.93,lowercase
+brand,Oppo,اوبو,ar,phone,0.85,
+brand,Oppo,opo,typo,phone,0.78,misspelling
+brand,Vivo,Vivo,en,phone,0.93,
+brand,Vivo,vivo,en,phone,0.92,lowercase
+brand,Vivo,فيفو,ar,phone,0.85,
+brand,Vivo,vivoo,typo,phone,0.72,misspelling
+brand,Huawei,Huawei,en,phone,0.95,
+brand,Huawei,huawei,en,phone,0.93,lowercase
+brand,Huawei,هواوي,ar,phone,0.92,
+brand,Huawei,hawawi,darija_latin,phone,0.80,transliteration
+brand,Huawei,huawai,typo,phone,0.78,misspelling
+brand,Huawei,wawi,typo,phone,0.70,common shortened misspelling
+brand,Honor,Honor,en,phone,0.93,
+brand,Honor,honor,en,phone,0.92,lowercase
+brand,Honor,هونر,ar,phone,0.85,
+brand,Honor,honour,typo,phone,0.78,British spelling typo
+brand,Infinix,Infinix,en,phone,0.93,
+brand,Infinix,infinix,en,phone,0.92,lowercase
+brand,Infinix,انفينكس,ar,phone,0.85,
+brand,Infinix,infiniks,typo,phone,0.75,misspelling
+brand,Tecno,Tecno,en,phone,0.92,
+brand,Tecno,tecno,en,phone,0.91,lowercase
+brand,Tecno,تكنو,ar,phone,0.84,
+brand,Tecno,techno,typo,phone,0.78,"misspelling, confuses with genre"
+brand,Itel,Itel,en,phone,0.90,
+brand,Itel,itel,en,phone,0.89,lowercase
+brand,Itel,ايتل,ar,phone,0.82,
+brand,Itel,aytel,typo,phone,0.70,misspelling
+brand,HP,HP,en,laptop,0.94,
+brand,HP,hp,en,laptop,0.92,lowercase
+brand,HP,اتش بي,ar,laptop,0.85,
+brand,HP,اش بي,ar,laptop,0.80,
+brand,HP,hewlett packard,en,laptop,0.85,full company name
+brand,HP,hp omen,brand_model,laptop,0.92,gaming laptop line
+brand,HP,hp victus,brand_model,laptop,0.92,gaming laptop line
+brand,HP,omen,brand_model,laptop,0.85,HP gaming sub-brand
+brand,HP,victus,brand_model,laptop,0.85,HP gaming sub-brand
+brand,Dell,Dell,en,laptop,0.95,
+brand,Dell,dell,en,laptop,0.93,lowercase
+brand,Dell,ديل,ar,laptop,0.86,
+brand,Dell,del,typo,laptop,0.75,missing l
+brand,Lenovo,Lenovo,en,laptop,0.95,
+brand,Lenovo,lenovo,en,laptop,0.93,lowercase
+brand,Lenovo,لينوفو,ar,laptop,0.88,
+brand,Lenovo,lenovoo,typo,laptop,0.72,misspelling
+brand,Lenovo,thinkpad,brand_model,laptop,0.93,Lenovo business laptop line
+brand,Lenovo,think pad,typo,laptop,0.82,split word
+brand,Lenovo,legion,brand_model,laptop,0.90,Lenovo gaming laptop line
+brand,Asus,Asus,en,laptop,0.95,
+brand,Asus,asus,en,laptop,0.93,lowercase
+brand,Asus,اسوس,ar,laptop,0.88,
+brand,Asus,azus,typo,laptop,0.75,misspelling
+brand,Asus,asuss,typo,laptop,0.72,misspelling
+brand,Asus,rog,brand_model,laptop,0.85,Asus gaming sub-brand Republic of Gamers
+brand,Acer,Acer,en,laptop,0.93,
+brand,Acer,acer,en,laptop,0.92,lowercase
+brand,Acer,ايسر,ar,laptop,0.85,
+brand,Acer,asair,typo,laptop,0.70,phonetic misspelling
+brand,Acer,aser,typo,laptop,0.75,misspelling
+brand,MSI,MSI,en,laptop,0.92,
+brand,MSI,msi,en,laptop,0.91,lowercase
+brand,MSI,ام اس اي,ar,laptop,0.78,
+brand,MacBook,MacBook,brand_model,laptop,0.96,
+brand,MacBook,macbook,brand_model,laptop,0.95,lowercase
+brand,MacBook,ماك بوك,ar,laptop,0.88,
+brand,MacBook,makbouk,darija_latin,laptop,0.78,transliteration
+brand,MacBook,mac book,typo,laptop,0.85,split word
+brand,MacBook,macbook pro,brand_model,laptop,0.94,specific model
+brand,MacBook,macbook air,brand_model,laptop,0.94,specific model
+brand,MacBook,makbouk pro,darija_latin,laptop,0.74,
+brand,PlayStation,PlayStation,brand_model,gaming,0.96,
+brand,PlayStation,playstation,brand_model,gaming,0.95,lowercase
+brand,PlayStation,ps4,brand_model,gaming,0.93,console generation
+brand,PlayStation,ps5,brand_model,gaming,0.95,console generation
+brand,PlayStation,بلايستيشن,ar,gaming,0.90,
+brand,PlayStation,playstayshن,darija_ar,gaming,0.70,mixed script typo
+brand,PlayStation,blestichn,darija_latin,gaming,0.70,phonetic transliteration
+brand,PlayStation,play station,typo,gaming,0.85,split word
+brand,Xbox,Xbox,brand_model,gaming,0.95,
+brand,Xbox,xbox,brand_model,gaming,0.94,lowercase
+brand,Xbox,اكس بوكس,ar,gaming,0.85,
+brand,Xbox,xbox series x,brand_model,gaming,0.92,specific model
+brand,Xbox,xbox series s,brand_model,gaming,0.90,specific model
+brand,Xbox,ekss boks,typo,gaming,0.70,phonetic misspelling
+brand,Nintendo,Nintendo,brand_model,gaming,0.93,
+brand,Nintendo,nintendo,brand_model,gaming,0.92,lowercase
+brand,Nintendo,نينتندو,ar,gaming,0.84,
+brand,Nintendo,nintendo switch,brand_model,gaming,0.93,specific console
+brand,Nintendo,switch,brand_model,gaming,0.85,common shortened name
+brand,Nintendo,ninetendo,typo,gaming,0.70,misspelling
+category,car,car,en,car,0.95,
+category,car,voiture,fr,car,0.96,
+category,car,voitur,typo,car,0.80,missing e
+category,car,vwatir,typo,car,0.70,phonetic misspelling
+category,car,سيارة,ar,car,0.93,
+category,car,tomobil,darija_latin,car,0.88,darija for car
+category,car,toumobile,darija_latin,car,0.85,darija transliteration
+category,car,tomobile,darija_latin,car,0.86,
+category,car,automobile,fr,car,0.85,formal term
+category,car,bagra,typo,car,0.70,"unrelated darija slang, low conf"
+category,used_car,used car,en,car,0.92,
+category,used_car,voiture occasion,fr,car,0.93,
+category,used_car,voiture d'occasion,fr,car,0.94,
+category,used_car,occasion,fr,car,0.85,"colloquial, implies used car in context"
+category,used_car,سيارة مستعملة,ar,car,0.90,
+category,used_car,tomobil msta3mla,darija_latin,car,0.85,
+category,used_car,tomobile m3awda,darija_latin,car,0.75,
+category,motorcycle,motorcycle,en,motorcycle,0.93,
+category,motorcycle,moto,fr,motorcycle,0.95,
+category,motorcycle,motocyclette,fr,motorcycle,0.88,formal term
+category,motorcycle,دراجة نارية,ar,motorcycle,0.90,
+category,motorcycle,motou,darija_latin,motorcycle,0.82,transliteration
+category,motorcycle,mota,typo,motorcycle,0.75,misspelling
+category,scooter,scooter,en,motorcycle,0.92,
+category,scooter,scooter,fr,motorcycle,0.92,
+category,scooter,trottinette,fr,motorcycle,0.85,can mean kick scooter
+category,scooter,سكوتر,ar,motorcycle,0.85,
+category,scooter,scoutair,typo,motorcycle,0.70,phonetic misspelling
+category,bicycle,bicycle,en,sports,0.92,
+category,bicycle,vélo,fr,sports,0.95,
+category,bicycle,velo,fr,sports,0.92,missing accent
+category,bicycle,دراجة هوائية,ar,sports,0.88,
+category,bicycle,bicycleta,typo,sports,0.70,spanish-influenced misspelling
+category,bicycle,bisklet,darija_latin,sports,0.78,transliteration
+category,spare_parts,spare parts,en,car,0.90,
+category,spare_parts,pièces détachées,fr,car,0.93,
+category,spare_parts,pieces detachees,fr,car,0.88,missing accents
+category,spare_parts,قطع غيار,ar,car,0.92,
+category,spare_parts,g3at ghyar,darija_latin,car,0.82,darija transliteration
+category,spare_parts,9at3 ghyar,darija_latin,car,0.83,darija transliteration
+brand,Volkswagen,Volkswagen,en,car,0.95,
+brand,Volkswagen,volkswagen,en,car,0.93,lowercase
+brand,Volkswagen,vw,brand_model,car,0.90,common abbreviation
+brand,Volkswagen,فولكس فاكن,ar,car,0.80,
+brand,Volkswagen,volswagen,typo,car,0.75,misspelling
+brand,Volkswagen,folks wagen,typo,car,0.70,phonetic misspelling
+brand,Volkswagen,golf,brand_model,car,0.90,VW model
+brand,Volkswagen,polo,brand_model,car,0.88,VW model
+brand,Renault,Renault,en,car,0.95,
+brand,Renault,renault,en,car,0.93,lowercase
+brand,Renault,رونو,ar,car,0.88,
+brand,Renault,renaut,typo,car,0.78,misspelling
+brand,Renault,rno,darija_latin,car,0.80,darija shortened transliteration
+brand,Renault,clio,brand_model,car,0.90,Renault model
+brand,Dacia,Dacia,en,car,0.94,
+brand,Dacia,dacia,en,car,0.92,lowercase
+brand,Dacia,داسيا,ar,car,0.86,
+brand,Dacia,dassia,typo,car,0.74,misspelling
+brand,Dacia,logan,brand_model,car,0.90,Dacia model
+brand,Dacia,sandero,brand_model,car,0.89,Dacia model
+brand,Peugeot,Peugeot,en,car,0.95,
+brand,Peugeot,peugeot,en,car,0.93,lowercase
+brand,Peugeot,بيجو,ar,car,0.88,
+brand,Peugeot,bijo,darija_latin,car,0.78,phonetic transliteration
+brand,Peugeot,pijo,typo,car,0.70,phonetic misspelling
+brand,Peugeot,208,brand_model,car,0.85,Peugeot model
+brand,Peugeot,308,brand_model,car,0.85,Peugeot model
+brand,Peugeot,peugeot 208,brand_model,car,0.92,
+brand,Peugeot,peugeot 308,brand_model,car,0.92,
+brand,Citroen,Citroen,en,car,0.93,
+brand,Citroen,citroën,fr,car,0.95,
+brand,Citroen,citroen,fr,car,0.92,missing accent
+brand,Citroen,سيتروين,ar,car,0.85,
+brand,Citroen,sitroen,typo,car,0.75,misspelling
+brand,Toyota,Toyota,en,car,0.96,
+brand,Toyota,toyota,en,car,0.94,lowercase
+brand,Toyota,تويوتا,ar,car,0.92,
+brand,Toyota,toyouta,typo,car,0.78,misspelling
+brand,Toyota,toyota corolla,brand_model,car,0.93,
+brand,Toyota,corolla,brand_model,car,0.90,Toyota model
+brand,Toyota,yaris,brand_model,car,0.88,Toyota model
+brand,Toyota,corola,typo,car,0.78,misspelling
+brand,Hyundai,Hyundai,en,car,0.94,
+brand,Hyundai,hyundai,en,car,0.92,lowercase
+brand,Hyundai,هيونداي,ar,car,0.88,
+brand,Hyundai,hyundai tucson,brand_model,car,0.90,
+brand,Hyundai,tucson,brand_model,car,0.87,Hyundai model
+brand,Hyundai,hyondai,typo,car,0.75,misspelling
+brand,Kia,Kia,en,car,0.93,
+brand,Kia,kia,en,car,0.91,lowercase
+brand,Kia,كيا,ar,car,0.86,
+brand,Kia,kia sportage,brand_model,car,0.89,
+brand,Kia,sportage,brand_model,car,0.85,Kia model
+brand,Kia,kya,typo,car,0.70,misspelling
+brand,Mercedes,Mercedes,en,car,0.96,
+brand,Mercedes,mercedes,en,car,0.94,lowercase
+brand,Mercedes,مرسيدس,ar,car,0.90,
+brand,Mercedes,merso,darija_latin,car,0.85,common darija nickname
+brand,Mercedes,mercedes benz,en,car,0.93,full name
+brand,Mercedes,merdeces,typo,car,0.70,misspelling
+brand,BMW,BMW,en,car,0.96,
+brand,BMW,bmw,en,car,0.94,lowercase
+brand,BMW,بي ام دبليو,ar,car,0.85,
+brand,BMW,bm,darija_latin,car,0.75,shortened darija reference
+brand,BMW,bmv,typo,car,0.70,misspelling
+brand,Audi,Audi,en,car,0.95,
+brand,Audi,audi,en,car,0.93,lowercase
+brand,Audi,اودي,ar,car,0.87,
+brand,Audi,awdi,darija_latin,car,0.78,transliteration
+brand,Audi,aoudi,typo,car,0.72,misspelling
+brand,Ford,Ford,en,car,0.94,
+brand,Ford,ford,en,car,0.92,lowercase
+brand,Ford,فورد,ar,car,0.86,
+brand,Ford,foord,typo,car,0.70,misspelling
+brand,Fiat,Fiat,en,car,0.93,
+brand,Fiat,fiat,en,car,0.91,lowercase
+brand,Fiat,فيات,ar,car,0.85,
+brand,Fiat,fyat,typo,car,0.70,misspelling
+brand,Yamaha,Yamaha,en,motorcycle,0.93,
+brand,Yamaha,yamaha,en,motorcycle,0.91,lowercase
+brand,Yamaha,ياماها,ar,motorcycle,0.86,
+brand,Yamaha,yamaa,typo,motorcycle,0.70,misspelling
+brand,Honda,Honda,en,car,0.94,
+brand,Honda,honda,en,car,0.92,lowercase
+brand,Honda,هوندا,ar,car,0.87,
+brand,Honda,honda civic,brand_model,car,0.90,car model
+brand,Honda,civic,brand_model,car,0.85,Honda model
+brand,Honda,hwanda,typo,car,0.70,phonetic misspelling
+category,refrigerator,refrigerator,en,home_appliance,0.93,
+category,refrigerator,fridge,en,home_appliance,0.93,
+category,refrigerator,réfrigérateur,fr,home_appliance,0.95,
+category,refrigerator,refrigerateur,fr,home_appliance,0.90,missing accent
+category,refrigerator,frigo,fr,home_appliance,0.94,colloquial FR
+category,refrigerator,ثلاجة,ar,home_appliance,0.93,
+category,refrigerator,telaja,darija_latin,home_appliance,0.88,darija transliteration
+category,refrigerator,tlaja,darija_latin,home_appliance,0.86,darija transliteration
+category,refrigerator,frigoo,typo,home_appliance,0.72,misspelling
+category,washing_machine,washing machine,en,home_appliance,0.93,
+category,washing_machine,machine à laver,fr,home_appliance,0.95,
+category,washing_machine,machine a laver,fr,home_appliance,0.90,missing accent
+category,washing_machine,غسالة,ar,home_appliance,0.92,
+category,washing_machine,machine tsil,darija_latin,home_appliance,0.85,darija for washing machine
+category,washing_machine,machine dial tsbon,darija_latin,home_appliance,0.72,informal darija
+category,washing_machine,lavante,typo,home_appliance,0.70,misspelling
+category,oven,oven,en,home_appliance,0.92,
+category,oven,four,fr,home_appliance,0.93,
+category,oven,fourneau,fr,home_appliance,0.82,can mean stove/furnace
+category,oven,فرن,ar,home_appliance,0.92,
+category,oven,forno,darija_latin,home_appliance,0.85,darija transliteration
+category,oven,forn,darija_latin,home_appliance,0.86,darija transliteration
+category,microwave,microwave,en,home_appliance,0.93,
+category,microwave,micro-ondes,fr,home_appliance,0.95,
+category,microwave,micro ondes,fr,home_appliance,0.90,missing hyphen
+category,microwave,ميكروويف,ar,home_appliance,0.90,
+category,microwave,microweiv,darija_latin,home_appliance,0.75,phonetic transliteration
+category,microwave,micro onde,typo,home_appliance,0.80,missing s
+category,tv,tv,en,home_appliance,0.93,
+category,tv,television,en,home_appliance,0.90,
+category,tv,télévision,fr,home_appliance,0.95,
+category,tv,televiseur,fr,home_appliance,0.88,missing accent
+category,tv,téléviseur,fr,home_appliance,0.92,
+category,tv,تلفزة,ar,home_appliance,0.90,
+category,tv,tlfaza,darija_latin,home_appliance,0.85,darija transliteration
+category,tv,tlvza,darija_latin,home_appliance,0.78,darija transliteration
+category,tv,smart tv,en,home_appliance,0.90,specific TV type
+category,air_conditioner,air conditioner,en,home_appliance,0.92,
+category,air_conditioner,climatiseur,fr,home_appliance,0.95,
+category,air_conditioner,clim,fr,home_appliance,0.92,colloquial FR abbreviation
+category,air_conditioner,مكيف,ar,home_appliance,0.92,
+category,air_conditioner,klima,darija_latin,home_appliance,0.88,darija for AC
+category,air_conditioner,ac,en,home_appliance,0.85,abbreviation
+category,air_conditioner,klim,darija_latin,home_appliance,0.84,
+category,heater,heater,en,home_appliance,0.90,
+category,heater,chauffage,fr,home_appliance,0.93,
+category,heater,radiateur,fr,home_appliance,0.88,electric heater term
+category,heater,مدفأة,ar,home_appliance,0.88,
+category,heater,chofaj,darija_latin,home_appliance,0.80,darija transliteration
+category,blender,blender,en,home_appliance,0.92,
+category,blender,mixeur,fr,home_appliance,0.93,
+category,blender,mixer,fr,home_appliance,0.85,english loanword used in FR
+category,blender,خلاط,ar,home_appliance,0.90,
+category,blender,khalat,darija_latin,home_appliance,0.85,darija transliteration
+category,blender,mixour,typo,home_appliance,0.70,misspelling
+category,vacuum_cleaner,vacuum cleaner,en,home_appliance,0.91,
+category,vacuum_cleaner,aspirateur,fr,home_appliance,0.95,
+category,vacuum_cleaner,aspiratör,typo,home_appliance,0.70,misspelling
+category,vacuum_cleaner,مكنسة كهربائية,ar,home_appliance,0.88,
+category,vacuum_cleaner,aspiratour,darija_latin,home_appliance,0.78,darija transliteration
+category,sofa,sofa,en,furniture,0.93,
+category,sofa,canapé,fr,furniture,0.95,
+category,sofa,canape,fr,furniture,0.90,missing accent
+category,sofa,أريكة,ar,furniture,0.88,
+category,sofa,salon,fr,furniture,0.80,"colloquial, used for sofa set"
+category,sofa,kanapi,darija_latin,furniture,0.80,darija transliteration
+category,sofa,sofà,typo,furniture,0.70,misspelling
+category,bed,bed,en,furniture,0.93,
+category,bed,lit,fr,furniture,0.93,
+category,bed,سرير,ar,furniture,0.90,
+category,bed,namousa,typo,furniture,0.70,"unrelated darija slang, low conf"
+category,bed,serir,darija_latin,furniture,0.82,darija transliteration
+category,mattress,mattress,en,furniture,0.92,
+category,mattress,matelas,fr,furniture,0.95,
+category,mattress,matla,darija_latin,furniture,0.80,darija transliteration
+category,mattress,فراش,ar,furniture,0.88,
+category,mattress,matlas,typo,furniture,0.78,misspelling
+category,table,table,en,furniture,0.92,
+category,table,table,fr,furniture,0.93,
+category,table,طاولة,ar,furniture,0.90,
+category,table,tabla,darija_latin,furniture,0.83,darija transliteration
+category,chair,chair,en,furniture,0.92,
+category,chair,chaise,fr,furniture,0.94,
+category,chair,كرسي,ar,furniture,0.90,
+category,chair,kursi,darija_latin,furniture,0.84,darija transliteration
+category,chair,chaize,typo,furniture,0.72,misspelling
+category,wardrobe,wardrobe,en,furniture,0.90,
+category,wardrobe,armoire,fr,furniture,0.94,
+category,wardrobe,placard,fr,furniture,0.85,can mean closet
+category,wardrobe,خزانة,ar,furniture,0.88,
+category,wardrobe,khzana,darija_latin,furniture,0.82,darija transliteration
+category,desk,desk,en,furniture,0.91,
+category,desk,bureau,fr,furniture,0.93,can also mean office
+category,desk,مكتب,ar,furniture,0.88,can also mean office
+category,desk,byro,darija_latin,furniture,0.78,darija transliteration
+category,kitchen,kitchen,en,furniture,0.90,
+category,kitchen,cuisine,fr,furniture,0.93,
+category,kitchen,مطبخ,ar,furniture,0.90,
+category,kitchen,koujina,darija_latin,furniture,0.82,darija transliteration
+category,decoration,decoration,en,furniture,0.88,
+category,decoration,décoration,fr,furniture,0.93,
+category,decoration,decoration,fr,furniture,0.88,missing accent
+category,decoration,ديكور,ar,furniture,0.86,
+category,decoration,dikor,darija_latin,furniture,0.80,darija transliteration
+category,lamp,lamp,en,furniture,0.90,
+category,lamp,lampe,fr,furniture,0.93,
+category,lamp,مصباح,ar,furniture,0.88,
+category,lamp,lampa,darija_latin,furniture,0.80,darija transliteration
+category,lamp,lemp,typo,furniture,0.70,phonetic misspelling
+category,t_shirt,t-shirt,en,clothes,0.93,
+category,t_shirt,tshirt,en,clothes,0.90,missing hyphen
+category,t_shirt,tee shirt,fr,clothes,0.88,
+category,t_shirt,تيشيرت,ar,clothes,0.85,
+category,t_shirt,tisheart,typo,clothes,0.70,phonetic misspelling
+category,shirt,shirt,en,clothes,0.91,
+category,shirt,chemise,fr,clothes,0.94,
+category,shirt,قميص,ar,clothes,0.88,
+category,shirt,9amij,darija_latin,clothes,0.80,darija transliteration
+category,pants,pants,en,clothes,0.90,
+category,pants,trousers,en,clothes,0.85,
+category,pants,pantalon,fr,clothes,0.94,
+category,pants,بنطلون,ar,clothes,0.88,
+category,pants,bantalon,darija_latin,clothes,0.83,darija transliteration
+category,pants,pantalo,typo,clothes,0.75,misspelling
+category,jeans,jeans,en,clothes,0.93,
+category,jeans,jean,fr,clothes,0.92,
+category,jeans,جينز,ar,clothes,0.88,
+category,jeans,jin,darija_latin,clothes,0.78,darija transliteration
+category,jacket,jacket,en,clothes,0.91,
+category,jacket,veste,fr,clothes,0.94,
+category,jacket,blouson,fr,clothes,0.85,can mean bomber jacket
+category,jacket,سترة,ar,clothes,0.86,
+category,jacket,jaket,darija_latin,clothes,0.80,darija transliteration
+category,jacket,jaket,typo,clothes,0.78,common misspelling
+category,dress,dress,en,clothes,0.91,
+category,dress,robe,fr,clothes,0.94,
+category,dress,فستان,ar,clothes,0.90,
+category,dress,fostan,darija_latin,clothes,0.84,darija transliteration
+category,shoes,shoes,en,shoes,0.92,
+category,shoes,chaussures,fr,shoes,0.95,
+category,shoes,chaussure,fr,shoes,0.90,singular
+category,shoes,حذاء,ar,shoes,0.90,
+category,shoes,sabbat,darija_latin,shoes,0.86,darija for shoes
+category,shoes,sebbat,darija_latin,shoes,0.85,darija transliteration
+category,shoes,chosur,typo,shoes,0.70,phonetic misspelling
+category,sneakers,sneakers,en,shoes,0.93,
+category,sneakers,baskets,fr,shoes,0.95,
+category,sneakers,basket,fr,shoes,0.90,colloquial singular
+category,sneakers,كرة,ar,shoes,0.70,"informal, low confidence ambiguous"
+category,sneakers,snikerz,typo,shoes,0.70,phonetic misspelling
+category,sneakers,snikers,darija_latin,shoes,0.78,darija transliteration
+category,sandals,sandals,en,shoes,0.90,
+category,sandals,sandales,fr,shoes,0.93,
+category,sandals,صندل,ar,shoes,0.86,
+category,sandals,chebchab,darija_latin,shoes,0.82,darija for traditional sandals/slippers
+category,sandals,sandal,typo,shoes,0.80,missing s
+category,watch,watch,en,clothes,0.92,
+category,watch,montre,fr,clothes,0.94,
+category,watch,ساعة,ar,clothes,0.90,
+category,watch,magana,darija_latin,clothes,0.86,darija for watch
+category,bag,bag,en,clothes,0.91,
+category,bag,sac,fr,clothes,0.94,
+category,bag,حقيبة,ar,clothes,0.88,
+category,bag,sak,darija_latin,clothes,0.80,darija transliteration
+category,bag,sac à main,fr,clothes,0.88,handbag specific
+category,oil,oil,en,grocery,0.90,
+category,oil,huile,fr,grocery,0.94,
+category,oil,زيت,ar,grocery,0.92,
+category,oil,zit,darija_latin,grocery,0.87,darija transliteration
+category,oil,zit lzitoune,darija_latin,grocery,0.84,darija for olive oil
+category,sugar,sugar,en,grocery,0.90,
+category,sugar,sucre,fr,grocery,0.94,
+category,sugar,سكر,ar,grocery,0.92,
+category,sugar,sukkar,darija_latin,grocery,0.86,darija transliteration
+category,sugar,succre,typo,grocery,0.75,misspelling
+category,flour,flour,en,grocery,0.89,
+category,flour,farine,fr,grocery,0.94,
+category,flour,طحين,ar,grocery,0.90,
+category,flour,tahin,darija_latin,grocery,0.83,darija transliteration
+category,flour,flor,typo,grocery,0.72,misspelling
+category,milk,milk,en,grocery,0.91,
+category,milk,lait,fr,grocery,0.94,
+category,milk,حليب,ar,grocery,0.92,
+category,milk,hlib,darija_latin,grocery,0.87,darija transliteration
+category,coffee,coffee,en,grocery,0.92,
+category,coffee,café,fr,grocery,0.94,
+category,coffee,cafe,fr,grocery,0.90,missing accent
+category,coffee,قهوة,ar,grocery,0.92,
+category,coffee,9ahwa,darija_latin,grocery,0.87,darija transliteration
+category,coffee,qahwa,darija_latin,grocery,0.85,darija transliteration
+category,tea,tea,en,grocery,0.91,
+category,tea,thé,fr,grocery,0.94,
+category,tea,the,fr,grocery,0.85,"missing accent, ambiguous with article"
+category,tea,شاي,ar,grocery,0.92,
+category,tea,atay,darija_latin,grocery,0.87,darija for mint tea
+category,rice,rice,en,grocery,0.90,
+category,rice,riz,fr,grocery,0.94,
+category,rice,أرز,ar,grocery,0.90,
+category,rice,rooz,darija_latin,grocery,0.85,darija transliteration
+category,pasta,pasta,en,grocery,0.91,
+category,pasta,pâtes,fr,grocery,0.93,
+category,pasta,pates,fr,grocery,0.88,missing accent
+category,pasta,معكرونة,ar,grocery,0.90,
+category,pasta,ma3karouna,darija_latin,grocery,0.85,darija transliteration
+category,water,water,en,grocery,0.91,
+category,water,eau,fr,grocery,0.94,
+category,water,ماء,ar,grocery,0.92,
+category,water,lma,darija_latin,grocery,0.87,darija for water
+category,water,dyal lma,darija_latin,grocery,0.70,informal phrase
+category,detergent,detergent,en,grocery,0.89,
+category,detergent,lessive,fr,grocery,0.93,
+category,detergent,مسحوق غسيل,ar,grocery,0.86,
+category,detergent,tide,darija_latin,grocery,0.70,genericized brand name used colloquially
+category,detergent,sabon dial tsbon,darija_latin,grocery,0.72,informal darija
+category,shampoo,shampoo,en,beauty,0.91,
+category,shampoo,shampooing,fr,beauty,0.94,
+category,shampoo,شامبو,ar,beauty,0.90,
+category,shampoo,champwan,darija_latin,beauty,0.80,darija transliteration
+category,shampoo,shampo,typo,beauty,0.78,missing o
+category,perfume,perfume,en,beauty,0.91,
+category,perfume,parfum,fr,beauty,0.95,
+category,perfume,عطر,ar,beauty,0.92,
+category,perfume,3tar,darija_latin,beauty,0.86,darija transliteration
+category,perfume,perfom,typo,beauty,0.72,misspelling
+category,makeup,makeup,en,beauty,0.91,
+category,makeup,maquillage,fr,beauty,0.94,
+category,makeup,makiyaj,darija_latin,beauty,0.80,darija transliteration
+category,makeup,مكياج,ar,beauty,0.90,
+category,makeup,makeup,typo,beauty,0.85,correct but commonly miswritten as 'make up'
+category,makeup,make up,typo,beauty,0.82,split word
+category,skincare,skincare,en,beauty,0.90,
+category,skincare,soins de la peau,fr,beauty,0.88,
+category,skincare,العناية بالبشرة,ar,beauty,0.86,
+category,skincare,skin care,typo,beauty,0.82,split word
+category,hair_dryer,hair dryer,en,beauty,0.90,
+category,hair_dryer,sèche-cheveux,fr,beauty,0.93,
+category,hair_dryer,seche cheveux,fr,beauty,0.85,missing accent/hyphen
+category,hair_dryer,مجفف شعر,ar,beauty,0.86,
+category,hair_dryer,sicheswar,darija_latin,beauty,0.72,phonetic darija transliteration
+category,electric_shaver,electric shaver,en,beauty,0.89,
+category,electric_shaver,rasoir électrique,fr,beauty,0.92,
+category,electric_shaver,rasoir electrique,fr,beauty,0.86,missing accent
+category,electric_shaver,ماكينة حلاقة,ar,beauty,0.86,
+category,electric_shaver,rasour,darija_latin,beauty,0.78,darija transliteration
+category,vitamins,vitamins,en,beauty,0.89,
+category,vitamins,vitamines,fr,beauty,0.92,
+category,vitamins,فيتامينات,ar,beauty,0.88,
+category,vitamins,vitamine,typo,beauty,0.80,singular used as plural
+category,protein_powder,protein powder,en,beauty,0.90,
+category,protein_powder,protéine en poudre,fr,beauty,0.88,
+category,protein_powder,proteine,fr,beauty,0.84,"missing accent, shortened"
+category,protein_powder,بروتين,ar,beauty,0.86,
+category,protein_powder,protin,typo,beauty,0.75,misspelling
+category,protein_powder,whey,brand_model,beauty,0.82,common informal term for protein powder
+category,apartment,apartment,en,real_estate,0.92,
+category,apartment,appartement,fr,real_estate,0.95,
+category,apartment,appart,fr,real_estate,0.91,colloquial FR abbreviation
+category,apartment,شقة,ar,real_estate,0.92,
+category,apartment,chi9a,darija_latin,real_estate,0.86,darija transliteration
+category,apartment,appartemen,typo,real_estate,0.75,misspelling
+category,house,house,en,real_estate,0.91,
+category,house,maison,fr,real_estate,0.94,
+category,house,منزل,ar,real_estate,0.90,
+category,house,dar,darija_latin,real_estate,0.88,darija for house
+category,villa,villa,en,real_estate,0.92,
+category,villa,villa,fr,real_estate,0.93,
+category,villa,فيلا,ar,real_estate,0.90,
+category,villa,vila,typo,real_estate,0.78,misspelling
+category,studio,studio,en,real_estate,0.91,
+category,studio,studio,fr,real_estate,0.92,
+category,studio,استوديو,ar,real_estate,0.85,
+category,studio,stidio,typo,real_estate,0.72,misspelling
+category,rent,rent,en,real_estate,0.90,
+category,rent,location,fr,real_estate,0.93,
+category,rent,louer,fr,real_estate,0.88,verb form
+category,rent,كراء,ar,real_estate,0.90,
+category,rent,kra,darija_latin,real_estate,0.87,darija for rent
+category,rent,kraya,darija_latin,real_estate,0.85,darija noun form
+category,sale,sale,en,real_estate,0.90,
+category,sale,vente,fr,real_estate,0.93,
+category,sale,بيع,ar,real_estate,0.90,
+category,sale,bay3,darija_latin,real_estate,0.85,darija transliteration
+category,sale,chraya,darija_latin,real_estate,0.80,"darija, also relates to buying"
+category,land,land,en,real_estate,0.90,
+category,land,terrain,fr,real_estate,0.94,
+category,land,أرض,ar,real_estate,0.90,
+category,land,ard,darija_latin,real_estate,0.85,darija transliteration
+category,land,terain,typo,real_estate,0.75,misspelling
+category,office,office,en,real_estate,0.90,
+category,office,bureau,fr,real_estate,0.92,can also mean desk
+category,office,مكتب,ar,real_estate,0.88,can also mean desk
+category,office,byro,darija_latin,real_estate,0.78,darija transliteration
+category,shop,shop,en,real_estate,0.90,
+category,shop,magasin,fr,real_estate,0.93,
+category,shop,boutique,fr,real_estate,0.90,
+category,shop,محل,ar,real_estate,0.90,
+category,shop,mahal,darija_latin,real_estate,0.85,darija transliteration
+color,black,black,en,color,0.95,
+color,black,noir,fr,color,0.96,
+color,black,noire,fr,color,0.92,feminine form
+color,black,أسود,ar,color,0.93,
+color,black,kehel,darija_latin,color,0.88,darija for black
+color,black,k7el,darija_latin,color,0.88,"darija for black, numeral 7 for ح"
+color,black,khal,darija_latin,color,0.82,darija variant
+color,black,nwar,typo,color,0.70,misspelling of noir
+color,white,white,en,color,0.95,
+color,white,blanc,fr,color,0.96,
+color,white,blanche,fr,color,0.92,feminine form
+color,white,أبيض,ar,color,0.93,
+color,white,bida,darija_latin,color,0.87,"darija for white, feminine"
+color,white,byed,darija_latin,color,0.85,"darija for white, masculine"
+color,white,blan,typo,color,0.72,misspelling
+color,red,red,en,color,0.95,
+color,red,rouge,fr,color,0.96,
+color,red,أحمر,ar,color,0.93,
+color,red,7mer,darija_latin,color,0.87,"darija for red, numeral 7 for ح"
+color,red,hmar,darija_latin,color,0.82,darija variant
+color,red,rouj,typo,color,0.70,phonetic misspelling
+color,blue,blue,en,color,0.95,
+color,blue,bleu,fr,color,0.96,
+color,blue,bleue,fr,color,0.90,feminine form
+color,blue,أزرق,ar,color,0.92,
+color,blue,zra9,darija_latin,color,0.86,"darija for blue, numeral 9 for ق"
+color,blue,zrag,darija_latin,color,0.80,darija variant
+color,blue,blu,typo,color,0.75,misspelling
+color,green,green,en,color,0.95,
+color,green,vert,fr,color,0.96,
+color,green,verte,fr,color,0.90,feminine form
+color,green,أخضر,ar,color,0.92,
+color,green,khdar,darija_latin,color,0.86,darija for green
+color,green,grin,typo,color,0.70,phonetic misspelling
+color,gray,gray,en,color,0.93,
+color,gray,grey,en,color,0.92,british spelling
+color,gray,gris,fr,color,0.95,
+color,gray,grise,fr,color,0.88,feminine form
+color,gray,رمادي,ar,color,0.90,
+color,gray,rmadi,darija_latin,color,0.83,darija transliteration
+color,gray,grii,typo,color,0.70,misspelling
+color,silver,silver,en,color,0.93,
+color,silver,argenté,fr,color,0.92,
+color,silver,argente,fr,color,0.85,missing accent
+color,silver,فضي,ar,color,0.88,
+color,silver,fedi,darija_latin,color,0.78,darija transliteration
+color,gold,gold,en,color,0.93,
+color,gold,doré,fr,color,0.92,
+color,gold,dore,fr,color,0.85,missing accent
+color,gold,ذهبي,ar,color,0.90,
+color,gold,dhabi,darija_latin,color,0.80,darija transliteration
+color,gold,golden,en,color,0.85,adjective variant
+color,yellow,yellow,en,color,0.95,
+color,yellow,jaune,fr,color,0.96,
+color,yellow,أصفر,ar,color,0.92,
+color,yellow,sfar,darija_latin,color,0.85,darija for yellow
+color,yellow,yelow,typo,color,0.72,misspelling
+color,brown,brown,en,color,0.93,
+color,brown,marron,fr,color,0.95,
+color,brown,بني,ar,color,0.88,
+color,brown,kahwi,darija_latin,color,0.80,"darija, lit. coffee-colored"
+color,brown,brwn,typo,color,0.70,misspelling
+color,beige,beige,en,color,0.91,
+color,beige,beige,fr,color,0.92,
+color,beige,بيج,ar,color,0.84,
+color,beige,bij,darija_latin,color,0.78,darija transliteration
+color,orange,orange,en,color,0.93,
+color,orange,orange,fr,color,0.94,
+color,orange,برتقالي,ar,color,0.88,
+color,orange,lartanji,darija_latin,color,0.78,darija for orange color
+color,orange,orenj,typo,color,0.70,phonetic misspelling
+color,purple,purple,en,color,0.92,
+color,purple,violet,fr,color,0.94,
+color,purple,violette,fr,color,0.86,feminine form
+color,purple,بنفسجي,ar,color,0.86,
+color,purple,bnafsji,darija_latin,color,0.76,darija transliteration
+condition,new,new,en,general,0.94,
+condition,new,neuf,fr,general,0.95,
+condition,new,neuve,fr,general,0.90,feminine form
+condition,new,جديد,ar,general,0.92,
+condition,new,jdid,darija_latin,general,0.88,darija for new
+condition,new,jdida,darija_latin,general,0.85,darija feminine form
+condition,new,nuf,typo,general,0.70,phonetic misspelling
+condition,used,used,en,general,0.93,
+condition,used,occasion,fr,general,0.93,
+condition,used,d'occasion,fr,general,0.90,
+condition,used,مستعمل,ar,general,0.91,
+condition,used,msta3mel,darija_latin,general,0.87,darija for used
+condition,used,m3awd,darija_latin,general,0.78,darija variant
+condition,good_condition,good condition,en,general,0.91,
+condition,good_condition,bon état,fr,general,0.93,
+condition,good_condition,bon etat,fr,general,0.88,missing accent
+condition,good_condition,حالة جيدة,ar,general,0.90,
+condition,good_condition,n9i,darija_latin,general,0.86,darija for clean/good condition
+condition,good_condition,nadi,darija_latin,general,0.82,darija variant
+condition,good_condition,mzyan,darija_latin,general,0.80,darija for good
+condition,cheap,cheap,en,general,0.92,
+condition,cheap,pas cher,fr,general,0.93,
+condition,cheap,bon marché,fr,general,0.86,
+condition,cheap,رخيص,ar,general,0.90,
+condition,cheap,rkhis,darija_latin,general,0.87,darija for cheap
+condition,cheap,rkhiss,darija_latin,general,0.82,darija variant spelling
+condition,expensive,expensive,en,general,0.92,
+condition,expensive,cher,fr,general,0.93,
+condition,expensive,chère,fr,general,0.88,feminine form
+condition,expensive,غالي,ar,general,0.90,
+condition,expensive,ghali,darija_latin,general,0.87,darija for expensive
+condition,available,available,en,general,0.91,
+condition,available,disponible,fr,general,0.94,
+condition,available,متوفر,ar,general,0.90,
+condition,available,mawjoud,darija_latin,general,0.83,darija for available
+condition,available,kayn,darija_latin,general,0.84,"darija, lit. 'there is'"
+intent,near_me,near me,en,general,0.92,
+intent,near_me,près de moi,fr,general,0.93,
+intent,near_me,pres de moi,fr,general,0.86,missing accent
+intent,near_me,قريب مني,ar,general,0.88,
+intent,near_me,9reb mnni,darija_latin,general,0.83,darija for near me
+intent,near_me,9reb,darija_latin,general,0.82,darija for near/close
+intent,best,best,en,general,0.92,
+intent,best,meilleur,fr,general,0.94,
+intent,best,meilleure,fr,general,0.88,feminine form
+intent,best,أفضل,ar,general,0.90,
+intent,best,lahsen,darija_latin,general,0.82,darija for best
+intent,best,zwin,darija_latin,general,0.75,"darija, colloquial for nice/good"
+intent,buy,buy,en,general,0.93,
+intent,buy,acheter,fr,general,0.94,
+intent,buy,شراء,ar,general,0.90,
+intent,buy,bghit nchri,darija_latin,general,0.85,"darija phrase, 'I want to buy'"
+intent,buy,chrit,darija_latin,general,0.80,darija past tense 'I bought'
+intent,buy,nchri,darija_latin,general,0.83,darija 'to buy' first person
+intent,search,search,en,general,0.93,
+intent,search,rechercher,fr,general,0.93,
+intent,search,chercher,fr,general,0.91,
+intent,search,بحث,ar,general,0.90,
+intent,search,kan9leb,darija_latin,general,0.85,darija for 'I am searching'
+intent,search,n9leb,darija_latin,general,0.83,darija for 'to search'
+intent,compare,compare,en,general,0.91,
+intent,compare,comparer,fr,general,0.93,
+intent,compare,مقارنة,ar,general,0.88,
+intent,compare,nqarn,darija_latin,general,0.76,darija for 'to compare'
+intent,please,please,en,general,0.88,
+intent,please,s'il vous plaît,fr,general,0.90,
+intent,please,sil vous plait,fr,general,0.83,missing accents/apostrophe
+intent,please,من فضلك,ar,general,0.88,
+intent,please,3afak,darija_latin,general,0.86,darija for please
+intent,please,afak,darija_latin,general,0.80,darija variant without 3
+intent,want,want,en,general,0.90,
+intent,want,vouloir,fr,general,0.88,verb infinitive
+intent,want,je veux,fr,general,0.91,
+intent,want,أريد,ar,general,0.88,
+intent,want,bghit,darija_latin,general,0.87,darija for 'I want'
+intent,want,bghi,darija_latin,general,0.84,darija variant
+intent,filter_by_price,filter by price,en,general,0.85,
+intent,filter_by_price,filtrer par prix,fr,general,0.86,
+intent,filter_by_price,تصفية حسب السعر,ar,general,0.82,
+intent,filter_by_price,hsab taman,darija_latin,general,0.70,"darija, lit. 'by price'"
+intent,sort_by_newest,sort by newest,en,general,0.84,
+intent,sort_by_newest,trier par nouveauté,fr,general,0.83,
+intent,sort_by_newest,ترتيب حسب الأحدث,ar,general,0.80,
+intent,add_to_cart,add to cart,en,general,0.88,
+intent,add_to_cart,ajouter au panier,fr,general,0.90,
+intent,add_to_cart,أضف إلى السلة,ar,general,0.85,
+intent,add_to_cart,zid f cart,darija_latin,general,0.74,"darija/english mix, informal"
+intent,contact_seller,contact seller,en,general,0.87,
+intent,contact_seller,contacter le vendeur,fr,general,0.88,
+intent,contact_seller,تواصل مع البائع,ar,general,0.84,
+intent,contact_seller,twasel m3a biy3,darija_latin,general,0.72,darija phrase
+brand,Samsung Galaxy,Samsung Galaxy S23,brand_model,phone,0.90,specific model
+brand,Samsung Galaxy,Samsung Galaxy S24,brand_model,phone,0.90,specific model
+brand,Samsung Galaxy,Samsung Galaxy A54,brand_model,phone,0.88,specific model
+brand,Samsung Galaxy,galaxy s23,brand_model,phone,0.87,shortened form
+brand,Samsung Galaxy,galaxy a54,brand_model,phone,0.85,shortened form
+category,scarf,scarf,en,clothes,0.89,
+category,scarf,écharpe,fr,clothes,0.92,
+category,scarf,foulard,fr,clothes,0.88,can mean headscarf
+category,scarf,وشاح,ar,clothes,0.84,
+category,scarf,fular,darija_latin,clothes,0.78,darija transliteration
+category,belt,belt,en,clothes,0.89,
+category,belt,ceinture,fr,clothes,0.92,
+category,belt,حزام,ar,clothes,0.86,
+category,belt,hzam,darija_latin,clothes,0.80,darija transliteration
+category,eggs,eggs,en,grocery,0.90,
+category,eggs,œufs,fr,grocery,0.92,
+category,eggs,oeufs,fr,grocery,0.88,missing ligature
+category,eggs,بيض,ar,grocery,0.90,
+category,eggs,baid,darija_latin,grocery,0.85,darija transliteration
+category,bread,bread,en,grocery,0.90,
+category,bread,pain,fr,grocery,0.93,
+category,bread,خبز,ar,grocery,0.90,
+category,bread,khobz,darija_latin,grocery,0.86,darija transliteration
+category,honey,honey,en,grocery,0.89,
+category,honey,miel,fr,grocery,0.92,
+category,honey,عسل,ar,grocery,0.88,
+category,honey,3assal,darija_latin,grocery,0.82,darija transliteration
+category,treadmill,treadmill,en,sports,0.88,
+category,treadmill,tapis de course,fr,sports,0.90,
+category,treadmill,جهاز المشي,ar,sports,0.82,
+category,dumbbell,dumbbell,en,sports,0.88,
+category,dumbbell,haltère,fr,sports,0.90,
+category,dumbbell,haltere,fr,sports,0.84,missing accent
+category,dumbbell,دامبل,ar,sports,0.80,
+category,football,football,en,sports,0.91,
+category,football,ballon de foot,fr,sports,0.88,
+category,football,كرة القدم,ar,sports,0.88,
+category,football,kora,darija_latin,sports,0.82,darija for ball/football
+category,iron,iron,en,home_appliance,0.89,
+category,iron,fer à repasser,fr,home_appliance,0.92,
+category,iron,fer a repasser,fr,home_appliance,0.86,missing accent
+category,iron,مكواة,ar,home_appliance,0.86,
+category,iron,makwa,darija_latin,home_appliance,0.80,darija transliteration
+category,water_heater,water heater,en,home_appliance,0.88,
+category,water_heater,chauffe-eau,fr,home_appliance,0.92,
+category,water_heater,chauffe eau,fr,home_appliance,0.86,missing hyphen
+category,water_heater,سخان ماء,ar,home_appliance,0.85,
+category,water_heater,chauffo,darija_latin,home_appliance,0.78,darija transliteration
+category,garage,garage,en,real_estate,0.89,
+category,garage,garage,fr,real_estate,0.90,
+category,garage,كراج,ar,real_estate,0.84,
+category,garage,garaj,darija_latin,real_estate,0.80,darija transliteration
+category,warehouse,warehouse,en,real_estate,0.87,
+category,warehouse,entrepôt,fr,real_estate,0.89,
+category,warehouse,entrepot,fr,real_estate,0.83,missing accent
+category,warehouse,مستودع,ar,real_estate,0.84,
+category,phone,تيليفون,darija_ar,phone,0.84,darija for phone in arabic script
+category,phone,پورتابل,darija_ar,phone,0.78,"darija loanword for mobile, arabic script"
+category,laptop,لابطوب,darija_ar,laptop,0.82,darija transliteration of laptop
+category,laptop,أوردي,darija_ar,laptop,0.76,"darija for computer, from french ordi"
+category,tablet,طابلات,darija_ar,tablet,0.74,darija transliteration of tablet
+category,headphones,سماعات,darija_ar,headphones,0.85,darija for headphones
+category,monitor,شاشة,darija_ar,monitor,0.84,darija for screen
+category,car,طوموبيل,darija_ar,car,0.88,"darija for car, common spoken form"
+category,car,توموبيل,darija_ar,car,0.85,darija variant spelling
+category,used_car,طوموبيل مستعملة,darija_ar,car,0.82,darija for used car
+category,motorcycle,موطو,darija_ar,motorcycle,0.84,darija for motorcycle
+category,bicycle,بيسكليط,darija_ar,sports,0.83,darija for bicycle
+category,spare_parts,قطع الغيار,darija_ar,car,0.85,darija for spare parts
+category,refrigerator,تلاجة,darija_ar,home_appliance,0.88,"darija for fridge, arabic script"
+category,washing_machine,ماشين طسيل,darija_ar,home_appliance,0.82,darija phrase for washing machine
+category,oven,فرنو,darija_ar,home_appliance,0.83,darija for oven
+category,microwave,ميكرواويف,darija_ar,home_appliance,0.78,darija transliteration
+category,tv,تلفازة,darija_ar,home_appliance,0.86,darija for tv
+category,air_conditioner,كليما,darija_ar,home_appliance,0.86,darija for AC
+category,heater,الشوفاج,darija_ar,home_appliance,0.80,darija for heater
+category,blender,الخلاط,darija_ar,home_appliance,0.84,darija for blender
+category,sofa,كنابي,darija_ar,furniture,0.80,darija for sofa
+category,bed,الصرير,darija_ar,furniture,0.80,darija for bed
+category,mattress,المطلة,darija_ar,furniture,0.78,darija for mattress
+category,table,الطابلة,darija_ar,furniture,0.81,darija for table
+category,chair,الكرسي,darija_ar,furniture,0.84,darija for chair
+category,wardrobe,الخزانة,darija_ar,furniture,0.83,darija for wardrobe
+category,shoes,الصبّاط,darija_ar,shoes,0.86,darija for shoes
+category,sandals,الشبشب,darija_ar,shoes,0.83,darija for slippers/sandals
+category,watch,الماگانة,darija_ar,clothes,0.78,"darija for watch, arabic script with gaf"
+category,bag,الساك,darija_ar,clothes,0.80,darija for bag
+category,oil,الزيت,darija_ar,grocery,0.86,darija for oil
+category,sugar,السكر,darija_ar,grocery,0.85,darija for sugar
+category,coffee,القهوة,darija_ar,grocery,0.86,darija for coffee
+category,tea,الأتاي,darija_ar,grocery,0.87,darija for mint tea
+category,water,الما,darija_ar,grocery,0.85,darija for water
+category,bread,الخبز,darija_ar,grocery,0.86,darija for bread
+category,perfume,العطر,darija_ar,beauty,0.85,darija for perfume
+category,apartment,الشقة,darija_ar,real_estate,0.86,darija for apartment
+category,house,الدار,darija_ar,real_estate,0.88,darija for house
+category,rent,الكراء,darija_ar,real_estate,0.87,darija for rent
+category,land,الأرض,darija_ar,real_estate,0.85,darija for land
+category,shop,المحل,darija_ar,real_estate,0.85,darija for shop
+color,black,كحل,darija_ar,color,0.86,"darija for black, arabic script"
+color,white,بيضة,darija_ar,color,0.84,"darija for white, feminine, arabic script"
+color,white,بيض,darija_ar,color,0.82,"darija for white, masculine, arabic script"
+color,red,حمر,darija_ar,color,0.84,"darija for red, arabic script"
+color,blue,زرق,darija_ar,color,0.84,"darija for blue, arabic script"
+color,green,خضر,darija_ar,color,0.84,"darija for green, arabic script"
+color,gray,رمادي,darija_ar,color,0.80,"darija for gray, arabic script"
+color,yellow,صفر,darija_ar,color,0.83,"darija for yellow, arabic script"
+color,brown,قهوي,darija_ar,color,0.78,"darija for brown, lit. coffee-colored"
+color,orange,لارتنجي,darija_ar,color,0.76,"darija for orange color, arabic script"
+color,gold,دهبي,darija_ar,color,0.80,darija for gold color
+color,silver,فضي,darija_ar,color,0.78,darija for silver color
+color,beige,بيج,darija_ar,color,0.74,"darija for beige, arabic script"
+color,purple,بنفسجي,darija_ar,color,0.76,"darija for purple, arabic script"
+condition,new,جديد,darija_ar,general,0.88,darija for new
+condition,new,جدیدة,darija_ar,general,0.80,darija feminine form of new
+condition,used,مستعمل,darija_ar,general,0.87,darija for used
+condition,good_condition,نقي,darija_ar,general,0.84,darija for clean/good condition
+condition,good_condition,مزيان,darija_ar,general,0.82,darija for good
+condition,cheap,رخيص,darija_ar,general,0.86,darija for cheap
+condition,expensive,غالي,darija_ar,general,0.86,darija for expensive
+condition,available,كاين,darija_ar,general,0.83,"darija, lit. there is, used for available"
+intent,near_me,قريب مني,darija_ar,general,0.84,darija for near me
+intent,near_me,قريب,darija_ar,general,0.80,darija for near/close
+intent,best,الأحسن,darija_ar,general,0.82,darija for the best
+intent,buy,بغيت نشري,darija_ar,general,0.86,"darija phrase, I want to buy"
+intent,buy,نشري,darija_ar,general,0.82,"darija, to buy, first person"
+intent,search,كنقلب,darija_ar,general,0.85,"darija, I am searching"
+intent,search,نقلب,darija_ar,general,0.82,"darija, to search"
+intent,want,بغيت,darija_ar,general,0.87,darija for I want
+intent,compare,نقارن,darija_ar,general,0.76,"darija, to compare"
+intent,please,عافاك,darija_ar,general,0.86,darija for please
+intent,add_to_cart,زيد فالسلة,darija_ar,general,0.74,"darija phrase, add to basket"
+intent,contact_seller,تواصل مع البايع,darija_ar,general,0.74,"darija phrase, contact the seller"
+brand,Samsung Galaxy,Samsung Galaxy S22,brand_model,phone,0.88,specific model
+brand,Samsung Galaxy,Samsung Galaxy Note 20,brand_model,phone,0.86,specific model
+brand,Samsung Galaxy,galaxy a34,brand_model,phone,0.84,shortened form
+brand,Samsung Galaxy,galaxy a14,brand_model,phone,0.83,shortened form
+brand,Samsung Galaxy,galaxy z flip,brand_model,phone,0.85,foldable line
+brand,Samsung Galaxy,samsung note,brand_model,phone,0.82,product line shortened
+brand,iPhone,iphone 12,brand_model,phone,0.92,specific model
+brand,iPhone,iphone 16,brand_model,phone,0.90,specific model
+brand,iPhone,iphone pro max,brand_model,phone,0.88,product line
+brand,iPhone,ayfoun,darija_latin,phone,0.78,phonetic darija transliteration
+brand,iPhone,ifone 13,typo,phone,0.75,misspelling with model number
+brand,iPhone,ايفون 13,darija_ar,phone,0.84,darija arabic script with model number
+brand,iPhone,ايفون برو,darija_ar,phone,0.80,"darija arabic script, iphone pro"
+brand,Xiaomi,mi band,brand_model,phone,0.84,Xiaomi wearable line
+brand,Xiaomi,poco,brand_model,phone,0.83,Xiaomi sub-brand
+brand,Xiaomi,poco x5,brand_model,phone,0.81,specific model
+brand,Xiaomi,شاومي ريدمي,darija_ar,phone,0.78,darija arabic script brand+line
+brand,Huawei,huawei matebook,brand_model,phone,0.84,Huawei laptop line
+brand,Huawei,matebook,brand_model,phone,0.80,shortened laptop line name
+brand,Huawei,huawei nova,brand_model,phone,0.82,Huawei phone line
+brand,Dell,dell inspiron,brand_model,laptop,0.86,Dell laptop line
+brand,Dell,dell xps,brand_model,laptop,0.86,Dell premium laptop line
+brand,Dell,inspiron,brand_model,laptop,0.80,shortened laptop line name
+brand,Dell,xps,brand_model,laptop,0.78,shortened laptop line name
+brand,Dell,dell latitude,brand_model,laptop,0.82,Dell business laptop line
+brand,HP,hp pavilion,brand_model,laptop,0.85,HP laptop line
+brand,HP,pavilion,brand_model,laptop,0.78,shortened laptop line name
+brand,HP,hp elitebook,brand_model,laptop,0.83,HP business laptop line
+brand,Lenovo,lenovo ideapad,brand_model,laptop,0.85,Lenovo laptop line
+brand,Lenovo,ideapad,brand_model,laptop,0.78,shortened laptop line name
+brand,Lenovo,legion 5,brand_model,laptop,0.84,specific gaming model
+brand,Lenovo,ليجن,darija_ar,laptop,0.74,darija arabic script for Legion
+brand,Asus,asus vivobook,brand_model,laptop,0.84,Asus laptop line
+brand,Asus,vivobook,brand_model,laptop,0.78,shortened laptop line name
+brand,Asus,rog strix,brand_model,laptop,0.83,Asus gaming laptop line
+brand,Asus,zenbook,brand_model,laptop,0.80,Asus premium laptop line
+brand,Toyota,toyota hilux,brand_model,car,0.88,specific model
+brand,Toyota,hilux,brand_model,car,0.84,Toyota truck model
+brand,Toyota,toyota rav4,brand_model,car,0.86,specific model
+brand,Toyota,rav4,brand_model,car,0.83,Toyota SUV model
+brand,Toyota,هيلوكس,darija_ar,car,0.80,darija arabic script for Hilux
+brand,Dacia,dacia duster,brand_model,car,0.88,specific model
+brand,Dacia,duster,brand_model,car,0.85,Dacia SUV model
+brand,Dacia,داستر,darija_ar,car,0.82,darija arabic script for Duster
+brand,Renault,renault kangoo,brand_model,car,0.85,Renault van model
+brand,Renault,kangoo,brand_model,car,0.82,shortened model name
+brand,Renault,megane,brand_model,car,0.82,Renault model
+brand,Hyundai,hyundai accent,brand_model,car,0.85,specific model
+brand,Hyundai,accent,brand_model,car,0.78,"shortened model name, ambiguous"
+brand,Hyundai,hyundai i10,brand_model,car,0.84,specific model
+brand,Mercedes,mercedes classe a,brand_model,car,0.85,specific model
+brand,Mercedes,classe c,brand_model,car,0.82,Mercedes model
+brand,Mercedes,ميرسي,darija_ar,car,0.78,darija arabic script nickname for Mercedes
+brand,Yamaha,yamaha nmax,brand_model,motorcycle,0.83,Yamaha scooter model
+brand,Yamaha,nmax,brand_model,motorcycle,0.78,shortened scooter model name
+brand,PlayStation,ps4 slim,brand_model,gaming,0.86,specific console variant
+brand,PlayStation,ps5 pro,brand_model,gaming,0.86,specific console variant
+brand,PlayStation,ps5 slim,brand_model,gaming,0.85,specific console variant
+brand,PlayStation,manette ps5,brand_model,gaming,0.82,"PS5 controller, french term"
+brand,PlayStation,بلاي ستيشن 5,darija_ar,gaming,0.80,darija arabic script with model number
+brand,Xbox,xbox one,brand_model,gaming,0.86,console generation
+brand,Xbox,manette xbox,brand_model,gaming,0.80,"Xbox controller, french term"
+category,hoodie,hoodie,en,clothes,0.90,
+category,hoodie,sweat à capuche,fr,clothes,0.88,
+category,hoodie,sweat capuche,fr,clothes,0.84,shortened form
+category,hoodie,هودي,ar,clothes,0.82,
+category,hoodie,hoodi,darija_latin,clothes,0.78,darija transliteration
+category,suit,suit,en,clothes,0.89,
+category,suit,costume,fr,clothes,0.92,
+category,suit,بدلة,ar,clothes,0.86,
+category,suit,kostim,darija_latin,clothes,0.78,darija transliteration of french costume
+category,traditional_dress,kaftan,en,clothes,0.86,Moroccan traditional dress
+category,traditional_dress,caftan,fr,clothes,0.88,
+category,traditional_dress,قفطان,ar,clothes,0.88,
+category,traditional_dress,9aftan,darija_latin,clothes,0.84,darija transliteration
+category,traditional_dress,djellaba,fr,clothes,0.86,Moroccan traditional garment
+category,traditional_dress,جلابة,ar,clothes,0.86,
+category,traditional_dress,jellaba,darija_latin,clothes,0.84,darija transliteration
+category,flip_flops,flip flops,en,shoes,0.87,
+category,flip_flops,tongs,fr,shoes,0.90,
+category,flip_flops,شحاطة,ar,shoes,0.82,
+category,flip_flops,chajata,darija_latin,shoes,0.76,darija transliteration
+category,juice,juice,en,grocery,0.89,
+category,juice,jus,fr,grocery,0.92,
+category,juice,عصير,ar,grocery,0.88,
+category,juice,3acir,darija_latin,grocery,0.82,darija transliteration
+category,cheese,cheese,en,grocery,0.89,
+category,cheese,fromage,fr,grocery,0.93,
+category,cheese,جبن,ar,grocery,0.86,
+category,cheese,jben,darija_latin,grocery,0.82,darija transliteration
+category,olives,olives,en,grocery,0.88,
+category,olives,olives,fr,grocery,0.90,
+category,olives,زيتون,ar,grocery,0.88,
+category,olives,zitoun,darija_latin,grocery,0.84,darija transliteration
+category,dates,dates,en,grocery,0.87,the fruit
+category,dates,dattes,fr,grocery,0.90,
+category,dates,تمر,ar,grocery,0.86,
+category,dates,tmar,darija_latin,grocery,0.80,darija transliteration
+category,couscous,couscous,en,grocery,0.90,
+category,couscous,couscous,fr,grocery,0.92,
+category,couscous,كسكس,ar,grocery,0.88,
+category,couscous,seksou,darija_latin,grocery,0.82,darija transliteration
+category,mint,mint,en,grocery,0.86,
+category,mint,menthe,fr,grocery,0.90,
+category,mint,نعناع,ar,grocery,0.86,
+category,mint,na3na3,darija_latin,grocery,0.83,darija transliteration
+category,soap,soap,en,beauty,0.89,
+category,soap,savon,fr,beauty,0.92,
+category,soap,صابون,ar,beauty,0.88,
+category,soap,sabon,darija_latin,beauty,0.84,darija transliteration
+category,toothpaste,toothpaste,en,beauty,0.88,
+category,toothpaste,dentifrice,fr,beauty,0.91,
+category,toothpaste,معجون أسنان,ar,beauty,0.85,
+category,toothpaste,dentifris,typo,beauty,0.74,phonetic misspelling
+category,sunscreen,sunscreen,en,beauty,0.88,
+category,sunscreen,crème solaire,fr,beauty,0.90,
+category,sunscreen,creme solaire,fr,beauty,0.84,missing accent
+category,sunscreen,واقي شمس,ar,beauty,0.84,
+category,yoga_mat,yoga mat,en,sports,0.87,
+category,yoga_mat,tapis de yoga,fr,sports,0.88,
+category,yoga_mat,سجادة يوغا,ar,sports,0.78,
+category,tracksuit,tracksuit,en,sports,0.86,
+category,tracksuit,survêtement,fr,sports,0.90,
+category,tracksuit,survetement,fr,sports,0.84,missing accent
+category,tracksuit,سروال رياضي,ar,sports,0.80,
+category,tracksuit,trening,darija_latin,sports,0.80,darija/slang transliteration
+category,parking,parking,en,real_estate,0.88,
+category,parking,parking,fr,real_estate,0.90,
+category,parking,موقف سيارات,ar,real_estate,0.82,
+category,parking,parking,darija_latin,real_estate,0.85,darija loanword
+category,riad,riad,en,real_estate,0.88,Moroccan traditional house with courtyard
+category,riad,riad,fr,real_estate,0.90,
+category,riad,رياض,ar,real_estate,0.86,
+category,riad,ryad,darija_latin,real_estate,0.84,darija transliteration
+intent,free_delivery,free delivery,en,general,0.86,
+intent,free_delivery,livraison gratuite,fr,general,0.88,
+intent,free_delivery,توصيل مجاني,ar,general,0.84,
+intent,free_delivery,tawsil bla flouss,darija_latin,general,0.72,darija informal phrase
+intent,discount,discount,en,general,0.88,
+intent,discount,réduction,fr,general,0.90,
+intent,discount,reduction,fr,general,0.85,missing accent
+intent,discount,promo,fr,general,0.86,colloquial
+intent,discount,تخفيض,ar,general,0.86,
+intent,discount,solde,fr,general,0.84,sale/clearance term
+intent,discount,takhfid,darija_latin,general,0.78,darija transliteration
+intent,warranty,warranty,en,general,0.87,
+intent,warranty,garantie,fr,general,0.91,
+intent,warranty,ضمان,ar,general,0.86,
+intent,warranty,damane,darija_latin,general,0.78,darija transliteration
+intent,delivery,delivery,en,general,0.88,
+intent,delivery,livraison,fr,general,0.91,
+intent,delivery,توصيل,ar,general,0.86,
+intent,delivery,tawsil,darija_latin,general,0.82,darija transliteration
+intent,payment,payment,en,general,0.87,
+intent,payment,paiement,fr,general,0.90,
+intent,payment,دفع,ar,general,0.85,
+intent,payment,khlas,darija_latin,general,0.80,darija for payment
+intent,cash_on_delivery,cash on delivery,en,general,0.86,
+intent,cash_on_delivery,paiement à la livraison,fr,general,0.86,
+intent,cash_on_delivery,الدفع عند التوصيل,ar,general,0.82,
+intent,cash_on_delivery,khlas men li tawsil,darija_latin,general,0.70,darija informal phrase
+condition,damaged,damaged,en,general,0.88,
+condition,damaged,endommagé,fr,general,0.88,
+condition,damaged,endommage,fr,general,0.82,missing accent
+condition,damaged,تالف,ar,general,0.84,
+condition,damaged,khasr,darija_latin,general,0.80,darija for broken/damaged
+condition,like_new,like new,en,general,0.87,
+condition,like_new,comme neuf,fr,general,0.90,
+condition,like_new,كالجديد,ar,general,0.84,
+condition,like_new,kima jdid,darija_latin,general,0.80,darija phrase for like new
+condition,refurbished,refurbished,en,general,0.86,
+condition,refurbished,reconditionné,fr,general,0.88,
+condition,refurbished,reconditionne,fr,general,0.82,missing accent
+condition,refurbished,مجدد,ar,general,0.82,
+condition,original,original,en,general,0.88,
+condition,original,original,fr,general,0.90,
+condition,original,أصلي,ar,general,0.88,
+condition,original,original,darija_latin,general,0.84,darija loanword
+condition,original,asli,darija_latin,general,0.82,darija for authentic/original
+condition,fake_copy,counterfeit,en,general,0.84,
+condition,fake_copy,contrefaçon,fr,general,0.86,
+condition,fake_copy,contrefacon,fr,general,0.80,missing cedilla
+condition,fake_copy,تقليد,ar,general,0.82,
+condition,fake_copy,taqlid,darija_latin,general,0.76,darija transliteration
+condition,fake_copy,copie,fr,general,0.80,colloquial for fake/copy product
+category,phone,telfon,typo,phone,0.74,phonetic misspelling
+category,phone,hatife,typo,phone,0.70,misspelling
+category,laptop,portable pc,typo,laptop,0.78,reordered words
+category,laptop,لاب توب,darija_ar,laptop,0.83,darija arabic script split form
+category,tablet,تابلت,darija_ar,tablet,0.80,darija arabic script transliteration
+category,gaming_pc,حاسوب الألعاب,darija_ar,gaming,0.74,darija arabic script for gaming pc
+category,monitor,écran d'ordinateur,fr,monitor,0.86,full phrase variant
+category,keyboard,clavier azerty,fr,keyboard,0.80,specific keyboard layout
+category,mouse,souris sans fil,fr,mouse,0.82,wireless mouse phrase
+category,mouse,wireless mouse,en,mouse,0.85,
+category,headphones,سماعة بلوتوث,darija_ar,headphones,0.78,darija arabic script for bluetooth headphones
+category,earbuds,ايربودز,darija_ar,earbuds,0.80,darija arabic script transliteration of airpods
+category,smartwatch,ساعة سمارت,darija_ar,smartwatch,0.76,darija arabic script mixed term
+category,camera,كاميرا تصوير,darija_ar,camera,0.74,darija arabic script redundant phrase
+category,printer,امبريمانت,darija_ar,printer,0.70,darija arabic script transliteration of french imprimante
+brand,Samsung,سامسنج,darija_ar,phone,0.86,darija arabic script variant spelling
+brand,Apple,ابول,darija_ar,phone,0.70,misspelling
+brand,iPhone,ايفون 14 برو,darija_ar,phone,0.82,darija arabic script with model
+brand,Xiaomi,ميجو,darija_ar,phone,0.70,informal nickname misspelling
+brand,Huawei,هواوي ميت,darija_ar,phone,0.76,darija arabic script brand+line
+brand,HP,اتش بي اومن,darija_ar,laptop,0.74,darija arabic script brand+gaming line
+brand,Dell,ديل اكس بي اس,darija_ar,laptop,0.70,darija arabic script brand+line
+brand,Lenovo,لينوفو ليجن,darija_ar,laptop,0.76,darija arabic script brand+gaming line
+brand,Asus,اسوس روج,darija_ar,laptop,0.74,darija arabic script brand+gaming line
+brand,MacBook,ماك بوك اير,darija_ar,laptop,0.78,darija arabic script for macbook air
+brand,PlayStation,بلايستيشن 4,darija_ar,gaming,0.78,darija arabic script with model number
+brand,Toyota,طويوطا,darija_ar,car,0.84,darija arabic script transliteration
+brand,Dacia,داسيا لوجان,darija_ar,car,0.80,darija arabic script brand+model
+brand,Renault,كليو,darija_ar,car,0.78,darija arabic script for Clio
+brand,Peugeot,بيجو 208,darija_ar,car,0.80,darija arabic script with model
+brand,Mercedes,مرسيدس بنز,darija_ar,car,0.82,darija arabic script full name
+brand,BMW,بي ام دبليو,darija_ar,car,0.80,darija arabic script transliteration
+category,motorcycle,موتور,darija_ar,motorcycle,0.78,darija slang for motorcycle/engine
+category,scooter,سكوتير,darija_ar,motorcycle,0.76,darija arabic script transliteration
+category,refrigerator,تلاجة ديال الكوزينا,darija_ar,home_appliance,0.70,"darija informal phrase, low conf"
+category,washing_machine,غسالة اوطوماتيك,darija_ar,home_appliance,0.76,darija arabic script with automatic
+category,tv,تيفي,darija_ar,home_appliance,0.82,darija arabic script for TV
+category,tv,tivi,darija_latin,home_appliance,0.80,darija transliteration of TV
+category,air_conditioner,مكيف هواء,ar,home_appliance,0.88,formal arabic full term
+category,oven,فور,darija_ar,home_appliance,0.78,darija arabic script variant for oven
+category,sofa,كنبة,ar,furniture,0.86,formal arabic for sofa
+category,bed,فراش,ar,furniture,0.80,can also mean mattress/bedding
+category,wardrobe,دولاب,darija_ar,furniture,0.78,darija variant word for wardrobe
+category,wardrobe,دولاب,darija_ar,furniture,0.80,darija arabic script variant
+category,shoes,سباط,ar,shoes,0.78,informal arabic borrowing from darija
+category,jeans,جين,darija_ar,clothes,0.80,darija arabic script for jeans
+category,t_shirt,تيشرت,darija_ar,clothes,0.82,darija arabic script for t-shirt
+category,jacket,فيست,darija_ar,clothes,0.74,darija transliteration of french veste
+category,watch,ساعة يد,ar,clothes,0.84,"formal arabic, hand watch"
+category,oil,زيت العود,darija_ar,grocery,0.70,"darija for olive oil, lit oil of the stick, regional term"
+category,sugar,سكر مكعبات,ar,grocery,0.78,sugar cubes specific term
+category,detergent,تيد,darija_ar,grocery,0.70,genericized brand nickname
+category,perfume,برفان,darija_ar,beauty,0.80,darija transliteration of french parfum
+category,makeup,ميكاج,darija_ar,beauty,0.78,darija transliteration of french maquillage
+category,skincare,سوان دو لا بو,darija_ar,beauty,0.70,"darija phonetic transliteration of french phrase, rare"
+category,apartment,شقة للكراء,darija_ar,real_estate,0.80,"darija arabic script phrase, apartment for rent"
+category,apartment,شقة للبيع,darija_ar,real_estate,0.80,"darija arabic script phrase, apartment for sale"
+category,villa,فيلا للبيع,darija_ar,real_estate,0.78,"darija arabic script phrase, villa for sale"
+category,land,ارض للبيع,darija_ar,real_estate,0.78,"darija arabic script phrase, land for sale"
+category,studio,استوديو للكراء,darija_ar,real_estate,0.74,darija arabic script phrase
+color,black,نوار,darija_ar,color,0.72,darija slang variant for black
+color,white,البيضة,darija_ar,color,0.78,darija arabic script with article
+color,red,روج,darija_ar,color,0.70,phonetic borrowing from french rouge
+color,blue,بلو,darija_ar,color,0.72,darija transliteration of english blue
+color,green,فير,darija_ar,color,0.70,"misspelling of vert, low conf"
+intent,want,نبغي,darija_ar,general,0.80,"darija variant for I want, eastern Morocco dialect"
+intent,search,فين نلقى,darija_ar,general,0.76,"darija phrase, where can I find"
+intent,search,فين كاين,darija_ar,general,0.76,"darija phrase, where is there"
+intent,best,الزوينة,darija_ar,general,0.72,darija feminine form of nice/best
+intent,buy,واخا نشريه,darija_ar,general,0.70,"darija phrase, ok I'll buy it, low conf casual"
+condition,cheap,prix mnasib,darija_latin,general,0.72,"darija/french mix, suitable price"
+condition,available,disponible daba,darija_latin,general,0.70,"darija/french mix, available now"
+intent,near_me,حداي,darija_ar,general,0.78,"darija arabic script for near me, alt form"
+intent,near_me,حدايا,darija_ar,general,0.76,darija transliteration alt form
+city,casablanca,casablanca,en,city,0.96,major moroccan city for avito and mubawab
+city,casablanca,casa,darija_latin,city,0.95,common moroccan city nickname
+city,casablanca,dar el beida,darija_latin,city,0.90,casablanca darija name
+city,casablanca,dar el baida,darija_latin,city,0.90,casablanca darija variant
+city,casablanca,kaza,darija_latin,city,0.82,phonetic nickname
+city,casablanca,الدار البيضاء,ar,city,0.94,arabic city name
+city,rabat,rabat,en,city,0.96,major moroccan city
+city,rabat,rbaat,darija_latin,city,0.82,common typo
+city,rabat,rbati,darija_latin,city,0.78,city adjective used colloquially
+city,rabat,الرباط,ar,city,0.94,arabic city name
+city,marrakech,marrakech,en,city,0.96,major moroccan city
+city,marrakech,marrakesh,en,city,0.92,english spelling variant
+city,marrakech,marrakch,darija_latin,city,0.82,darija spelling
+city,marrakech,مراكش,ar,city,0.94,arabic city name
+city,tanger,tanger,fr,city,0.95,northern moroccan city
+city,tanger,tangier,en,city,0.92,english city name
+city,tanger,tanja,darija_latin,city,0.86,darija city name
+city,tanger,طنجة,ar,city,0.94,arabic city name
+city,fes,fes,en,city,0.95,major moroccan city
+city,fes,fez,en,city,0.92,english spelling variant
+city,fes,fès,fr,city,0.92,french spelling
+city,fes,فاس,ar,city,0.94,arabic city name
+city,agadir,agadir,en,city,0.95,southern moroccan city
+city,agadir,agadire,typo,city,0.75,common misspelling
+city,agadir,اكادير,ar,city,0.90,arabic city name without hamza
+city,agadir,أكادير,ar,city,0.94,arabic city name
+city,meknes,meknes,en,city,0.95,major moroccan city
+city,meknes,meknès,fr,city,0.92,french spelling
+city,meknes,mknas,darija_latin,city,0.80,darija spelling
+city,meknes,مكناس,ar,city,0.94,arabic city name
+city,oujda,oujda,en,city,0.95,eastern moroccan city
+city,oujda,wajda,darija_latin,city,0.80,phonetic spelling
+city,oujda,وجدة,ar,city,0.94,arabic city name
+city,kenitra,kenitra,en,city,0.95,moroccan city
+city,kenitra,qnitra,darija_latin,city,0.85,darija city name
+city,kenitra,kénitra,fr,city,0.92,french spelling
+city,kenitra,القنيطرة,ar,city,0.94,arabic city name
+city,tetouan,tetouan,en,city,0.95,northern moroccan city
+city,tetouan,tétouan,fr,city,0.92,french spelling
+city,tetouan,tetwan,darija_latin,city,0.84,darija spelling
+city,tetouan,تطوان,ar,city,0.94,arabic city name
+city,sale,sale,en,city,0.88,city near rabat
+city,sale,salé,fr,city,0.92,french spelling
+city,sale,sla,darija_latin,city,0.86,darija city name
+city,sale,سلا,ar,city,0.94,arabic city name
+city,mohammedia,mohammedia,en,city,0.94,moroccan city
+city,mohammedia,mohammedia,fr,city,0.92,french spelling
+city,mohammedia,muhammadiya,typo,city,0.78,transliteration variant
+city,mohammedia,المحمدية,ar,city,0.92,arabic city name
+city,nador,nador,en,city,0.94,northern moroccan city
+city,nador,nadour,typo,city,0.76,phonetic variant
+city,nador,الناظور,ar,city,0.92,arabic city name
+city,el_jadida,el jadida,en,city,0.94,moroccan city
+city,el_jadida,eljadida,typo,city,0.82,joined spelling
+city,el_jadida,jdida,darija_latin,city,0.82,darija shorthand
+city,el_jadida,الجديدة,ar,city,0.92,arabic city name
+city,safi,safi,en,city,0.94,moroccan city
+city,safi,asfi,darija_latin,city,0.82,darija spelling
+city,safi,آسفي,ar,city,0.92,arabic city name
+city,essaouira,essaouira,en,city,0.94,moroccan city
+city,essaouira,essaouira,fr,city,0.92,french spelling
+city,essaouira,swira,darija_latin,city,0.85,darija city name
+city,essaouira,الصويرة,ar,city,0.92,arabic city name
+city,laayoune,laayoune,en,city,0.94,southern moroccan city
+city,laayoune,laâyoune,fr,city,0.90,french spelling
+city,laayoune,layoune,typo,city,0.82,simplified spelling
+city,laayoune,العيون,ar,city,0.92,arabic city name
+city,beni_mellal,beni mellal,en,city,0.94,moroccan city
+city,beni_mellal,beni melal,typo,city,0.84,single l variant
+city,beni_mellal,bni mellal,darija_latin,city,0.84,darija spelling
+city,beni_mellal,بني ملال,ar,city,0.92,arabic city name
+city,khouribga,khouribga,en,city,0.94,moroccan city
+city,khouribga,khouribgua,typo,city,0.76,misspelling
+city,khouribga,خريبكة,ar,city,0.92,arabic city name
+city,temara,temara,en,city,0.92,city near rabat
+city,temara,témara,fr,city,0.90,french spelling
+city,temara,tmara,darija_latin,city,0.84,darija spelling
+city,temara,تمارة,ar,city,0.92,arabic city name
+category,cream,cream,en,beauty,0.91,palmarosa skincare product
+category,cream,crème,fr,beauty,0.94,french beauty term
+category,cream,creme,fr,beauty,0.90,missing accent
+category,cream,krem,darija_latin,beauty,0.82,darija transliteration
+category,cream,كريم,ar,beauty,0.90,arabic beauty term
+category,face_cream,face cream,en,beauty,0.89,skincare product
+category,face_cream,crème visage,fr,beauty,0.91,french skincare term
+category,face_cream,creme visage,fr,beauty,0.86,missing accent
+category,face_cream,كريم الوجه,ar,beauty,0.84,arabic skincare term
+category,body_lotion,body lotion,en,beauty,0.88,beauty body care
+category,body_lotion,lait corps,fr,beauty,0.88,french body care term
+category,body_lotion,lotion corps,fr,beauty,0.88,french body care term
+category,body_lotion,لوشن الجسم,ar,beauty,0.82,arabic transliteration
+category,deodorant,deodorant,en,beauty,0.90,beauty hygiene product
+category,deodorant,déodorant,fr,beauty,0.93,french spelling
+category,deodorant,deodorant,fr,beauty,0.88,missing accent
+category,deodorant,مزيل العرق,ar,beauty,0.86,arabic product term
+category,lipstick,lipstick,en,beauty,0.90,makeup product
+category,lipstick,rouge à lèvres,fr,beauty,0.93,french makeup term
+category,lipstick,rouge a levres,fr,beauty,0.86,missing accents
+category,lipstick,أحمر شفاه,ar,beauty,0.86,arabic makeup term
+category,mascara,mascara,en,beauty,0.92,makeup product
+category,mascara,mascara,fr,beauty,0.92,french same term
+category,mascara,ماسكارا,ar,beauty,0.86,arabic transliteration
+category,foundation,foundation,en,beauty,0.88,makeup product
+category,foundation,fond de teint,fr,beauty,0.92,french makeup term
+category,foundation,فونديتان,darija_ar,beauty,0.76,darija transliteration
+category,serum,serum,en,beauty,0.89,skincare product
+category,serum,sérum,fr,beauty,0.92,french spelling
+category,serum,سيروم,ar,beauty,0.84,arabic transliteration
+category,moisturizer,moisturizer,en,beauty,0.88,skincare product
+category,moisturizer,hydratant,fr,beauty,0.90,french skincare term
+category,moisturizer,crème hydratante,fr,beauty,0.88,french skincare phrase
+category,moisturizer,مرطب,ar,beauty,0.84,arabic skincare term
+category,nail_polish,nail polish,en,beauty,0.88,makeup product
+category,nail_polish,vernis,fr,beauty,0.91,french beauty term
+category,nail_polish,vernis à ongles,fr,beauty,0.90,french beauty phrase
+category,nail_polish,طلاء أظافر,ar,beauty,0.82,arabic beauty term
+category,body_wash,body wash,en,beauty,0.86,hygiene product
+category,body_wash,gel douche,fr,beauty,0.90,french hygiene term
+category,body_wash,gel de douche,fr,beauty,0.88,french hygiene phrase
+category,body_wash,جل الاستحمام,ar,beauty,0.82,arabic hygiene term
+category,hair_mask,hair mask,en,beauty,0.86,hair care product
+category,hair_mask,masque cheveux,fr,beauty,0.88,french hair care term
+category,hair_mask,ماسك الشعر,ar,beauty,0.80,arabic hair care term
+category,hair_oil,hair oil,en,beauty,0.86,hair care product
+category,hair_oil,huile cheveux,fr,beauty,0.88,french hair care term
+category,hair_oil,زيت الشعر,ar,beauty,0.82,arabic hair care term
+category,cleanser,cleanser,en,beauty,0.86,skincare product
+category,cleanser,nettoyant visage,fr,beauty,0.88,french skincare term
+category,cleanser,غسول الوجه,ar,beauty,0.82,arabic skincare term
+category,toner,toner,en,beauty,0.84,skincare product
+category,toner,lotion tonique,fr,beauty,0.86,french skincare term
+category,toner,تونر,ar,beauty,0.80,arabic transliteration
+category,console,console,en,gaming,0.91,gaming product for jumia and electroplanet
+category,console,console de jeux,fr,gaming,0.92,french gaming term
+category,console,كونسول,ar,gaming,0.86,arabic transliteration
+category,gaming_console,gaming console,en,gaming,0.90,gaming product
+category,gaming_console,console gaming,fr,gaming,0.88,french gaming term
+category,controller,controller,en,gaming,0.88,gaming accessory
+category,controller,manette,fr,gaming,0.92,french gaming accessory
+category,controller,يد التحكم,ar,gaming,0.82,arabic gaming term
+category,router,router,en,electronics,0.88,networking product
+category,router,routeur,fr,electronics,0.90,french networking term
+category,router,روتر,ar,electronics,0.82,arabic transliteration
+category,modem,modem,en,electronics,0.88,networking product
+category,modem,modem,fr,electronics,0.88,french same term
+category,modem,موديم,ar,electronics,0.82,arabic transliteration
+category,wifi_box,wifi box,en,electronics,0.84,networking product
+category,wifi_box,box wifi,fr,electronics,0.86,french phrase
+category,speaker,speaker,en,electronics,0.89,audio product
+category,speaker,enceinte,fr,electronics,0.92,french audio product
+category,speaker,baffle,darija_latin,electronics,0.80,moroccan loanword
+category,speaker,مكبر صوت,ar,electronics,0.82,arabic audio term
+category,bluetooth_speaker,bluetooth speaker,en,electronics,0.87,audio product
+category,bluetooth_speaker,enceinte bluetooth,fr,electronics,0.90,french audio term
+category,soundbar,soundbar,en,electronics,0.88,audio product
+category,soundbar,barre de son,fr,electronics,0.91,french audio product
+category,soundbar,ساوندبار,ar,electronics,0.80,arabic transliteration
+category,projector,projector,en,electronics,0.88,video product
+category,projector,vidéoprojecteur,fr,electronics,0.91,french video product
+category,projector,videoprojecteur,fr,electronics,0.86,missing accent
+category,projector,بروجكتور,ar,electronics,0.82,arabic transliteration
+category,webcam,webcam,en,electronics,0.88,computer accessory
+category,webcam,caméra web,fr,electronics,0.88,french computer accessory
+category,webcam,كاميرا ويب,ar,electronics,0.80,arabic computer term
+category,charger,charger,en,phone_accessory,0.89,phone accessory
+category,charger,chargeur,fr,phone_accessory,0.92,french accessory term
+category,charger,شارجور,darija_ar,phone_accessory,0.82,darija transliteration
+category,powerbank,powerbank,en,phone_accessory,0.88,phone accessory
+category,powerbank,batterie externe,fr,phone_accessory,0.91,french accessory term
+category,powerbank,باور بانك,ar,phone_accessory,0.82,arabic transliteration
+category,phone_case,phone case,en,phone_accessory,0.87,phone accessory
+category,phone_case,coque,fr,phone_accessory,0.91,french accessory term
+category,phone_case,coque téléphone,fr,phone_accessory,0.88,french phrase
+category,phone_case,كوك,darija_ar,phone_accessory,0.70,darija transliteration low confidence
+category,screen_protector,screen protector,en,phone_accessory,0.87,phone accessory
+category,screen_protector,protection écran,fr,phone_accessory,0.90,french accessory term
+category,screen_protector,vitre protection,fr,phone_accessory,0.86,french accessory phrase
+category,cable,cable,en,phone_accessory,0.88,accessory
+category,cable,câble,fr,phone_accessory,0.91,french accessory term
+category,cable,cable usb,fr,phone_accessory,0.86,usb cable phrase
+category,freezer,freezer,en,home_appliance,0.90,appliance category
+category,freezer,congélateur,fr,home_appliance,0.94,french appliance term
+category,freezer,congelateur,fr,home_appliance,0.88,missing accent
+category,freezer,مجمد,ar,home_appliance,0.84,arabic appliance term
+category,dishwasher,dishwasher,en,home_appliance,0.90,appliance category
+category,dishwasher,lave-vaisselle,fr,home_appliance,0.94,french appliance term
+category,dishwasher,lave vaisselle,fr,home_appliance,0.88,missing hyphen
+category,dishwasher,غسالة الصحون,ar,home_appliance,0.84,arabic appliance term
+category,cooker,cooker,en,home_appliance,0.86,appliance category
+category,cooker,cuisinière,fr,home_appliance,0.91,french appliance term
+category,cooker,cuisiniere,fr,home_appliance,0.86,missing accent
+category,hood,hood,en,home_appliance,0.82,kitchen appliance
+category,hood,hotte,fr,home_appliance,0.90,french appliance term
+category,coffee_machine,coffee machine,en,home_appliance,0.88,small appliance
+category,coffee_machine,machine à café,fr,home_appliance,0.92,french appliance term
+category,coffee_machine,machine a cafe,fr,home_appliance,0.86,missing accents
+category,food_processor,food processor,en,home_appliance,0.84,small appliance
+category,food_processor,robot cuisine,fr,home_appliance,0.88,french appliance term
+category,iron,fer à repasser,fr,home_appliance,0.92,common french phrase
+category,iron,fer a repasser,fr,home_appliance,0.86,missing accent
+category,hair_straightener,hair straightener,en,beauty,0.86,beauty appliance
+category,hair_straightener,lisseur,fr,beauty,0.91,french beauty appliance
+category,hair_straightener,lisseur cheveux,fr,beauty,0.88,french beauty phrase
+category,gpu,gpu,en,pc_component,0.89,ultrapc component
+category,gpu,carte graphique,fr,pc_component,0.92,french pc component
+category,gpu,كارت كرافيك,darija_ar,pc_component,0.78,darija pc part
+category,ssd,ssd,en,pc_component,0.90,ultrapc storage component
+category,ssd,disque ssd,fr,pc_component,0.88,french pc component
+category,ram,ram,en,pc_component,0.90,ultrapc memory component
+category,ram,mémoire ram,fr,pc_component,0.90,french pc component
+category,ram,memoire ram,fr,pc_component,0.86,missing accent
+category,cpu,cpu,en,pc_component,0.88,pc component
+category,cpu,processeur,fr,pc_component,0.92,french pc component
+category,cpu,processor,en,pc_component,0.88,english pc component
+category,motherboard,motherboard,en,pc_component,0.88,pc component
+category,motherboard,carte mère,fr,pc_component,0.92,french pc component
+category,motherboard,carte mere,fr,pc_component,0.86,missing accent
+category,pc_case,pc case,en,pc_component,0.86,pc component
+category,pc_case,boitier,fr,pc_component,0.88,french pc component
+category,cooler,cooler,en,pc_component,0.84,pc cooling component
+category,cooler,ventilateur,fr,pc_component,0.86,french pc cooling term
+category,ups,ups,en,pc_component,0.84,power protection
+category,ups,onduleur,fr,pc_component,0.90,french power protection term
+category,gaming_chair,gaming chair,en,gaming,0.86,gaming furniture
+category,gaming_chair,chaise gamer,fr,gaming,0.90,french gaming furniture
+category,butter,butter,en,grocery,0.89,grocery staple
+category,butter,beurre,fr,grocery,0.93,french grocery term
+category,butter,zebda,darija_latin,grocery,0.86,darija grocery term
+category,butter,زبدة,ar,grocery,0.90,arabic grocery term
+category,yogurt,yogurt,en,grocery,0.90,grocery staple
+category,yogurt,yaourt,fr,grocery,0.93,french grocery term
+category,yogurt,raib,darija_latin,grocery,0.84,moroccan dairy term
+category,yogurt,ياغورت,ar,grocery,0.86,arabic transliteration
+category,chicken,chicken,en,grocery,0.90,grocery fresh food
+category,chicken,poulet,fr,grocery,0.93,french grocery term
+category,chicken,djaj,darija_latin,grocery,0.87,darija grocery term
+category,chicken,دجاج,ar,grocery,0.90,arabic grocery term
+category,meat,meat,en,grocery,0.89,grocery fresh food
+category,meat,viande,fr,grocery,0.93,french grocery term
+category,meat,lham,darija_latin,grocery,0.86,darija grocery term
+category,meat,لحم,ar,grocery,0.90,arabic grocery term
+category,fish,fish,en,grocery,0.89,grocery fresh food
+category,fish,poisson,fr,grocery,0.93,french grocery term
+category,fish,hout,darija_latin,grocery,0.86,darija grocery term
+category,fish,سمك,ar,grocery,0.90,arabic grocery term
+category,noodles,noodles,en,grocery,0.86,grocery product
+category,noodles,nouilles,fr,grocery,0.90,french grocery term
+category,canned_food,canned food,en,grocery,0.85,grocery product
+category,canned_food,conserve,fr,grocery,0.90,french grocery term
+category,canned_food,علب مصبرة,ar,grocery,0.80,arabic grocery term
+category,baby_diaper,baby diaper,en,grocery,0.86,baby grocery product
+category,baby_diaper,couche bébé,fr,grocery,0.90,french baby product
+category,baby_diaper,couche bebe,fr,grocery,0.84,missing accent
+category,baby_diaper,حفاظات,ar,grocery,0.84,arabic baby product
+category,baby_milk,baby milk,en,grocery,0.86,baby grocery product
+category,baby_milk,lait bébé,fr,grocery,0.90,french baby product
+category,baby_milk,lait bebe,fr,grocery,0.84,missing accent
+category,semolina,semolina,en,grocery,0.86,grocery staple
+category,semolina,semoule,fr,grocery,0.91,french grocery term
+category,semolina,smida,darija_latin,grocery,0.86,darija grocery term
+category,semolina,سميدة,darija_ar,grocery,0.86,darija arabic term
+category,harissa,harissa,en,grocery,0.84,grocery condiment
+category,harissa,هريسة,ar,grocery,0.84,arabic condiment
+category,mayonnaise,mayonnaise,en,grocery,0.86,grocery condiment
+category,mayonnaise,mayonnaise,fr,grocery,0.88,french condiment
+category,ketchup,ketchup,en,grocery,0.86,grocery condiment
+category,ketchup,ketchup,fr,grocery,0.86,french condiment
+category,furniture,furniture,en,furniture,0.90,umbrella term for ikea and avito
+category,furniture,meuble,fr,furniture,0.92,french furniture term
+category,furniture,mobilier,fr,furniture,0.90,french umbrella term
+category,furniture,أثاث,ar,furniture,0.88,arabic furniture term
+category,furniture,athath,darija_latin,furniture,0.80,arabic transliteration
+category,curtain,curtain,en,furniture,0.88,home product
+category,curtain,rideau,fr,furniture,0.92,french home product
+category,curtain,ستارة,ar,furniture,0.86,arabic home product
+category,rug,rug,en,furniture,0.88,home product
+category,rug,tapis,fr,furniture,0.92,french home product
+category,rug,زرابي,darija_ar,furniture,0.82,darija home product
+category,pillow,pillow,en,furniture,0.88,home product
+category,pillow,oreiller,fr,furniture,0.92,french home product
+category,pillow,مخدة,darija_ar,furniture,0.84,darija home product
+category,blanket,blanket,en,furniture,0.88,home textile
+category,blanket,couverture,fr,furniture,0.92,french home textile
+category,blanket,بطانية,ar,furniture,0.84,arabic home textile
+category,duvet,duvet,en,furniture,0.86,home textile
+category,duvet,couette,fr,furniture,0.92,french home textile
+category,storage,storage,en,furniture,0.86,home organization
+category,storage,rangement,fr,furniture,0.90,french home organization
+category,shelf,shelf,en,furniture,0.88,home product
+category,shelf,étagère,fr,furniture,0.92,french home product
+category,shelf,etagere,fr,furniture,0.86,missing accent
+category,mirror,mirror,en,furniture,0.88,home product
+category,mirror,miroir,fr,furniture,0.92,french home product
+category,mirror,مرآة,ar,furniture,0.84,arabic home product
+category,commode,commode,fr,furniture,0.88,furniture product
+category,nightstand,nightstand,en,furniture,0.84,furniture product
+category,nightstand,table de chevet,fr,furniture,0.90,french furniture term
+category,running_shoes,running shoes,en,sports,0.88,sports footwear
+category,running_shoes,chaussures running,fr,sports,0.90,french sports footwear
+category,tennis,tennis,en,sports,0.86,sport category
+category,tennis,tennis,fr,sports,0.86,french same term
+category,tennis_racket,tennis racket,en,sports,0.86,sports equipment
+category,tennis_racket,raquette tennis,fr,sports,0.90,french sports equipment
+category,basketball,basketball,en,sports,0.88,sport category
+category,basketball,basket,fr,sports,0.86,french sport term
+category,basketball,ballon basket,fr,sports,0.88,french equipment phrase
+category,swimsuit,swimsuit,en,sports,0.86,sports clothing
+category,swimsuit,maillot de bain,fr,sports,0.90,french sports clothing
+category,leggings,leggings,en,sports,0.86,sports clothing
+category,leggings,legging,fr,sports,0.88,french sports clothing
+category,sportswear,sportswear,en,sports,0.86,sports clothing umbrella
+category,sportswear,vêtement sport,fr,sports,0.88,french sports clothing phrase
+category,sportswear,vetement sport,fr,sports,0.84,missing accent
+category,gym_bag,gym bag,en,sports,0.86,sports accessory
+category,gym_bag,sac de sport,fr,sports,0.90,french sports accessory
+category,fitness_bike,fitness bike,en,sports,0.84,sports equipment
+category,fitness_bike,vélo appartement,fr,sports,0.88,french fitness equipment
+category,fitness_bike,velo appartement,fr,sports,0.84,missing accent
+category,barbell,barbell,en,sports,0.86,sports equipment
+category,barbell,barre de musculation,fr,sports,0.88,french sports equipment
+category,football_jersey,football jersey,en,sports,0.86,sports clothing
+category,football_jersey,maillot,fr,sports,0.88,french sports clothing
+category,football_jersey,maillot de foot,fr,sports,0.90,french sports clothing phrase
+brand,LG,LG,en,home_appliance,0.95,electronics and appliance brand
+brand,LG,lg,en,home_appliance,0.93,lowercase
+brand,LG,ال جي,ar,home_appliance,0.86,arabic transliteration
+brand,Sony,Sony,en,electronics,0.95,electronics brand
+brand,Sony,sony,en,electronics,0.93,lowercase
+brand,Sony,سوني,ar,electronics,0.88,arabic transliteration
+brand,Philips,Philips,en,home_appliance,0.94,electronics and appliance brand
+brand,Philips,philips,en,home_appliance,0.92,lowercase
+brand,Philips,فيليبس,ar,home_appliance,0.86,arabic transliteration
+brand,Bosch,Bosch,en,home_appliance,0.94,appliance brand
+brand,Bosch,bosch,en,home_appliance,0.92,lowercase
+brand,Bosch,بوش,ar,home_appliance,0.86,arabic transliteration
+brand,Whirlpool,Whirlpool,en,home_appliance,0.93,appliance brand
+brand,Whirlpool,whirlpool,en,home_appliance,0.91,lowercase
+brand,Whirlpool,ويرلبول,ar,home_appliance,0.82,arabic transliteration
+brand,Hisense,Hisense,en,home_appliance,0.93,tv and appliance brand
+brand,Hisense,hisense,en,home_appliance,0.91,lowercase
+brand,Hisense,هايسنس,ar,home_appliance,0.84,arabic transliteration
+brand,TCL,TCL,en,home_appliance,0.93,tv brand
+brand,TCL,tcl,en,home_appliance,0.91,lowercase
+brand,TCL,تي سي ال,ar,home_appliance,0.82,arabic transliteration
+brand,Haier,Haier,en,home_appliance,0.92,appliance brand
+brand,Haier,haier,en,home_appliance,0.90,lowercase
+brand,Beko,Beko,en,home_appliance,0.92,appliance brand
+brand,Beko,beko,en,home_appliance,0.90,lowercase
+brand,Midea,Midea,en,home_appliance,0.91,appliance brand
+brand,Midea,midea,en,home_appliance,0.89,lowercase
+brand,Daewoo,Daewoo,en,home_appliance,0.90,appliance brand
+brand,Daewoo,daewoo,en,home_appliance,0.88,lowercase
+brand,Realme,Realme,en,phone,0.93,phone brand
+brand,Realme,realme,en,phone,0.91,lowercase
+brand,Realme,ريلمي,ar,phone,0.84,arabic transliteration
+brand,OnePlus,OnePlus,en,phone,0.93,phone brand
+brand,OnePlus,oneplus,en,phone,0.91,lowercase joined form
+brand,OnePlus,one plus,typo,phone,0.84,split word
+brand,Nokia,Nokia,en,phone,0.92,phone brand
+brand,Nokia,nokia,en,phone,0.90,lowercase
+brand,Nokia,نوكيا,ar,phone,0.86,arabic transliteration
+brand,Motorola,Motorola,en,phone,0.92,phone brand
+brand,Motorola,motorola,en,phone,0.90,lowercase
+brand,Google Pixel,Google Pixel,brand_model,phone,0.90,phone line
+brand,Google Pixel,pixel,brand_model,phone,0.84,short phone line
+brand,Canon,Canon,en,electronics,0.93,camera and printer brand
+brand,Canon,canon,en,electronics,0.91,lowercase
+brand,Epson,Epson,en,electronics,0.92,printer brand
+brand,Epson,epson,en,electronics,0.90,lowercase
+brand,Brother,Brother,en,electronics,0.90,printer brand
+brand,Brother,brother,en,electronics,0.88,lowercase
+brand,Logitech,Logitech,en,pc_accessory,0.93,pc accessory brand
+brand,Logitech,logitech,en,pc_accessory,0.91,lowercase
+brand,Razer,Razer,en,gaming,0.93,gaming accessory brand
+brand,Razer,razer,en,gaming,0.91,lowercase
+brand,Corsair,Corsair,en,gaming,0.92,gaming component brand
+brand,Corsair,corsair,en,gaming,0.90,lowercase
+brand,HyperX,HyperX,en,gaming,0.92,gaming accessory brand
+brand,HyperX,hyperx,en,gaming,0.90,lowercase
+brand,Kingston,Kingston,en,pc_component,0.92,storage and memory brand
+brand,Kingston,kingston,en,pc_component,0.90,lowercase
+brand,SanDisk,SanDisk,en,pc_component,0.92,storage brand
+brand,SanDisk,sandisk,en,pc_component,0.90,lowercase
+brand,Western Digital,Western Digital,en,pc_component,0.91,storage brand
+brand,Western Digital,wd,brand_model,pc_component,0.86,storage brand abbreviation
+brand,Seagate,Seagate,en,pc_component,0.91,storage brand
+brand,Seagate,seagate,en,pc_component,0.89,lowercase
+brand,Nvidia,Nvidia,en,pc_component,0.92,gpu brand
+brand,Nvidia,nvidia,en,pc_component,0.90,lowercase
+brand,AMD,AMD,en,pc_component,0.92,cpu and gpu brand
+brand,AMD,amd,en,pc_component,0.90,lowercase
+brand,Intel,Intel,en,pc_component,0.92,cpu brand
+brand,Intel,intel,en,pc_component,0.90,lowercase
+brand,Nike,Nike,en,sports,0.95,sports brand
+brand,Nike,nike,en,sports,0.93,lowercase
+brand,Nike,نايك,ar,sports,0.86,arabic transliteration
+brand,Adidas,Adidas,en,sports,0.95,sports brand
+brand,Adidas,adidas,en,sports,0.93,lowercase
+brand,Adidas,اديداس,ar,sports,0.86,arabic transliteration
+brand,Puma,Puma,en,sports,0.94,sports brand
+brand,Puma,puma,en,sports,0.92,lowercase
+brand,Puma,بوما,ar,sports,0.86,arabic transliteration
+brand,Reebok,Reebok,en,sports,0.92,sports brand
+brand,Reebok,reebok,en,sports,0.90,lowercase
+brand,New Balance,New Balance,en,sports,0.92,sports brand
+brand,New Balance,new balance,en,sports,0.90,lowercase
+brand,Asics,Asics,en,sports,0.91,sports brand
+brand,Asics,asics,en,sports,0.89,lowercase
+brand,Jordan,Jordan,en,sports,0.91,sports brand and line
+brand,Jordan,jordan,en,sports,0.89,lowercase
+brand,Converse,Converse,en,sports,0.90,sneaker brand
+brand,Converse,converse,en,sports,0.88,lowercase
+brand,Under Armour,Under Armour,en,sports,0.90,sports brand
+brand,Under Armour,under armour,en,sports,0.88,lowercase
+brand,Decathlon,Decathlon,en,sports,0.92,sports retailer and brand
+brand,Decathlon,decathlon,en,sports,0.90,lowercase
+brand,Kipsta,Kipsta,brand_model,sports,0.88,decathlon football brand
+brand,Kipsta,kipsta,brand_model,sports,0.86,lowercase
+brand,Quechua,Quechua,brand_model,sports,0.88,decathlon outdoor brand
+brand,Quechua,quechua,brand_model,sports,0.86,lowercase
+brand,Domyos,Domyos,brand_model,sports,0.88,decathlon fitness brand
+brand,Domyos,domyos,brand_model,sports,0.86,lowercase
+brand,DeFacto,DeFacto,en,clothes,0.93,fashion provider brand
+brand,DeFacto,defacto,en,clothes,0.91,lowercase
+brand,LC Waikiki,LC Waikiki,en,clothes,0.90,fashion brand in morocco
+brand,LC Waikiki,lc waikiki,en,clothes,0.88,lowercase
+brand,Zara,Zara,en,clothes,0.91,fashion brand
+brand,Zara,zara,en,clothes,0.89,lowercase
+brand,H&M,H&M,en,clothes,0.90,fashion brand
+brand,H&M,hm,typo,clothes,0.82,common shorthand without ampersand
+brand,Pull&Bear,Pull&Bear,en,clothes,0.88,fashion brand
+brand,Pull&Bear,pull and bear,en,clothes,0.86,spoken brand form
+brand,Stradivarius,Stradivarius,en,clothes,0.88,fashion brand
+brand,Stradivarius,stradivarius,en,clothes,0.86,lowercase
+brand,Loreal,Loreal,en,beauty,0.94,beauty brand
+brand,Loreal,loreal,en,beauty,0.92,lowercase
+brand,Loreal,l'oréal,fr,beauty,0.94,french brand spelling
+brand,Loreal,loreal paris,en,beauty,0.90,brand line
+brand,Nivea,Nivea,en,beauty,0.94,beauty brand
+brand,Nivea,nivea,en,beauty,0.92,lowercase
+brand,Garnier,Garnier,en,beauty,0.93,beauty brand
+brand,Garnier,garnier,en,beauty,0.91,lowercase
+brand,Maybelline,Maybelline,en,beauty,0.93,makeup brand
+brand,Maybelline,maybelline,en,beauty,0.91,lowercase
+brand,Vichy,Vichy,en,beauty,0.92,dermocosmetic brand
+brand,Vichy,vichy,en,beauty,0.90,lowercase
+brand,La Roche-Posay,La Roche-Posay,en,beauty,0.92,dermocosmetic brand
+brand,La Roche-Posay,la roche posay,en,beauty,0.88,no hyphen variant
+brand,CeraVe,CeraVe,en,beauty,0.91,dermocosmetic brand
+brand,CeraVe,cerave,en,beauty,0.89,lowercase
+brand,The Ordinary,The Ordinary,en,beauty,0.90,skincare brand
+brand,The Ordinary,the ordinary,en,beauty,0.88,lowercase
+brand,Yves Rocher,Yves Rocher,en,beauty,0.90,beauty brand
+brand,Yves Rocher,yves rocher,en,beauty,0.88,lowercase
+brand,Lancome,Lancome,en,beauty,0.90,beauty brand
+brand,Lancome,lancôme,fr,beauty,0.91,french spelling
+brand,Givenchy,Givenchy,en,beauty,0.90,perfume brand
+brand,Givenchy,givenchy,en,beauty,0.88,lowercase
+brand,Sephora,Sephora,en,beauty,0.88,beauty retailer and search term
+brand,Sephora,sephora,en,beauty,0.86,lowercase
+brand,Danone,Danone,en,grocery,0.93,grocery dairy brand
+brand,Danone,danone,en,grocery,0.91,lowercase
+brand,Centrale Danone,Centrale Danone,brand_model,grocery,0.92,moroccan dairy brand
+brand,Centrale Danone,centrale,en,grocery,0.88,common shorthand
+brand,Jaouda,Jaouda,en,grocery,0.92,moroccan dairy brand
+brand,Jaouda,jaouda,en,grocery,0.90,lowercase
+brand,Copag,Copag,en,grocery,0.89,moroccan cooperative brand
+brand,Copag,copag,en,grocery,0.87,lowercase
+brand,Lesieur,Lesieur,en,grocery,0.92,moroccan oil and condiment brand
+brand,Lesieur,lesieur,en,grocery,0.90,lowercase
+brand,Aicha,Aicha,en,grocery,0.92,moroccan grocery brand
+brand,Aicha,aïcha,fr,grocery,0.92,french accented brand spelling
+brand,Aicha,aicha,en,grocery,0.90,lowercase
+brand,Dari,Dari,en,grocery,0.91,moroccan couscous and pasta brand
+brand,Dari,dari,en,grocery,0.89,lowercase
+brand,Bimo,Bimo,en,grocery,0.90,moroccan biscuit brand
+brand,Bimo,bimo,en,grocery,0.88,lowercase
+brand,Chergui,Chergui,en,grocery,0.90,moroccan dairy brand
+brand,Chergui,chergui,en,grocery,0.88,lowercase
+brand,Carrefour,Carrefour,en,grocery,0.92,grocery retailer behind bringo
+brand,Carrefour,carrefour,en,grocery,0.90,lowercase
+brand,Marjane,Marjane,en,grocery,0.92,moroccan supermarket brand
+brand,Marjane,marjane,en,grocery,0.90,lowercase
+brand,IKEA,IKEA,en,furniture,0.94,furniture retailer and brand
+brand,IKEA,ikea,en,furniture,0.92,lowercase
+brand,IKEA,ikéa,fr,furniture,0.90,french accented variant
+brand,Seat,Seat,en,car,0.90,car brand in morocco
+brand,Seat,seat,en,car,0.88,lowercase
+brand,Skoda,Skoda,en,car,0.90,car brand in morocco
+brand,Skoda,skoda,en,car,0.88,lowercase
+brand,Opel,Opel,en,car,0.90,car brand in morocco
+brand,Opel,opel,en,car,0.88,lowercase
+brand,Nissan,Nissan,en,car,0.91,car brand in morocco
+brand,Nissan,nissan,en,car,0.89,lowercase
+brand,Mitsubishi,Mitsubishi,en,car,0.90,car brand in morocco
+brand,Mitsubishi,mitsubishi,en,car,0.88,lowercase
+brand,Suzuki,Suzuki,en,car,0.90,car brand in morocco
+brand,Suzuki,suzuki,en,car,0.88,lowercase
+brand,Jeep,Jeep,en,car,0.90,car brand
+brand,Jeep,jeep,en,car,0.88,lowercase
+brand,Land Rover,Land Rover,en,car,0.90,car brand
+brand,Land Rover,land rover,en,car,0.88,lowercase
+brand,Range Rover,Range Rover,brand_model,car,0.90,car model line
+brand,Range Rover,range rover,brand_model,car,0.88,lowercase
+brand,Volvo,Volvo,en,car,0.90,car brand
+brand,Volvo,volvo,en,car,0.88,lowercase
+brand,Isuzu,Isuzu,en,car,0.88,vehicle brand
+brand,Isuzu,isuzu,en,car,0.86,lowercase
+brand,Porsche,Porsche,en,car,0.90,car brand
+brand,Porsche,porsche,en,car,0.88,lowercase
+intent,site_jumia,jumia,en,site,0.86,provider name mention
+intent,site_avito,avito,en,site,0.86,provider name mention
+intent,site_electrosalam,electrosalam,en,site,0.84,provider name mention
+intent,site_mafiawaystore,mafiawaystore,en,site,0.84,provider name mention
+intent,site_moteur,moteur,en,site,0.82,provider name mention ambiguous french word
+intent,site_mymarket,mymarket,en,site,0.84,provider name mention
+intent,site_ultrapc,ultrapc,en,site,0.84,provider name mention
+intent,site_electroplanet,electroplanet,en,site,0.84,provider name mention
+intent,site_defacto,defacto,en,site,0.84,provider name mention
+intent,site_biougnach,biougnach,en,site,0.84,provider name mention
+intent,site_marjane,marjane,en,site,0.84,provider name mention
+intent,site_decathlon,decathlon,en,site,0.84,provider name mention
+intent,site_mubawab,mubawab,en,site,0.84,provider name mention
+intent,site_ikea,ikea,en,site,0.84,provider name mention
+intent,site_palmarosa,palmarosa,en,site,0.84,provider name mention
+intent,site_bringo,bringo,en,site,0.84,provider name mention
+intent,site_planetsport,planetsport,en,site,0.84,provider name mention

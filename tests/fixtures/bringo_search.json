@@ -1,0 +1,27 @@
+{
+  "sections": {
+    "Search Suggestions": [],
+    "Products": [
+      {
+        "matched_terms": ["lait"],
+        "value": "Pack Lait UHT Entier Jaouda 1L 6 unites",
+        "data": {
+          "id": "127180",
+          "url": "/products/vendor-2-553571",
+          "price": 5895,
+          "x_slug": "pack-uht-entier-jaouda-6-1l-vendor-2-553571"
+        }
+      },
+      {
+        "matched_terms": ["lait"],
+        "value": "Lait UHT Entier Salim 1L",
+        "data": {
+          "id": "127292",
+          "url": "/products/vendor-2-672208",
+          "price": 1095,
+          "x_slug": "lait-uht-entier-salim-en-carton-1l-x6-vendor-2-672208"
+        }
+      }
+    ]
+  }
+}

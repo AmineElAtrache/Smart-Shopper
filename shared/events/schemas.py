@@ -134,6 +134,9 @@ class ProductQuery(BaseModel):
             "decathlon",
             "mubawab",
             "ikea",
+            "palmarosa",
+            "bringo",
+            "planetsport",
         ]
     )
 

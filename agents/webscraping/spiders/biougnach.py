@@ -16,6 +16,7 @@ from agents.webscraping.spiders.base import (
     matches_brand,
     matches_color,
     matches_product,
+    use_playwright_provider,
 )
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -23,6 +24,7 @@ from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 BIOUGNACH_BASE_URL = "https://www.biougnach.ma"
 BIOUGNACH_SEARCH_URL = "https://www.biougnach.ma/recherche?controller=search&s={query}"
 BIOUGNACH_SAMSUNG_SMARTPHONE_URL = "https://www.biougnach.ma/shop/category/-50/4"
+BIOUGNACH_TV_CATEGORY_URL = "https://www.biougnach.ma/shop/category/21/3"
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -32,18 +34,21 @@ SCRIPT_JSON_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم)",
+    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…)",
     re.IGNORECASE,
 )
 
 
 def build_search_url(task: ScrapeTaskAssigned) -> str:
-    if (task.query.brand or "").lower() == "samsung" and (task.query.product or "").lower() in {
+    product = (task.query.product or "").lower()
+    if (task.query.brand or "").lower() == "samsung" and product in {
         "phone",
         "smartphone",
         "telephone",
     }:
         return BIOUGNACH_SAMSUNG_SMARTPHONE_URL
+    if product in {"tv", "television", "télévision", "televiseur", "téléviseur"}:
+        return BIOUGNACH_TV_CATEGORY_URL
     return BIOUGNACH_SEARCH_URL.format(query=quote_plus(build_search_text(task)))
 
 
@@ -54,10 +59,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("biougnach"):
         return await fetch_rendered_html(url, timeout=timeout, locale="fr-MA")
-    except Exception:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
@@ -172,7 +176,7 @@ def _extract_title(anchor, block_text: str) -> str:
 
 
 def _title_before_price_or_marker(text: str) -> str:
-    title = clean_text(re.split(r"Référence|Reference|Marque|Prix|MAD|DH", text, maxsplit=1, flags=re.IGNORECASE)[0])
+    title = clean_text(re.split(r"RÃ©fÃ©rence|Reference|Marque|Prix|MAD|DH", text, maxsplit=1, flags=re.IGNORECASE)[0])
     return title
 
 

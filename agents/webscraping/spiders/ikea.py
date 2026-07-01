@@ -16,6 +16,7 @@ from agents.webscraping.spiders.base import (
     matches_brand,
     matches_color,
     matches_product,
+    use_playwright_provider,
 )
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -39,7 +40,7 @@ SCRIPT_JSON_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم)",
+    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…)",
     re.IGNORECASE,
 )
 
@@ -55,10 +56,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("ikea"):
         return await fetch_rendered_html(url, timeout=timeout, locale="fr-MA")
-    except Exception:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:

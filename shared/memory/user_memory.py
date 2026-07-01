@@ -14,12 +14,14 @@ from typing import Any
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
 
+from models.ner.product_vocabulary import normalize_key
 from shared.events.schemas import Channel, InboundMessage, OutboundResponse, ProductQuery
 
 
 class UserProfile(BaseModel):
     user_id: str
     channel: Channel = Channel.TELEGRAM
+    preferred_product: str | None = None
     preferred_sites: list[str] = Field(default_factory=list)
     preferred_city: str | None = None
     preferred_budget: float | None = None
@@ -72,6 +74,8 @@ class UserMemory:
             "updated_at": datetime.now(UTC),
         }
         if query is not None:
+            if query.product:
+                updates["preferred_product"] = query.product
             if query.sites:
                 updates["preferred_sites"] = query.sites
             if query.city:
@@ -93,12 +97,28 @@ class UserMemory:
         await self._set_hot_profile(updated)
         return updated
 
-    async def apply_preferences(self, user_id: str, query: ProductQuery) -> ProductQuery:
+    async def apply_preferences(
+        self,
+        user_id: str,
+        query: ProductQuery,
+        *,
+        explicit_city: bool = False,
+    ) -> ProductQuery:
         profile = await self.get_profile(user_id)
+        city = query.city
+        if city is None and profile.preferred_city and not explicit_city:
+            from agents.orchestrator.tools.provider_capabilities import sites_support_city_filter
+
+            if sites_support_city_filter(query.sites):
+                city = profile.preferred_city
+        budget = query.budget
+        if budget is None and _should_apply_preferred_budget(query, profile):
+            budget = profile.preferred_budget
+
         return query.model_copy(
             update={
-                "city": query.city or profile.preferred_city,
-                "budget": query.budget if query.budget is not None else profile.preferred_budget,
+                "city": city,
+                "budget": budget,
                 "currency": query.currency or profile.preferred_currency,
                 "sites": query.sites or profile.preferred_sites,
             }
@@ -159,3 +179,11 @@ class UserMemory:
             profile.model_dump_json(),
             ex=self._hot_ttl_seconds,
         )
+
+
+def _should_apply_preferred_budget(query: ProductQuery, profile: UserProfile) -> bool:
+    if profile.preferred_budget is None:
+        return False
+    if not query.product or not profile.preferred_product:
+        return False
+    return normalize_key(query.product) == normalize_key(profile.preferred_product)

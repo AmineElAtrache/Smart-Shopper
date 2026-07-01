@@ -95,21 +95,48 @@ def localized_product_header(language: str, *, seed: str = "") -> str:
     return variants[_variant_index(seed, len(variants), salt="header")]
 
 
+def _no_results_reply(event: DecisionRanked, language: str) -> str:
+    query = event.query
+    if query and (query.brand or query.product or query.budget is not None):
+        label = " ".join(
+            part for part in (query.brand, query.product) if part
+        ).strip() or "your search"
+        budget_part = ""
+        if query.budget is not None:
+            currency = query.currency or "MAD"
+            budget_part = f" within {query.budget:g} {currency}"
+        if language == "fr":
+            return (
+                f"Je n'ai trouve aucune option pour {label}{budget_part}. "
+                "Essaie un budget un peu plus eleve ou un autre modele."
+            )
+        if language == "ar":
+            return (
+                f"لم أجد خيارات تطابق {label}{budget_part}. "
+                "جرّب زيادة الميزانية قليلاً أو تغيير الموديل."
+            )
+        return (
+            f"I could not find any {label} options{budget_part}. "
+            "Try a slightly higher budget or a different model."
+        )
+    if language == "fr":
+        return (
+            "Salut! Dis-moi ce que tu cherches, ton budget, "
+            "et ta ville si tu veux, et je lance la recherche."
+        )
+    if language == "ar":
+        return "مرحباً! أخبرني بما تبحث عنه وميزانيتك ومدينتك إن أردت، وسأبدأ البحث."
+    return (
+        "Hi, I could not find product options yet. "
+        "Send me what you are looking for and your budget, and I will search for options."
+    )
+
+
 def build_standard_response(event: DecisionRanked, language: str) -> str:
     from agents.agent_generator.agent import build_composed_message
 
     if not event.products:
-        if language == "fr":
-            return (
-                "Salut! Dis-moi ce que tu cherches, ton budget, "
-                "et ta ville si tu veux, et je lance la recherche."
-            )
-        if language == "ar":
-            return "مرحباً! أخبرني بما تبحث عنه وميزانيتك ومدينتك إن أردت، وسأبدأ البحث."
-        return (
-            "Hi, I could not find product options yet. "
-            "Send me what you are looking for and your budget, and I will search for options."
-        )
+        return _no_results_reply(event, language)
 
     seed = seed_for_event(event)
     count = min(3, len(event.products))

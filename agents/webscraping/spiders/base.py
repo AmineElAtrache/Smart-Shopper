@@ -1,12 +1,14 @@
-﻿"""Shared helpers for website scrapers."""
+"""Shared helpers for website scrapers."""
 
 from __future__ import annotations
 
+import os
 import re
 from html import unescape
 from urllib.parse import urljoin
 
 from shared.events.schemas import ProductQuery, ScrapeTaskAssigned
+from shared.query_matching import city_terms, normalize_token
 
 MAD_PRICE_RE = re.compile(r"(?P<amount>\d[\d\s.,]*)\s*(?:MAD|DH|DHS|درهم)?", re.IGNORECASE)
 TAG_RE = re.compile(r"<[^>]+>")
@@ -23,21 +25,41 @@ COLOR_ALIASES = {
     "silver": {"silver", "argent"},
     "brown": {"brown", "marron", "kahverengi"},
 }
+
+DEFAULT_PLAYWRIGHT_PROVIDERS = {"avito", "biougnach", "defacto", "electroplanet", "ikea", "jumia", "marjane", "palmarosa"}
+
+
+def playwright_providers() -> set[str]:
+    """Providers that should use browser rendering directly instead of httpx."""
+    raw_value = os.getenv("SCRAPE_PLAYWRIGHT_PROVIDERS")
+    if raw_value is None:
+        return set(DEFAULT_PLAYWRIGHT_PROVIDERS)
+    return {provider.strip().lower() for provider in raw_value.split(",") if provider.strip()}
+
+
+def use_playwright_provider(provider_name: str) -> bool:
+    return provider_name.lower() in playwright_providers()
+
 PRODUCT_ALIASES = {
     "phone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
     "smartphone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
     "telephone": {"phone", "telephone", "téléphone", "smartphone", "gsm", "galaxy"},
-    "laptop": {"laptop", "pc", "ordinateur", "portable"},
+    "laptop": {"laptop", "pc", "ordinateur", "portable", "notebook", "elitebook", "omen", "victus"},
+    "tv": {"tv", "television", "télévision", "televiseur", "téléviseur", "smart tv", "led", "qled", "oled", "qned"},
     "shoes": {"shoes", "shoe", "chaussures", "baskets"},
     "shoe": {"shoes", "shoe", "chaussures", "baskets"},
     "chair": {"chair", "chaise"},
+    "table": {"table", "tables", "table basse", "tabla"},
+    "tablet": {"tablet", "tablette", "tablettes", "ipad"},
     "apartment": {"apartment", "appartement", "appartements"},
+    "milk": {"milk", "lait"},
 }
 
 
 def build_search_text(task: ScrapeTaskAssigned) -> str:
     query = task.query
-    parts = [query.brand, query.product, query.color]
+    product = query.product.replace("_", " ") if query.product else None
+    parts = [query.brand, product, query.color]
     return " ".join(part for part in parts if part).strip() or "phone"
 
 
@@ -100,4 +122,7 @@ def matches_color(searchable_text: str, query: ProductQuery, aliases: dict[str, 
 
 
 def matches_city(searchable_text: str, query: ProductQuery) -> bool:
-    return not query.city or query.city.lower() in searchable_text.lower()
+    if not query.city:
+        return True
+    lowered = normalize_token(searchable_text)
+    return any(term in lowered for term in city_terms(query.city))

@@ -34,6 +34,13 @@ SCRIPT_JSON_RE = re.compile(
     r"<script[^>]+type=[\"']application/ld\+json[\"'][^>]*>(?P<json>.*?)</script>",
     re.IGNORECASE | re.DOTALL,
 )
+ELECTROSALAM_PRODUCT_ALIASES = {
+    "laptop": {"laptop", "pc", "ordinateur", "portable", "notebook", "elitebook", "omen", "victus", "thinkpad", "latitude"},
+    "pc": {"laptop", "pc", "ordinateur", "portable", "notebook", "elitebook", "omen", "victus"},
+    "phone": {"phone", "smartphone", "telephone", "téléphone", "gsm", "galaxy", "iphone", "redmi", "infinix", "itel"},
+    "smartphone": {"phone", "smartphone", "telephone", "téléphone", "gsm", "galaxy", "iphone", "redmi", "infinix", "itel"},
+    "tv": {"tv", "television", "télévision", "smart tv", "oled", "qled", "led"},
+}
 PRICE_RE = re.compile(
     r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم)",
     re.IGNORECASE,
@@ -244,6 +251,6 @@ def _matches_query(product: RawProduct, task: ScrapeTaskAssigned) -> bool:
     searchable_text = clean_text(f"{product.title} {product.url}").lower()
     return (
         matches_brand(searchable_text, task.query)
-        and matches_product(searchable_text, task.query)
+        and matches_product(searchable_text, task.query, ELECTROSALAM_PRODUCT_ALIASES)
         and matches_color(searchable_text, task.query)
     )

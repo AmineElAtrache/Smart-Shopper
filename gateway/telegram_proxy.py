@@ -17,6 +17,7 @@ from shared.events.schemas import Channel, InboundMessage, OutboundResponse
 from shared.events.topics import MSG_INBOUND, RESPONSE_OUTBOUND
 from shared.config.env import load_env_file
 from shared.config import get_settings
+from shared.content_moderation import apply_outbound_moderation, blocked_outbound_message
 from shared.memory import UserMemory
 from shared.memory.factory import create_user_memory
 from shared.runtime import HealthServer
@@ -150,6 +151,7 @@ class TelegramGateway:
             database=config.mongodb_database,
         )
         self._user_memory = user_memory
+        self._settings = get_settings()
 
     async def publish_telegram_text(self, *, chat_id: int | str, text: str) -> InboundMessage:
         event = build_inbound_message(chat_id=chat_id, text=text)
@@ -172,12 +174,9 @@ class TelegramGateway:
             del context
             if update.effective_chat is None or update.message is None or update.message.text is None:
                 return
-            event = await self.publish_telegram_text(
+            await self.publish_telegram_text(
                 chat_id=update.effective_chat.id,
                 text=update.message.text,
-            )
-            await update.message.reply_text(
-                f"Request received ({event.request_id}). I am looking for offers now."
             )
 
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
@@ -221,7 +220,24 @@ class TelegramGateway:
                 if chat_id is None:
                     print(f"Skipping outbound response with unknown Telegram user_id: {event.user_id}")
                     continue
-                await bot.send_message(chat_id=chat_id, text=event.message)
+                message_text, moderation = apply_outbound_moderation(
+                    event.message,
+                    fallback=blocked_outbound_message(reference_text=event.message),
+                    enabled=self._settings.governance_content_moderation_enabled,
+                    reference_text=event.message,
+                )
+                if not moderation.allowed:
+                    print(
+                        f"[gateway] blocked outbound response request_id={event.request_id}: "
+                        f"{moderation.summary}"
+                    )
+                    event = OutboundResponse(
+                        request_id=event.request_id,
+                        user_id=event.user_id,
+                        channel=event.channel,
+                        message=message_text,
+                    )
+                await bot.send_message(chat_id=chat_id, text=message_text)
                 self._history_store.record_outbound(event, chat_id=chat_id)
                 if self._user_memory is not None:
                     try:

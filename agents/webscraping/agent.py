@@ -1,4 +1,4 @@
-﻿"""WebScraping Agent for the Smart Shopper MVP.
+"""WebScraping Agent for the Smart Shopper MVP.
 
 The agent now tries real scraper providers first and falls back to deterministic
 mock products when providers fail or return no products.
@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from dataclasses import dataclass
 
 from agents.webscraping.spiders import (
     avito,
     biougnach,
+    bringo,
     decathlon,
     defacto,
     electroplanet,
@@ -24,13 +26,18 @@ from agents.webscraping.spiders import (
     moteur,
     mubawab,
     mymarket,
+    palmarosa,
+    planetsport,
     ultrapc,
 )
 from shared.config.env import load_env_file
 from shared.config import get_settings
+from shared.memory.factory import create_global_memory
 from shared.events.kafka import KafkaEventConsumer, KafkaEventProducer
-from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
-from shared.events.topics import SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+from shared.events.schemas import Availability, DecisionRanked, RawProduct, ScrapeTaskAssigned
+from shared.events.topics import DECISION_RANKED, SCRAPE_RAW, SCRAPE_TASK_ASSIGNED
+from shared.memory.global_memory import GlobalMemory
+from shared.memory.tier1_hooks import record_provider_health
 from shared.runtime import HealthServer
 
 DEFAULT_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
@@ -50,6 +57,9 @@ SCRAPE_PROVIDERS = (
     ("decathlon", decathlon),
     ("mubawab", mubawab),
     ("ikea", ikea),
+    ("palmarosa", palmarosa),
+    ("bringo", bringo),
+    ("planetsport", planetsport),
 )
 
 
@@ -120,21 +130,39 @@ async def _scrape_provider(
     task: ScrapeTaskAssigned,
     *,
     timeout_seconds: float,
+    global_memory: GlobalMemory | None = None,
 ) -> list[RawProduct]:
+    started = time.perf_counter()
+    error: str | None = None
+    provider_products: list[RawProduct] = []
     try:
+        try:
+            scrape_call = provider.scrape(task, timeout=timeout_seconds)  # type: ignore[attr-defined]
+        except TypeError:
+            scrape_call = provider.scrape(task)  # type: ignore[attr-defined]
         provider_products = await asyncio.wait_for(
-            provider.scrape(task),  # type: ignore[attr-defined]
+            scrape_call,
             timeout=timeout_seconds,
         )
     except TimeoutError:
+        error = "timeout"
         print(
             f"[scraper] {provider_name} timed out after {timeout_seconds}s "
             f"for {task.request_id}"
         )
-        return []
     except Exception as exc:
+        error = type(exc).__name__
         print(f"[scraper] {provider_name} failed for {task.request_id}: {exc}")
-        return []
+    finally:
+        if global_memory is not None:
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            await record_provider_health(
+                global_memory,
+                provider_name,
+                product_count=len(provider_products),
+                elapsed_ms=elapsed_ms,
+                error=error,
+            )
 
     if provider_products:
         print(
@@ -148,14 +176,23 @@ async def scrape_products(
     task: ScrapeTaskAssigned,
     *,
     mock_only: bool = False,
-    timeout_seconds: float = 20.0,
+    timeout_seconds: float = 30.0,
     max_concurrency: int = 8,
+    collection_grace_seconds: float = 8.0,
+    global_memory: GlobalMemory | None = None,
 ) -> list[RawProduct]:
     """Scrape providers concurrently, then fall back to mock products if needed."""
     if mock_only:
         fallback = build_mock_products(task)
         print(f"[scraper] mock-only mode; returning {len(fallback)} products for {task.request_id}")
         return fallback
+
+    providers = _providers_for_task(task)
+    if task.query.sites:
+        print(
+            f"[scraper] routed to {len(providers)} provider(s) for {task.request_id}: "
+            f"{', '.join(name for name, _ in providers)}"
+        )
 
     semaphore = asyncio.Semaphore(max_concurrency)
 
@@ -166,18 +203,26 @@ async def scrape_products(
                 provider,
                 task,
                 timeout_seconds=timeout_seconds,
+                global_memory=global_memory,
             )
 
     pending = [
         asyncio.create_task(bounded(provider_name, provider))
-        for provider_name, provider in SCRAPE_PROVIDERS
+        for provider_name, provider in providers
     ]
-    done, still_running = await asyncio.wait(pending, timeout=timeout_seconds)
+    # Allow slow providers to finish even when others are still running.
+    collection_timeout = timeout_seconds + collection_grace_seconds
+    done, still_running = await asyncio.wait(pending, timeout=collection_timeout)
 
     products: list[RawProduct] = []
     for finished in done:
         products.extend(finished.result())
 
+    if still_running:
+        print(
+            f"[scraper] {len(still_running)} provider(s) still running after "
+            f"{collection_timeout}s for {task.request_id}; cancelling remainder"
+        )
     for running in still_running:
         running.cancel()
     if still_running:
@@ -187,16 +232,32 @@ async def scrape_products(
         print(f"[scraper] collected {len(products)} products for {task.request_id}")
         return products
 
-    fallback = build_mock_products(task)
-    print(f"[scraper] using mock fallback with {len(fallback)} products for {task.request_id}")
-    return fallback
+    if mock_only:
+        fallback = build_mock_products(task)
+        print(f"[scraper] mock-only mode; returning {len(fallback)} products for {task.request_id}")
+        return fallback
+
+    print(
+        f"[scraper] no products collected for {task.request_id} "
+        f"(finished={len(done)} cancelled={len(still_running)})"
+    )
+    return []
+
+
+def _providers_for_task(task: ScrapeTaskAssigned) -> list[tuple[str, object]]:
+    allowed = {site.lower() for site in (task.query.sites or [])}
+    if not allowed:
+        return list(SCRAPE_PROVIDERS)
+    return [(name, provider) for name, provider in SCRAPE_PROVIDERS if name.lower() in allowed]
+
 
 @dataclass(frozen=True)
 class MockScraperConfig:
     kafka_bootstrap_servers: str = DEFAULT_KAFKA_BOOTSTRAP_SERVERS
     mock_only: bool = False
-    timeout_seconds: float = 20.0
+    timeout_seconds: float = 40.0
     max_concurrency: int = 8
+    collection_grace_seconds: float = 10.0
 
     @classmethod
     def from_env(cls) -> "MockScraperConfig":
@@ -207,8 +268,9 @@ class MockScraperConfig:
                 "KAFKA_BOOTSTRAP_SERVERS", DEFAULT_KAFKA_BOOTSTRAP_SERVERS
             ),
             mock_only=mock_only,
-            timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "20.0")),
+            timeout_seconds=float(os.getenv("SCRAPE_TIMEOUT_SECONDS", "40.0")),
             max_concurrency=int(os.getenv("SCRAPE_MAX_CONCURRENCY", "8")),
+            collection_grace_seconds=float(os.getenv("SCRAPE_COLLECTION_GRACE_SECONDS", "10.0")),
         )
 
 
@@ -218,8 +280,10 @@ class MockScraperAgent:
         *,
         config: MockScraperConfig,
         producer: KafkaEventProducer | None = None,
+        global_memory: GlobalMemory | None = None,
     ) -> None:
         self._config = config
+        self._global_memory = global_memory
         self._producer = producer or KafkaEventProducer(
             config.kafka_bootstrap_servers,
             client_id="mock-scraper-agent",
@@ -231,7 +295,12 @@ class MockScraperAgent:
             mock_only=self._config.mock_only,
             timeout_seconds=self._config.timeout_seconds,
             max_concurrency=self._config.max_concurrency,
+            collection_grace_seconds=self._config.collection_grace_seconds,
+            global_memory=self._global_memory,
         )
+        if not products:
+            await self._publish_empty_ranked(task)
+            return products
         for product in products:
             if task.watch_id:
                 product.metadata["watch_id"] = task.watch_id
@@ -239,6 +308,21 @@ class MockScraperAgent:
                 product.metadata["user_text"] = task.user_text
             await self._producer.publish(SCRAPE_RAW, product, key=task.request_id)
         return products
+
+    async def _publish_empty_ranked(self, task: ScrapeTaskAssigned) -> None:
+        ranked = DecisionRanked(
+            request_id=task.request_id,
+            user_id=task.user_id,
+            channel=task.channel,
+            query=task.query,
+            products=[],
+            user_text=task.user_text,
+        )
+        await self._producer.publish(DECISION_RANKED, ranked, key=task.request_id)
+        print(
+            f"[scraper] no products found; published empty decision.ranked "
+            f"request_id={task.request_id}"
+        )
 
     async def run(self) -> None:
         consumer = KafkaEventConsumer(
@@ -271,7 +355,9 @@ async def main() -> None:
                 mock_only=settings.scrape_mock_only,
                 timeout_seconds=settings.scrape_timeout_seconds,
                 max_concurrency=settings.scrape_max_concurrency,
-            )
+                collection_grace_seconds=settings.scrape_collection_grace_seconds,
+            ),
+            global_memory=create_global_memory(settings),
         ).run()
     finally:
         await health.stop()

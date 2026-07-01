@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 
 import httpx
 
+from agents.orchestrator.tools.provider_capabilities import capabilities_for
 from agents.webscraping.spiders.base import (
     absolute_url,
     budget_allows,
@@ -16,6 +17,7 @@ from agents.webscraping.spiders.base import (
     matches_brand,
     matches_color,
     matches_product,
+    use_playwright_provider,
 )
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -31,13 +33,13 @@ JUMIA_PRODUCT_TERMS = {
 PHONE_ACCESSORY_TERMS = {
     "adaptateur",
     "cable",
-    "câble",
+    "cÃ¢ble",
     "chargeur",
     "coque",
     "ecouteur",
-    "écouteur",
+    "Ã©couteur",
     "etui",
-    "étui",
+    "Ã©tui",
     "pochette",
     "support",
 }
@@ -50,7 +52,7 @@ SCRIPT_JSON_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم)",
+    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…)",
     re.IGNORECASE,
 )
 
@@ -66,10 +68,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("jumia"):
         return await fetch_rendered_html(url, timeout=timeout, locale="fr-MA")
-    except Exception:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
@@ -287,6 +288,9 @@ def _build_jumia_search_text(task: ScrapeTaskAssigned) -> str:
     if query.brand and query.brand.lower() == "samsung" and product == "smartphone":
         product = "Galaxy"
     parts = [query.brand, product, query.color]
+    caps = capabilities_for("jumia")
+    if caps.city_in_search_text and query.city:
+        parts.append(query.city.replace("_", " "))
     return " ".join(part for part in parts if part).strip() or build_search_text(task)
 
 

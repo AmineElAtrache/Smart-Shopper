@@ -16,6 +16,7 @@ from agents.webscraping.spiders.base import (
     matches_brand,
     matches_color,
     matches_product,
+    use_playwright_provider,
 )
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
@@ -38,8 +39,8 @@ PRODUCT_TERMS = {
 PRODUCT_MATCH_TERMS = {
     "shoes": {"shoes", "chaussures", "baskets"},
     "shoe": {"shoe", "chaussures", "baskets"},
-    "bike": {"bike", "velo", "vélo"},
-    "bicycle": {"bicycle", "velo", "vélo"},
+    "bike": {"bike", "velo", "vÃ©lo"},
+    "bicycle": {"bicycle", "velo", "vÃ©lo"},
     "tent": {"tent", "tente"},
     "shirt": {"shirt", "t-shirt", "tee-shirt"},
 }
@@ -48,7 +49,7 @@ SCRIPT_JSON_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم)",
+    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…)",
     re.IGNORECASE,
 )
 
@@ -66,10 +67,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("decathlon"):
         return await fetch_rendered_html(url, timeout=timeout, locale="fr-MA")
-    except Exception:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
@@ -194,7 +194,7 @@ def _extract_title(anchor, block_text: str) -> str:
 
 def _title_before_price_or_rating(text: str) -> str:
     title = clean_text(re.split(r"\d(?:[,.]\d)?\s+out of 5|Prix|MAD|DH", text, maxsplit=1, flags=re.IGNORECASE)[0])
-    title = re.sub(r"^(Nouveauté|Dernière chance|Promotion)\s+", "", title, flags=re.IGNORECASE).strip()
+    title = re.sub(r"^(NouveautÃ©|DerniÃ¨re chance|Promotion)\s+", "", title, flags=re.IGNORECASE).strip()
     title = re.sub(r"^DECATHLON\s+", "", title, flags=re.IGNORECASE).strip()
     title = re.sub(r"\s+\d(?:[,.]\d)?$", "", title).strip()
     return title

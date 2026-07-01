@@ -8,7 +8,27 @@ from redis.asyncio import Redis
 from shared.config import Settings
 from shared.memory.behavioral_memory import BehavioralMemory
 from shared.memory.global_memory import GlobalMemory
+from shared.memory.tier1_hooks import (
+    build_price_snapshots,
+    provider_domain,
+    record_provider_health,
+    record_query_price_samples,
+    record_ranked_prices,
+)
 from shared.memory.user_memory import UserMemory
+
+__all__ = [
+    "create_behavioral_memory",
+    "create_global_memory",
+    "create_mongo_database",
+    "create_redis",
+    "create_user_memory",
+    "build_price_snapshots",
+    "provider_domain",
+    "record_provider_health",
+    "record_query_price_samples",
+    "record_ranked_prices",
+]
 
 
 def create_redis(settings: Settings) -> Redis:

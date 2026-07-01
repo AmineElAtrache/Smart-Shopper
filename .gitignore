@@ -14,3 +14,10 @@ build/
 *.log
 models/ner/model/*
 !models/ner/model/.gitkeep
+.cache/
+# Large raw external datasets; keep only generated compact vocabulary CSVs.
+data/open-facts/
+data/openfacts/
+data/*.openfoodfacts.org.products.csv*
+data/*.openbeautyfacts.org.products.csv*
+data/*.openproductsfacts.org.products.csv*

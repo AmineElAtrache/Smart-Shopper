@@ -58,6 +58,9 @@ async def test_webscraping_agent_includes_mymarket_products(monkeypatch) -> None
         "decathlon",
         "mubawab",
         "ikea",
+        "palmarosa",
+        "bringo",
+        "planetsport",
     ):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.mymarket.scrape", fake_mymarket_scrape)
@@ -99,6 +102,9 @@ async def test_agent_publishes_mymarket_products(monkeypatch) -> None:
         "decathlon",
         "mubawab",
         "ikea",
+        "palmarosa",
+        "bringo",
+        "planetsport",
     ):
         monkeypatch.setattr(f"agents.webscraping.agent.{provider}.scrape", fake_empty)
     monkeypatch.setattr("agents.webscraping.agent.mymarket.scrape", fake_mymarket_scrape)

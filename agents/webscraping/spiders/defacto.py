@@ -8,7 +8,13 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from agents.webscraping.spiders.base import absolute_url, budget_allows, build_search_text, clean_text
+from agents.webscraping.spiders.base import (
+    absolute_url,
+    budget_allows,
+    build_search_text,
+    clean_text,
+    use_playwright_provider,
+)
 from agents.webscraping.tools.playwright_scraper import fetch_rendered_html
 from shared.events.schemas import Availability, RawProduct, ScrapeTaskAssigned
 
@@ -38,8 +44,8 @@ DEFACTO_COLOR_ALIASES = {
     "black": {"black", "noir", "siyah"},
     "white": {"white", "blanc", "beyaz"},
     "blue": {"blue", "bleu", "mavi"},
-    "red": {"red", "rouge", "kirmizi", "kırmızı"},
-    "green": {"green", "vert", "yesil", "yeşil"},
+    "red": {"red", "rouge", "kirmizi", "kÄ±rmÄ±zÄ±"},
+    "green": {"green", "vert", "yesil", "yeÅŸil"},
     "gray": {"gray", "grey", "gris", "gri"},
     "grey": {"gray", "grey", "gris", "gri"},
     "brown": {"brown", "marron", "kahverengi"},
@@ -53,7 +59,7 @@ SCRIPT_JSON_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|درهم|€|eur)?",
+    r"(?P<amount>\d{1,3}(?:[\s,.]\d{3})*(?:[,.]\d{2})?|\d+(?:[,.]\d{2})?)\s*(?:dh|dhs|mad|Ø¯Ø±Ù‡Ù…|â‚¬|eur)?",
     re.IGNORECASE,
 )
 
@@ -69,10 +75,9 @@ async def scrape(task: ScrapeTaskAssigned, *, timeout: float = 15.0) -> list[Raw
 
 
 async def _fetch_html(url: str, *, timeout: float) -> tuple[str, str]:
-    try:
+    if use_playwright_provider("defacto"):
         return await fetch_rendered_html(url, timeout=timeout, locale="en-MA")
-    except Exception:
-        return await _fetch_html_with_httpx(url, timeout=timeout)
+    return await _fetch_html_with_httpx(url, timeout=timeout)
 
 
 async def _fetch_html_with_httpx(url: str, *, timeout: float) -> tuple[str, str]:
@@ -215,7 +220,7 @@ def _extract_title(anchor, block_text: str) -> str:
     title = clean_text(anchor.get_text(" ", strip=True))
     if title and _parse_price(title) is None:
         return title
-    title = clean_text(re.split(r"Sale|Price|MAD|DH|€", block_text, maxsplit=1, flags=re.IGNORECASE)[0])
+    title = clean_text(re.split(r"Sale|Price|MAD|DH|â‚¬", block_text, maxsplit=1, flags=re.IGNORECASE)[0])
     return title
 
 

@@ -9,7 +9,7 @@ from models.ner.grpc_server import NerService
 from generated.ner.v1 import ner_pb2
 from shared.config import Settings
 from shared.events.schemas import Availability, InboundMessage, ProductQuery, RawProduct
-from shared.events.topics import DECISION_RANKED, NER_EXTRACTED, SCRAPE_TASK_ASSIGNED
+from shared.events.topics import DECISION_RANKED, NER_EXTRACTED, RESPONSE_OUTBOUND, SCRAPE_TASK_ASSIGNED
 
 
 class FakeProducer:
@@ -55,6 +55,30 @@ def test_orchestrator_service_publishes_ner_and_scrape_task() -> None:
     topics = [published[0] for published in producer.published]
     assert topics == [NER_EXTRACTED, SCRAPE_TASK_ASSIGNED]
     assert producer.published[1][1].query.brand == "Samsung"
+
+
+def test_orchestrator_service_replies_conversationally_for_greeting() -> None:
+    settings = Settings(_env_file=None, llm_provider="template", llm_api_key=None)
+    producer = FakeProducer()
+    service = OrchestratorService(
+        settings,
+        agent=OrchestratorAgent(),
+        cache=EmptyCache(),
+        consumer=FakeConsumer(),
+        producer=producer,
+    )
+
+    message = InboundMessage(
+        request_id="req_greet",
+        user_id="telegram_123",
+        text="slm",
+    )
+
+    asyncio.run(service.handle_message(message))
+
+    topics = [published[0] for published in producer.published]
+    assert topics == [NER_EXTRACTED, RESPONSE_OUTBOUND]
+    assert "chno bghiti" in producer.published[1][1].message.lower()
 
 
 def test_decision_service_flushes_ranked_products() -> None:

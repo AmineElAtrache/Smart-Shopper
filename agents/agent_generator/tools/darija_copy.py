@@ -6,6 +6,7 @@ import hashlib
 import re
 
 from shared.events.schemas import DecisionRanked
+from agents.orchestrator.tools.provider_capabilities import sites_support_city_filter
 
 DARIJA_LABELS = {
     "price": "Taman",
@@ -98,11 +99,38 @@ def is_stale_darija_closing(text: str) -> bool:
     return bool(first and first in legacy_first)
 
 
+def build_darija_no_results_reply(event: DecisionRanked) -> str:
+    query = event.query
+    if query and (query.brand or query.product or query.budget is not None or query.city or query.color):
+        label = _search_label(query)
+        if query.color:
+            return (
+                f"Ma lqit 7ta khityar {label}. "
+                "Jarrab lon okhor, badel l-model, wla 7yed lon mn talab dyalek."
+            )
+        if query.city and sites_support_city_filter(query.sites or []):
+            return (
+                f"Ma lqit 7ta khityar {label}. "
+                "Jarrab mdina okhra, badel l-model, wla 3tini mdina okhra."
+            )
+        if query.budget is not None:
+            currency = query.currency or "MAD"
+            return (
+                f"Ma lqit 7ta khityar li y-match {label} f {query.budget:g} {currency}. "
+                "Jarrab tzid l-mizaniya chwiya, badel l-model, wla 3tini mdina."
+            )
+        return (
+            f"Ma lqit 7ta khityar li y-match {label}. "
+            "Jarrab badel l-model wla 3tini tafasil okhra."
+        )
+    return build_darija_empty_reply()
+
+
 def build_darija_response(event: DecisionRanked) -> str:
     from agents.agent_generator.agent import build_composed_message
 
     if not event.products:
-        return build_darija_empty_reply()
+        return build_darija_no_results_reply(event)
 
     seed = seed_for_event(event)
     count = min(3, len(event.products))
@@ -181,6 +209,16 @@ def _first_sentence(text: str) -> str:
 
 def _normalize_phrase(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip().lower().rstrip(".!?؟…"))
+
+
+def _search_label(query) -> str:
+    parts = [query.brand, _darija_product_label(query.product) or query.product]
+    if query.color:
+        parts.append(query.color)
+    if query.city:
+        parts.append(f"f {query.city.replace('_', ' ')}")
+    label = " ".join(part for part in parts if part).strip()
+    return label or "had talab"
 
 
 def _product_hint(event: DecisionRanked) -> str | None:
